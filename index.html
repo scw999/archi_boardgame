@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="갓물주 - 부동산 개발 보드게임 디지털 프로토타입">
+  <title>갓물주 - 부동산 개발 보드게임</title>
+  
+  <!-- 폰트 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- 스타일시트 -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/cards.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+</head>
+<body>
+  <!-- 알림 컨테이너 -->
+  <div id="notifications"></div>
+  
+  <!-- ===== 메인 메뉴 ===== -->
+  <section id="main-menu">
+    <div class="game-logo">🏗️</div>
+    <h1 class="game-title">갓물주</h1>
+    <p class="game-subtitle">Real Estate Mogul - 부동산 개발 보드게임</p>
+    
+    <div class="menu-buttons">
+      <button id="btn-new-game" class="menu-btn primary">
+        🎮 새 게임 시작
+      </button>
+      <button id="btn-load-game" class="menu-btn secondary">
+        💾 이어하기
+      </button>
+      <button id="btn-rules" class="menu-btn secondary">
+        📜 게임 규칙
+      </button>
+    </div>
+  </section>
+  
+  <!-- ===== 플레이어 설정 ===== -->
+  <section id="player-setup" class="hidden">
+    <div class="setup-header">
+      <h2>👥 플레이어 설정</h2>
+      <p>참여할 플레이어 이름을 입력하세요 (1~4명)</p>
+    </div>
+    
+    <div class="player-inputs">
+      <div class="player-input-row">
+        <div class="player-number">1</div>
+        <input type="text" class="player-name-input" placeholder="플레이어 1 이름" value="플레이어 1">
+      </div>
+      <div class="player-input-row">
+        <div class="player-number">2</div>
+        <input type="text" class="player-name-input" placeholder="플레이어 2 이름 (선택)">
+      </div>
+      <div class="player-input-row">
+        <div class="player-number">3</div>
+        <input type="text" class="player-name-input" placeholder="플레이어 3 이름 (선택)">
+      </div>
+      <div class="player-input-row">
+        <div class="player-number">4</div>
+        <input type="text" class="player-name-input" placeholder="플레이어 4 이름 (선택)">
+      </div>
+    </div>
+    
+    <div class="setup-options">
+      <div class="option-row">
+        <input type="checkbox" id="easy-start">
+        <label for="easy-start">🎯 쉬운 시작 (모두 같은 금액으로 시작)</label>
+      </div>
+    </div>
+    
+    <div class="setup-actions">
+      <button id="btn-back" class="menu-btn secondary">← 뒤로</button>
+      <button id="btn-start-game" class="menu-btn primary">게임 시작 →</button>
+    </div>
+  </section>
+  
+  <!-- ===== 게임 컨테이너 ===== -->
+  <main id="game-container" class="hidden">
+    <!-- 플레이어 패널 (좌측) -->
+    <aside id="player-panels">
+      <!-- 동적으로 생성됨 -->
+    </aside>
+    
+    <!-- 게임 보드 (상단) -->
+    <header id="game-board">
+      <!-- 동적으로 생성됨 -->
+    </header>
+    
+    <!-- 카드 그리드 (중앙) -->
+    <section id="card-grid">
+      <!-- 동적으로 생성됨 -->
+    </section>
+    
+    <!-- 건물 선택기 -->
+    <section id="building-selector" class="hidden">
+      <!-- 동적으로 생성됨 -->
+    </section>
+    
+    <!-- 구매 옵션 패널 -->
+    <div id="purchase-options" class="hidden">
+      <!-- 동적으로 생성됨 -->
+    </div>
+    
+    <!-- 액션 영역 (하단) -->
+    <footer id="action-area">
+      <!-- 동적으로 생성됨 -->
+    </footer>
+    
+    <!-- 게임 로그 (우측) -->
+    <aside id="game-log">
+      <div class="log-header">📜 게임 로그</div>
+      <div class="log-entries">
+        <!-- 동적으로 생성됨 -->
+      </div>
+    </aside>
+  </main>
+  
+  <!-- 메인 스크립트 -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
