@@ -3930,8 +3930,7 @@ body {
 
 /* ===== 단가표 테이블 ===== */
 .budget-table-container {
-  max-height: 70vh;
-  overflow-y: auto;
+  /* 스크롤은 부모 .dialog에서 처리 - 이중 스크롤 방지 */
 }
 
 .table-section {
@@ -4295,4 +4294,191 @@ body {
 
 .common-action-btn.skip:hover {
   border-color: var(--text-muted);
+}
+
+/* ===== 와일드카드 패널 ===== */
+#wildcard-panel {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent-gold);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  max-width: 300px;
+  z-index: 500;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+#wildcard-panel.hidden {
+  display: none;
+}
+
+.wildcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wildcard-header h4 {
+  margin: 0;
+  color: var(--accent-gold);
+  font-size: 0.9rem;
+}
+
+.wildcard-header .card-count {
+  background: var(--accent-gold);
+  color: #000;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.wildcard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.wildcard-item {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.wildcard-item:hover {
+  border-color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.wildcard-item .card-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.wildcard-item .card-desc {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.wildcard-item .btn-use-wildcard {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--accent-gold);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===== 토지 가로채기 모달 ===== */
+.steal-land-modal {
+  padding: 1rem 0;
+}
+
+.steal-description {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.steal-land-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.steal-land-item {
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  transition: all var(--transition-fast);
+}
+
+.steal-land-item:hover {
+  border-color: var(--accent-gold);
+}
+
+.steal-land-item.cannot-afford {
+  opacity: 0.5;
+}
+
+.steal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.steal-info .player-name {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.steal-info .land-name {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.steal-cost {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.steal-cost .original-price {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: line-through;
+}
+
+.steal-cost .steal-price {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.btn-steal {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #000;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-steal:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+}
+
+.btn-steal.disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
 }

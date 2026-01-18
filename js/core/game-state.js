@@ -451,13 +451,17 @@ class GameState {
 
     // 라운드 종료
     endRound() {
-        // 모든 프로젝트를 완성된 건물로 이동
+        // 모든 프로젝트를 완성된 건물로 이동 (자산으로 보유)
         this.players.forEach(player => {
             if (player.currentProject && player.currentProject.building) {
+                // 건물을 자산으로 추가 (현금은 지급하지 않음 - 매각해야 현금 획득)
                 player.buildings.push({ ...player.currentProject });
-                player.money = player.currentProject.salePrice;
+                // 대출은 상환하지 않고 유지 (건물 자산이 담보가 됨)
+                this.addLog(`🏢 ${player.name}: ${player.currentProject.building.name} 완공! (자산가치: ${this.formatMoney(player.currentProject.salePrice)})`);
             }
             player.currentProject = null;
+            // 와일드카드 가로채기 사용 여부 리셋
+            player.wildcardUsed = false;
         });
 
         this.currentRound++;
@@ -474,9 +478,15 @@ class GameState {
     // 최종 점수 계산
     calculateFinalScores() {
         this.players.forEach(player => {
-            // 최종 자금 + 건물 가치 합산
-            player.totalScore = player.money;
-            this.addLog(`${player.name} 최종 점수: ${this.formatMoney(player.totalScore)}`);
+            // 건물 가치 계산
+            const buildingValue = this.getTotalBuildingValue(player);
+            // 최종 자금 + 건물 가치 - 대출 = 순자산
+            player.totalScore = player.money + buildingValue - player.loan;
+            this.addLog(`${player.name} 최종 점수:`);
+            this.addLog(`  💵 현금: ${this.formatMoney(player.money)}`);
+            this.addLog(`  🏢 건물 가치: ${this.formatMoney(buildingValue)}`);
+            this.addLog(`  🏦 대출: -${this.formatMoney(player.loan)}`);
+            this.addLog(`  📊 순자산: ${this.formatMoney(player.totalScore)}`);
         });
 
         // 순위 결정
@@ -486,7 +496,22 @@ class GameState {
 
     // 대출 관련
     getMaxLoan(player) {
-        return Math.floor(player.money * player.maxLoanMultiplier);
+        // 현금 기준 대출 한도
+        const cashBasedLimit = Math.floor(player.money * player.maxLoanMultiplier);
+
+        // 건물 가치 기준 대출 한도 (건물 가치의 80%까지 추가 대출 가능)
+        const buildingValue = this.getTotalBuildingValue(player);
+        const buildingBasedLimit = Math.floor(buildingValue * 0.8);
+
+        return cashBasedLimit + buildingBasedLimit;
+    }
+
+    // 플레이어의 총 건물 자산 가치 계산
+    getTotalBuildingValue(player) {
+        if (!player.buildings || player.buildings.length === 0) return 0;
+        return player.buildings.reduce((total, building) => {
+            return total + (building.salePrice || 0);
+        }, 0);
     }
 
     takeLoan(playerIndex, amount) {
