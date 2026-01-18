@@ -128,16 +128,27 @@ class GameState {
     }
 
     // 도시 지도 초기화 (5x5 그리드)
+    // 지방 → 경기 외곽 → 경기 주요 → 서울 → 서울 핵심 순서로 배치
     initCityMap() {
         const map = [];
-        const districts = ['강남구', '서초구', '마포구', '용산구', '성동구'];
+        // 행별 지역 정보 (위에서 아래로: 시골 → 서울 핵심)
+        const regionData = [
+            { name: '지방/시골', tier: 1, emoji: '🌾', color: '#4a7c4e' },
+            { name: '경기 외곽', tier: 2, emoji: '🏘️', color: '#6b8e6b' },
+            { name: '경기 주요', tier: 3, emoji: '🏙️', color: '#7a9ec2' },
+            { name: '서울', tier: 4, emoji: '🌆', color: '#9b7cb8' },
+            { name: '서울 핵심', tier: 5, emoji: '✨', color: '#d4af37' }
+        ];
 
         for (let y = 0; y < 5; y++) {
             map[y] = [];
             for (let x = 0; x < 5; x++) {
                 map[y][x] = {
                     x, y,
-                    district: districts[y],
+                    district: regionData[y].name,
+                    tier: regionData[y].tier,
+                    emoji: regionData[y].emoji,
+                    color: regionData[y].color,
                     owner: null,
                     project: null,
                     building: null,

@@ -238,7 +238,10 @@ class GameApp {
 
         optionsContainer.innerHTML = `
       <div class="purchase-panel">
-        <h3>${land.name} 구매</h3>
+        <div class="purchase-panel-header">
+          <h3>${land.name} 구매</h3>
+          <button class="purchase-panel-close" id="close-purchase-panel">&times;</button>
+        </div>
         <div class="price-options">
           <button class="price-btn market" data-type="market">
             시세: ${info.marketPrice}
@@ -263,6 +266,14 @@ class GameApp {
 
         optionsContainer.classList.remove('hidden');
 
+        // 닫기 버튼 이벤트
+        document.getElementById('close-purchase-panel')?.addEventListener('click', () => {
+            this.closePurchaseOptions();
+        });
+
+        // 외부 클릭 시 닫기
+        this.setupPurchaseOptionsOutsideClick(optionsContainer);
+
         // 가격 타입 선택
         optionsContainer.querySelectorAll('.price-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -279,6 +290,54 @@ class GameApp {
         document.getElementById('confirm-purchase')?.addEventListener('click', async () => {
             await this.attemptPurchase();
         });
+    }
+
+    // 구매 옵션 패널 닫기
+    closePurchaseOptions() {
+        const optionsContainer = document.getElementById('purchase-options');
+        if (optionsContainer) {
+            optionsContainer.classList.add('hidden');
+            optionsContainer.innerHTML = '';
+        }
+        this.selectedCardIndex = null;
+        // 카드 하이라이트 제거
+        document.querySelectorAll('.game-card.highlighted').forEach(card => {
+            card.classList.remove('highlighted');
+        });
+        // 외부 클릭 리스너 제거
+        if (this._outsideClickHandler) {
+            document.removeEventListener('click', this._outsideClickHandler);
+            this._outsideClickHandler = null;
+        }
+    }
+
+    // 외부 클릭 시 패널 닫기 설정
+    setupPurchaseOptionsOutsideClick(optionsContainer) {
+        // 이전 리스너 제거
+        if (this._outsideClickHandler) {
+            document.removeEventListener('click', this._outsideClickHandler);
+        }
+
+        // 약간의 딜레이 후 리스너 등록 (현재 클릭 이벤트가 바로 트리거되는 것 방지)
+        setTimeout(() => {
+            this._outsideClickHandler = (event) => {
+                const purchasePanel = optionsContainer.querySelector('.purchase-panel');
+                const cardGrid = document.getElementById('card-grid');
+
+                // 패널이 숨겨져 있으면 무시
+                if (optionsContainer.classList.contains('hidden')) return;
+
+                // 클릭이 패널 내부이면 무시
+                if (purchasePanel && purchasePanel.contains(event.target)) return;
+
+                // 클릭이 카드 그리드 내부이면 무시 (다른 카드 선택 허용)
+                if (cardGrid && cardGrid.contains(event.target)) return;
+
+                // 그 외의 경우 패널 닫기
+                this.closePurchaseOptions();
+            };
+            document.addEventListener('click', this._outsideClickHandler);
+        }, 100);
     }
 
     // 토지 구매 시도
