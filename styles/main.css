@@ -3553,12 +3553,49 @@ body {
   75% { transform: translateX(1px); }
 }
 
+/* 건설 중 셀 (기본) */
 .city-cell:has(.cell-project) {
   animation: constructionVibrate 0.3s infinite;
   border-color: rgba(245, 158, 11, 0.6);
   box-shadow:
     0 0 15px rgba(245, 158, 11, 0.3),
     inset 0 0 10px rgba(245, 158, 11, 0.1);
+}
+
+/* 토지만 구매한 상태 (녹색) */
+.city-cell.land-only {
+  animation: none;
+  border-color: rgba(34, 197, 94, 0.6);
+  box-shadow:
+    0 0 15px rgba(34, 197, 94, 0.3),
+    inset 0 0 10px rgba(34, 197, 94, 0.1);
+}
+
+.city-cell.land-only .project-icon {
+  animation: landPulse 2s ease-in-out infinite;
+}
+
+@keyframes landPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* 설계 중 상태 (파란색) */
+.city-cell.designing {
+  animation: none;
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow:
+    0 0 15px rgba(59, 130, 246, 0.3),
+    inset 0 0 10px rgba(59, 130, 246, 0.1);
+}
+
+.city-cell.designing .project-icon {
+  animation: designPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes designPulse {
+  0%, 100% { transform: rotate(-5deg) scale(1); }
+  50% { transform: rotate(5deg) scale(1.05); }
 }
 
 /* ===== 와일드카드 상세 모달 ===== */
@@ -4127,10 +4164,15 @@ body {
 }
 
 #design-preview-modal .blueprint-label {
-  font-size: 0.75rem;
+  position: static;
+  font-size: 0.85rem;
   color: var(--accent-blue);
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin-top: 0.75rem;
+  padding: 0.4rem 1rem;
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-sm);
 }
 
 #design-preview-modal .design-details {
@@ -4384,6 +4426,76 @@ body {
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* 와일드카드 헤더 우측 영역 */
+.wildcard-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 와일드카드 닫기 버튼 */
+.wildcard-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.wildcard-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+
+/* 와일드카드 토글 버튼 */
+.wildcard-toggle-btn {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  background: linear-gradient(135deg, var(--accent-gold), #d4a500);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+  transition: all var(--transition-fast);
+}
+
+.wildcard-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+}
+
+.wildcard-toggle-btn .badge {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}
+
+.wildcard-toggle-btn.hidden {
+  display: none;
+}
+
+/* 와일드카드 패널 위치 조정 (버튼 위에) */
+#wildcard-panel {
+  bottom: 4.5rem;
 }
 
 /* ===== 토지 가로채기 모달 ===== */

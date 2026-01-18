@@ -198,6 +198,8 @@ class GameApp {
             if (result.success) {
                 showNotification(result.message, 'success');
                 this.updateUI();
+                // PM 활동 후 자동으로 턴 넘기기
+                this.nextPlayerOrPhase(this.getCurrentCheckField());
             }
         });
 
@@ -646,6 +648,13 @@ class GameApp {
             return;
         }
 
+        // 이미 건축가와 계약을 했으면 설계 변경 불가 - 다음 플레이어로
+        if (player.currentProject.architect) {
+            showNotification(`${player.name}님은 이미 ${player.currentProject.architect.name} 건축가와 계약했습니다.`, 'info');
+            this.nextPlayerOrPhase('architect');
+            return;
+        }
+
         renderCardGrid(gameState.availableArchitects, 'architect', (index, architect) => {
             this.selectedArchitectIndex = index;
             highlightCard(index);
@@ -1012,6 +1021,9 @@ class GameApp {
 
     // 시공 페이즈
     runConstructionPhase() {
+        // 이전 돈벌기 옵션 패널 제거 (중복 방지)
+        document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
+
         const player = gameState.getCurrentPlayer();
 
         // 설계가 완료되지 않은 경우
@@ -1077,6 +1089,9 @@ class GameApp {
         const actionArea = document.getElementById('action-area');
         if (!actionArea) return;
 
+        // 기존 돈벌기 옵션 패널이 있으면 제거
+        document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
+
         const pmIncome = 50000000 + (player.buildings.length * 20000000);
 
         const moneyOptionsHtml = `
@@ -1101,9 +1116,8 @@ class GameApp {
             </div>
         `;
 
-        // 기존 액션 영역 위에 추가
-        const existingContent = actionArea.innerHTML;
-        actionArea.innerHTML = moneyOptionsHtml + existingContent;
+        // 기존 액션 영역 내용 교체 (중복 방지)
+        actionArea.innerHTML = moneyOptionsHtml;
 
         // PM 활동 버튼
         const pmBtn = document.getElementById('btn-pm-construction');
@@ -2282,6 +2296,10 @@ class GameApp {
     // 와일드카드 패널 업데이트
     updateWildcardPanel() {
         const player = gameState.getCurrentPlayer();
+
+        // 와일드카드 토글 버튼 업데이트/생성
+        this.updateWildcardToggleButton(player);
+
         if (!player || !player.wildcards || player.wildcards.length === 0) {
             // 와일드카드 패널 숨기기
             const wildcardPanel = document.getElementById('wildcard-panel');
@@ -2293,7 +2311,7 @@ class GameApp {
         if (!wildcardPanel) {
             wildcardPanel = document.createElement('div');
             wildcardPanel.id = 'wildcard-panel';
-            wildcardPanel.className = 'wildcard-panel';
+            wildcardPanel.className = 'wildcard-panel hidden'; // 기본적으로 숨김
             // game-container에 추가
             const gameContainer = document.getElementById('game-container');
             if (gameContainer) {
@@ -2304,7 +2322,10 @@ class GameApp {
         wildcardPanel.innerHTML = `
             <div class="wildcard-header">
                 <h4>🃏 보유 와일드카드</h4>
-                <span class="card-count">${player.wildcards.length}장</span>
+                <div class="wildcard-header-right">
+                    <span class="card-count">${player.wildcards.length}장</span>
+                    <button class="wildcard-close-btn" id="wildcard-close-btn">&times;</button>
+                </div>
             </div>
             <div class="wildcard-list">
                 ${player.wildcards.map((card, index) => `
@@ -2317,7 +2338,10 @@ class GameApp {
             </div>
         `;
 
-        wildcardPanel.classList.remove('hidden');
+        // 닫기 버튼 이벤트
+        document.getElementById('wildcard-close-btn')?.addEventListener('click', () => {
+            wildcardPanel.classList.add('hidden');
+        });
 
         // 와일드카드 아이템 클릭 시 상세보기
         wildcardPanel.querySelectorAll('.wildcard-item').forEach(item => {
@@ -2336,6 +2360,39 @@ class GameApp {
                 this.useWildcard(index);
             });
         });
+    }
+
+    // 와일드카드 토글 버튼 업데이트/생성
+    updateWildcardToggleButton(player) {
+        let toggleBtn = document.getElementById('wildcard-toggle-btn');
+
+        // 와일드카드가 없으면 버튼 숨기기
+        if (!player || !player.wildcards || player.wildcards.length === 0) {
+            if (toggleBtn) toggleBtn.classList.add('hidden');
+            return;
+        }
+
+        if (!toggleBtn) {
+            toggleBtn = document.createElement('button');
+            toggleBtn.id = 'wildcard-toggle-btn';
+            toggleBtn.className = 'wildcard-toggle-btn';
+            // game-container에 추가
+            const gameContainer = document.getElementById('game-container');
+            if (gameContainer) {
+                gameContainer.appendChild(toggleBtn);
+            }
+        }
+
+        toggleBtn.innerHTML = `🃏 와일드카드 <span class="badge">${player.wildcards.length}</span>`;
+        toggleBtn.classList.remove('hidden');
+
+        // 토글 이벤트 (새로 바인딩)
+        toggleBtn.onclick = () => {
+            const panel = document.getElementById('wildcard-panel');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
+        };
     }
 
     // 와일드카드 상세 보기

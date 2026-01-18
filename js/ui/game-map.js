@@ -107,8 +107,21 @@ export function renderCityGrid() {
             // 지역별 배경 테마
             const bgPattern = getTierBackgroundPattern(regionInfo.tier);
 
+            // 프로젝트 상태에 따른 아이콘 결정
+            let projectIcon = '🏗️';
+            let projectClass = 'constructing';
+            if (hasProject && cell.project) {
+                if (!cell.project.building) {
+                    projectIcon = '🏞️'; // 토지만 구매
+                    projectClass = 'land-only';
+                } else if (!cell.project.constructor) {
+                    projectIcon = '📐'; // 설계 중
+                    projectClass = 'designing';
+                }
+            }
+
             gridHtml += `
-                <div class="city-cell ${ownerClass} ${tierClass} ${hasBuilding ? 'has-building' : ''}"
+                <div class="city-cell ${ownerClass} ${tierClass} ${hasBuilding ? 'has-building' : ''} ${hasProject ? projectClass : ''}"
                      data-x="${x}" data-y="${y}" data-lot="${String.fromCharCode(65 + y)}${x + 1}"
                      style="--cell-bg: ${bgPattern}">
                     <div class="cell-terrain"></div>
@@ -119,7 +132,7 @@ export function renderCityGrid() {
                         </div>
                     ` : hasProject ? `
                         <div class="cell-project">
-                            <span class="project-icon">🏗️</span>
+                            <span class="project-icon">${projectIcon}</span>
                         </div>
                     ` : `
                         <div class="cell-empty">

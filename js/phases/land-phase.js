@@ -158,6 +158,9 @@ export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResu
             gameState.availableLands.splice(landIndex, 1);
         }
 
+        // 개발 지도에 토지 표시
+        gameState.placeProjectOnMap(playerIndex, project);
+
         result.message = `${getDiceEmoji(diceResult)} 낙찰 성공! ${land.name} 구매 완료`;
         gameState.addLog(`${player.name}: ${result.message}`);
     } else {
@@ -191,6 +194,9 @@ function completeLandPurchase(playerIndex, landIndex, priceType, selection) {
 
     // 사용된 토지 목록에서 제거
     gameState.availableLands.splice(landIndex, 1);
+
+    // 개발 지도에 토지 표시
+    gameState.placeProjectOnMap(playerIndex, project);
 }
 
 // 와일드카드 사용 (다른 사람이 낙찰받은 토지 10% 추가 지불로 가로채기)
