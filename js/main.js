@@ -5,7 +5,7 @@ import { renderPlayerPanels } from './ui/player-panel.js';
 import { renderCardGrid, highlightCard, renderBuildingSelector } from './ui/card-display.js';
 import { showDiceRoll, showStartingDiceRoll, showLandPurchaseDice, showRiskCardDraw } from './ui/dice-roller.js';
 import { initProjectMap, renderProjectMap, renderCityGrid } from './ui/game-map.js';
-import { selectLand, attemptLandPurchase, checkLandPhaseComplete, getLandDisplayInfo } from './phases/land-phase.js';
+import { selectLand, attemptLandPurchase, attemptLandPurchaseByLand, checkLandPhaseComplete, getLandDisplayInfo } from './phases/land-phase.js';
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
 import { calculateSalePrice, completeEvaluation, checkEvaluationPhaseComplete, getRoundSummary, getFinalResults } from './phases/evaluation-phase.js';
@@ -391,8 +391,16 @@ class GameApp {
         // 기본 선택
         optionsContainer.querySelector('.price-btn.market')?.classList.add('selected');
 
-        // 구매 시도
-        document.getElementById('confirm-purchase')?.addEventListener('click', async () => {
+        // 구매 시도 - 이벤트 버블링 방지
+        document.getElementById('confirm-purchase')?.addEventListener('click', async (event) => {
+            event.stopPropagation();  // 버블링 방지
+            event.preventDefault();
+
+            // 중복 클릭 방지
+            const btn = event.currentTarget;
+            if (btn.disabled) return;
+            btn.disabled = true;
+
             await this.attemptPurchase();
         });
     }
@@ -428,6 +436,10 @@ class GameApp {
             this._outsideClickHandler = (event) => {
                 const purchasePanel = optionsContainer.querySelector('.purchase-panel');
                 const cardGrid = document.getElementById('card-grid');
+                const diceContainer = document.getElementById('dice-container');
+
+                // 주사위 모달이 활성화되어 있으면 무시
+                if (diceContainer && diceContainer.classList.contains('active')) return;
 
                 // 패널이 숨겨져 있으면 무시
                 if (optionsContainer.classList.contains('hidden')) return;
@@ -437,6 +449,9 @@ class GameApp {
 
                 // 클릭이 카드 그리드 내부이면 무시 (다른 카드 선택 허용)
                 if (cardGrid && cardGrid.contains(event.target)) return;
+
+                // 클릭이 주사위 컨테이너 내부이면 무시
+                if (diceContainer && diceContainer.contains(event.target)) return;
 
                 // 그 외의 경우 패널 닫기
                 this.closePurchaseOptions();
@@ -448,11 +463,32 @@ class GameApp {
     // 토지 구매 시도
     async attemptPurchase() {
         const player = gameState.getCurrentPlayer();
-        const land = gameState.availableLands[this.selectedCardIndex];
 
-        if (this.selectedPriceType === 'market') {
-            // 시세는 항상 성공
-            const result = attemptLandPurchase(gameState.currentPlayerIndex, this.selectedCardIndex, 'market');
+        // 주사위 모달 표시 전에 선택 정보를 로컬 변수에 저장
+        const savedLandIndex = this.selectedCardIndex;
+        const priceType = this.selectedPriceType;
+        const land = gameState.availableLands[savedLandIndex];
+
+        if (savedLandIndex === null || !land) {
+            showNotification('토지를 선택해주세요.', 'error');
+            return;
+        }
+
+        // 토지 객체를 완전히 복사해서 저장 (참조 문제 방지)
+        const savedLand = { ...land };
+
+        // 외부 클릭 핸들러 제거 (주사위 모달 중 오작동 방지)
+        if (this._outsideClickHandler) {
+            document.removeEventListener('click', this._outsideClickHandler);
+            this._outsideClickHandler = null;
+        }
+
+        // 구매 옵션 패널 먼저 숨기기
+        document.getElementById('purchase-options')?.classList.add('hidden');
+
+        if (priceType === 'market') {
+            // 시세는 항상 성공 - 인덱스 기반 함수 사용
+            const result = attemptLandPurchase(gameState.currentPlayerIndex, savedLandIndex, 'market');
             if (result.isSuccess) {
                 showNotification(result.message, 'success');
                 this.nextPlayerOrPhase('land');
@@ -462,17 +498,17 @@ class GameApp {
         } else {
             // 급매/경매는 주사위
             const diceResult = await showLandPurchaseDice(
-                land.name,
-                this.selectedPriceType,
-                land.diceRequired[this.selectedPriceType]
+                savedLand.name,
+                priceType,
+                savedLand.diceRequired[priceType]
             );
 
-            // 주사위 결과를 전달하여 이중 굴림 방지
-            const result = attemptLandPurchase(
+            // 토지 객체를 직접 전달하는 새 함수 사용 (인덱스 문제 완전 우회)
+            const result = attemptLandPurchaseByLand(
                 gameState.currentPlayerIndex,
-                this.selectedCardIndex,
-                this.selectedPriceType,
-                diceResult.value  // 이미 굴린 주사위 결과 전달
+                savedLand,
+                priceType,
+                diceResult.value
             );
 
             if (result.isSuccess) {
@@ -484,7 +520,7 @@ class GameApp {
             this.nextPlayerOrPhase('land');
         }
 
-        document.getElementById('purchase-options')?.classList.add('hidden');
+        this.selectedCardIndex = null;
     }
 
     // 설계 페이즈
