@@ -4,6 +4,7 @@ import { renderGameBoard, renderGameLog, renderActionArea, showNotification, sho
 import { renderPlayerPanels } from './ui/player-panel.js';
 import { renderCardGrid, highlightCard, renderBuildingSelector } from './ui/card-display.js';
 import { showDiceRoll, showStartingDiceRoll, showLandPurchaseDice, showRiskCardDraw } from './ui/dice-roller.js';
+import { initProjectMap, renderProjectMap } from './ui/game-map.js';
 import { selectLand, attemptLandPurchase, checkLandPhaseComplete, getLandDisplayInfo } from './phases/land-phase.js';
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
@@ -21,6 +22,7 @@ class GameApp {
     // 초기화
     init() {
         this.bindEvents();
+        initProjectMap();
         this.showMainMenu();
     }
 
@@ -142,13 +144,88 @@ class GameApp {
             this.showLandPurchaseOptions(land);
         });
 
-        renderActionArea([
+        // 액션 버튼 - PM활동, 매각 옵션 추가
+        const actions = [
+            { id: 'pm-activity', label: 'PM 활동 (+5천만)', icon: '👷' },
+            { id: 'sell-land', label: '대지 매각', icon: '💰' },
             { id: 'skip-land', label: '이번 턴 패스', icon: '⏭️' }
-        ]);
+        ];
 
+        // 완성된 건물이 있으면 건물 매각 버튼 추가
+        if (player.buildings.length > 0) {
+            actions.splice(2, 0, { id: 'sell-building', label: '건물 매각', icon: '🏢' });
+        }
+
+        renderActionArea(actions);
+
+        // PM 활동
+        document.querySelector('[data-action="pm-activity"]')?.addEventListener('click', () => {
+            const result = gameState.doPMActivity(gameState.currentPlayerIndex);
+            showNotification(result.message, 'success');
+            this.updateUI();
+            this.nextPlayerOrPhase('land');
+        });
+
+        // 대지 매각
+        document.querySelector('[data-action="sell-land"]')?.addEventListener('click', () => {
+            const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
+            if (result.success) {
+                showNotification(result.message, 'success');
+                this.updateUI();
+            } else {
+                showNotification(result.message, 'error');
+            }
+        });
+
+        // 건물 매각
+        document.querySelector('[data-action="sell-building"]')?.addEventListener('click', () => {
+            this.showBuildingSellModal();
+        });
+
+        // 턴 패스
         document.querySelector('[data-action="skip-land"]')?.addEventListener('click', () => {
             showNotification(`${player.name} 토지 구매 패스`, 'info');
             this.nextPlayerOrPhase('land');
+        });
+    }
+
+    // 건물 매각 모달 표시
+    showBuildingSellModal() {
+        const player = gameState.getCurrentPlayer();
+
+        if (player.buildings.length === 0) {
+            showNotification('매각할 건물이 없습니다.', 'error');
+            return;
+        }
+
+        const buildingList = player.buildings.map((b, idx) => `
+            <div class="sell-building-item" data-index="${idx}">
+                <span class="building-info">${b.building.emoji} ${b.building.name} @ ${b.land.name}</span>
+                <span class="sell-price">매각가: ${gameState.formatMoney(Math.floor(b.salePrice * 0.9))}</span>
+                <button class="btn-sell-item" data-index="${idx}">매각</button>
+            </div>
+        `).join('');
+
+        showResultModal('건물 매각', `
+            <div class="sell-modal">
+                <p>매각할 건물을 선택하세요. (원가의 90%)</p>
+                <div class="sell-list">${buildingList}</div>
+            </div>
+        `, () => { });
+
+        // 매각 버튼 이벤트
+        document.querySelectorAll('.btn-sell-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.dataset.index);
+                const result = gameState.sellBuilding(gameState.currentPlayerIndex, idx);
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    document.querySelector('.modal-overlay')?.remove();
+                    this.updateUI();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            });
         });
     }
 
@@ -226,11 +303,18 @@ class GameApp {
                 land.diceRequired[this.selectedPriceType]
             );
 
-            if (diceResult.isSuccess) {
-                const result = attemptLandPurchase(gameState.currentPlayerIndex, this.selectedCardIndex, this.selectedPriceType);
+            // 주사위 결과를 전달하여 이중 굴림 방지
+            const result = attemptLandPurchase(
+                gameState.currentPlayerIndex,
+                this.selectedCardIndex,
+                this.selectedPriceType,
+                diceResult.value  // 이미 굴린 주사위 결과 전달
+            );
+
+            if (result.isSuccess) {
                 showNotification(result.message, 'success');
             } else {
-                showNotification('매매 불발! 다른 토지를 선택하세요.', 'warning');
+                showNotification(result.message, 'warning');
             }
 
             this.nextPlayerOrPhase('land');
@@ -862,6 +946,7 @@ class GameApp {
         renderGameBoard();
         renderPlayerPanels();
         renderGameLog();
+        renderProjectMap();
     }
 
     // 게임 불러오기

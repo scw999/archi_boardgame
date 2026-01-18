@@ -50,15 +50,16 @@ export function selectLand(playerIndex, landIndex, priceType) {
 }
 
 // 토지 구매 시도 (주사위 굴리기)
-export function attemptLandPurchase(playerIndex, landIndex, priceType) {
+// externalDiceResult: 외부에서 이미 굴린 주사위 결과 (선택적)
+export function attemptLandPurchase(playerIndex, landIndex, priceType, externalDiceResult = null) {
     const selection = selectLand(playerIndex, landIndex, priceType);
     if (!selection.success) {
         return selection;
     }
 
-    // 주사위 굴리기
-    const diceResult = rollDice();
-    const isSuccess = checkLandPurchase(diceResult, selection.requiredDice);
+    // 주사위 결과 - 외부에서 전달받았으면 그것을 사용, 아니면 새로 굴림
+    const diceResult = externalDiceResult !== null ? externalDiceResult : rollDice();
+    const isSuccess = priceType === 'market' ? true : checkLandPurchase(diceResult, selection.requiredDice);
 
     const result = {
         ...selection,
