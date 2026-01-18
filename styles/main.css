@@ -3899,3 +3899,400 @@ body {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+/* ===== 유틸리티 버튼 ===== */
+#game-utility-buttons {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 200;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.utility-btn {
+  padding: 0.5rem 1rem;
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.utility-btn:hover {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  transform: translateY(-1px);
+}
+
+/* ===== 단가표 테이블 ===== */
+.budget-table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.table-section {
+  margin-bottom: 1.5rem;
+}
+
+.table-section h3 {
+  margin: 0 0 0.75rem;
+  color: var(--accent-gold);
+  font-size: 1rem;
+}
+
+.budget-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.budget-table th,
+.budget-table td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.budget-table th {
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.budget-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.budget-table .building-cell,
+.budget-table .constructor-cell {
+  font-weight: 600;
+}
+
+.budget-table .number-cell {
+  text-align: right;
+  font-family: monospace;
+}
+
+.budget-table .number-cell.total {
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+.budget-table .type-cell {
+  text-align: center;
+}
+
+.budget-table .desc-cell {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  max-width: 150px;
+}
+
+.constructor-table th,
+.constructor-table td {
+  font-size: 0.8rem;
+}
+
+.budget-notes {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.budget-notes p {
+  margin: 0 0 0.5rem;
+  color: var(--accent-gold);
+}
+
+.budget-notes ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.budget-notes li {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+/* ===== 설계 미리보기 모달 ===== */
+#design-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: fadeIn 0.2s ease;
+}
+
+#design-preview-modal .modal-content.design-preview {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  max-width: 500px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#design-preview-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#design-preview-modal .modal-header h2 {
+  margin: 0;
+  color: var(--accent-gold);
+  font-size: 1.25rem;
+}
+
+#design-preview-modal .modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+#design-preview-modal .modal-close-btn:hover {
+  color: var(--text-primary);
+}
+
+#design-preview-modal .blueprint-modal {
+  padding: 1.5rem;
+}
+
+#design-preview-modal .blueprint-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+#design-preview-modal .building-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+#design-preview-modal .blueprint-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+#design-preview-modal .masterpiece-badge {
+  display: inline-block;
+  background: var(--accent-gold);
+  color: #000;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+#design-preview-modal .blueprint-image {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+#design-preview-modal .blueprint-frame {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+#design-preview-modal .blueprint-grid {
+  font-size: 4rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+#design-preview-modal .blueprint-label {
+  font-size: 0.75rem;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#design-preview-modal .design-details {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+#design-preview-modal .detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#design-preview-modal .detail-row:last-child {
+  border-bottom: none;
+}
+
+#design-preview-modal .detail-row .label {
+  color: var(--text-muted);
+}
+
+#design-preview-modal .detail-row .value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#design-preview-modal .detail-row.highlight .value {
+  color: var(--accent-gold);
+}
+
+#design-preview-modal .preview-warning {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: var(--radius-md);
+}
+
+#design-preview-modal .preview-warning p {
+  margin: 0;
+  color: var(--accent-gold);
+  font-size: 0.85rem;
+}
+
+#design-preview-modal .modal-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#design-preview-modal .btn-cancel-design {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+#design-preview-modal .btn-cancel-design:hover {
+  background: var(--bg-primary);
+  border-color: var(--text-muted);
+}
+
+#design-preview-modal .btn-confirm-design {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: var(--accent-blue);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+#design-preview-modal .btn-confirm-design:hover {
+  background: var(--accent-purple);
+  transform: translateY(-1px);
+}
+
+/* ===== 공통 액션 패널 ===== */
+#common-action-panel {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#common-action-panel .panel-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#common-action-panel .action-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.common-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 80px;
+}
+
+.common-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.common-action-btn .btn-icon {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.common-action-btn .btn-text {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.common-action-btn .btn-value {
+  font-size: 0.65rem;
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+.common-action-btn.pm:hover {
+  border-color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.common-action-btn.sell-land:hover {
+  border-color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.2);
+}
+
+.common-action-btn.sell-building:hover {
+  border-color: var(--accent-purple);
+  background: rgba(147, 51, 234, 0.2);
+}
+
+.common-action-btn.skip:hover {
+  border-color: var(--text-muted);
+}
