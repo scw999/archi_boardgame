@@ -87,6 +87,88 @@ export function attemptLandPurchase(playerIndex, landIndex, priceType, externalD
     return result;
 }
 
+// 토지 구매 시도 - 토지 객체 직접 전달 (인덱스 문제 우회)
+export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResult) {
+    const player = gameState.players[playerIndex];
+
+    if (!land) {
+        return { success: false, message: '토지 정보가 없습니다.' };
+    }
+
+    // 가격 타입별 가격 가져오기
+    const price = land.prices[priceType];
+    if (price === null || price === undefined) {
+        return { success: false, message: `${priceType === 'urgent' ? '급매' : '경매'} 거래가 불가능한 토지입니다.` };
+    }
+
+    // 필요한 주사위 가져오기
+    const requiredDice = land.diceRequired[priceType];
+    if (!requiredDice || requiredDice.length === 0) {
+        return { success: false, message: '이 가격으로는 거래할 수 없습니다.' };
+    }
+
+    // 개발 비용 계산
+    const developmentCost = calculateLandDevelopmentCost(land);
+    const totalCost = price + developmentCost;
+
+    // 자금 체크 (대출 가능 금액 포함)
+    const maxAvailable = player.money + gameState.getMaxLoan(player) - player.loan;
+    if (totalCost > maxAvailable) {
+        return {
+            success: false,
+            message: `자금이 부족합니다. (필요: ${gameState.formatMoney(totalCost)}, 가용: ${gameState.formatMoney(maxAvailable)})`
+        };
+    }
+
+    // 주사위 성공 여부 확인
+    const isSuccess = priceType === 'market' ? true : checkLandPurchase(diceResult, requiredDice);
+
+    const result = {
+        land,
+        priceType,
+        price,
+        developmentCost,
+        totalCost,
+        requiredDice,
+        diceResult,
+        diceEmoji: getDiceEmoji(diceResult),
+        isSuccess
+    };
+
+    if (isSuccess) {
+        // 대출 필요 여부 확인
+        let loanNeeded = totalCost - player.money;
+        if (loanNeeded > 0) {
+            gameState.takeLoan(playerIndex, loanNeeded);
+        }
+
+        // 자금 지불
+        gameState.payMoney(playerIndex, totalCost);
+
+        // 프로젝트에 토지 정보 저장
+        const project = player.currentProject;
+        project.land = land;
+        project.landPrice = price;
+        project.priceType = priceType;
+        project.developmentCost = developmentCost;
+
+        // availableLands에서 해당 토지 제거 (ID로 찾아서)
+        const landIndex = gameState.availableLands.findIndex(l => l.id === land.id);
+        if (landIndex !== -1) {
+            gameState.availableLands.splice(landIndex, 1);
+        }
+
+        result.message = `${getDiceEmoji(diceResult)} 낙찰 성공! ${land.name} 구매 완료`;
+        gameState.addLog(`${player.name}: ${result.message}`);
+    } else {
+        // 구매 실패
+        result.message = `${getDiceEmoji(diceResult)} 매매 불발! 다른 토지를 선택하거나 대기하세요.`;
+        gameState.addLog(`${player.name}: ${land.name} 매매 불발`);
+    }
+
+    return result;
+}
+
 // 토지 구매 완료
 function completeLandPurchase(playerIndex, landIndex, priceType, selection) {
     const player = gameState.players[playerIndex];

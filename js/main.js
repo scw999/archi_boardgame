@@ -5,7 +5,7 @@ import { renderPlayerPanels } from './ui/player-panel.js';
 import { renderCardGrid, highlightCard, renderBuildingSelector } from './ui/card-display.js';
 import { showDiceRoll, showStartingDiceRoll, showLandPurchaseDice, showRiskCardDraw } from './ui/dice-roller.js';
 import { initProjectMap, renderProjectMap, renderCityGrid } from './ui/game-map.js';
-import { selectLand, attemptLandPurchase, checkLandPhaseComplete, getLandDisplayInfo } from './phases/land-phase.js';
+import { selectLand, attemptLandPurchase, attemptLandPurchaseByLand, checkLandPhaseComplete, getLandDisplayInfo } from './phases/land-phase.js';
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
 import { calculateSalePrice, completeEvaluation, checkEvaluationPhaseComplete, getRoundSummary, getFinalResults } from './phases/evaluation-phase.js';
@@ -465,7 +465,6 @@ class GameApp {
         const player = gameState.getCurrentPlayer();
 
         // 주사위 모달 표시 전에 선택 정보를 로컬 변수에 저장
-        // (외부 클릭 핸들러가 this.selectedCardIndex를 null로 만들 수 있음)
         const savedLandIndex = this.selectedCardIndex;
         const priceType = this.selectedPriceType;
         const land = gameState.availableLands[savedLandIndex];
@@ -475,8 +474,8 @@ class GameApp {
             return;
         }
 
-        // 토지 ID 저장 (인덱스 변경에 대비)
-        const landId = land.id;
+        // 토지 객체를 완전히 복사해서 저장 (참조 문제 방지)
+        const savedLand = { ...land };
 
         // 외부 클릭 핸들러 제거 (주사위 모달 중 오작동 방지)
         if (this._outsideClickHandler) {
@@ -488,7 +487,7 @@ class GameApp {
         document.getElementById('purchase-options')?.classList.add('hidden');
 
         if (priceType === 'market') {
-            // 시세는 항상 성공
+            // 시세는 항상 성공 - 인덱스 기반 함수 사용
             const result = attemptLandPurchase(gameState.currentPlayerIndex, savedLandIndex, 'market');
             if (result.isSuccess) {
                 showNotification(result.message, 'success');
@@ -499,26 +498,17 @@ class GameApp {
         } else {
             // 급매/경매는 주사위
             const diceResult = await showLandPurchaseDice(
-                land.name,
+                savedLand.name,
                 priceType,
-                land.diceRequired[priceType]
+                savedLand.diceRequired[priceType]
             );
 
-            // 주사위 굴린 후, 토지 ID로 현재 인덱스 다시 찾기 (안전 장치)
-            let currentLandIndex = gameState.availableLands.findIndex(l => l.id === landId);
-
-            // 인덱스를 찾지 못하면 원래 인덱스 사용
-            if (currentLandIndex === -1) {
-                console.warn('Land not found by ID, using original index');
-                currentLandIndex = savedLandIndex;
-            }
-
-            // 토지 구매 시도
-            const result = attemptLandPurchase(
+            // 토지 객체를 직접 전달하는 새 함수 사용 (인덱스 문제 완전 우회)
+            const result = attemptLandPurchaseByLand(
                 gameState.currentPlayerIndex,
-                currentLandIndex,
+                savedLand,
                 priceType,
-                diceResult.value  // 이미 굴린 주사위 결과 전달
+                diceResult.value
             );
 
             if (result.isSuccess) {
