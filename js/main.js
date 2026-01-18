@@ -391,8 +391,16 @@ class GameApp {
         // 기본 선택
         optionsContainer.querySelector('.price-btn.market')?.classList.add('selected');
 
-        // 구매 시도
-        document.getElementById('confirm-purchase')?.addEventListener('click', async () => {
+        // 구매 시도 - 이벤트 버블링 방지
+        document.getElementById('confirm-purchase')?.addEventListener('click', async (event) => {
+            event.stopPropagation();  // 버블링 방지
+            event.preventDefault();
+
+            // 중복 클릭 방지
+            const btn = event.currentTarget;
+            if (btn.disabled) return;
+            btn.disabled = true;
+
             await this.attemptPurchase();
         });
     }
@@ -428,6 +436,10 @@ class GameApp {
             this._outsideClickHandler = (event) => {
                 const purchasePanel = optionsContainer.querySelector('.purchase-panel');
                 const cardGrid = document.getElementById('card-grid');
+                const diceContainer = document.getElementById('dice-container');
+
+                // 주사위 모달이 활성화되어 있으면 무시
+                if (diceContainer && diceContainer.classList.contains('active')) return;
 
                 // 패널이 숨겨져 있으면 무시
                 if (optionsContainer.classList.contains('hidden')) return;
@@ -437,6 +449,9 @@ class GameApp {
 
                 // 클릭이 카드 그리드 내부이면 무시 (다른 카드 선택 허용)
                 if (cardGrid && cardGrid.contains(event.target)) return;
+
+                // 클릭이 주사위 컨테이너 내부이면 무시
+                if (diceContainer && diceContainer.contains(event.target)) return;
 
                 // 그 외의 경우 패널 닫기
                 this.closePurchaseOptions();
@@ -451,14 +466,17 @@ class GameApp {
 
         // 주사위 모달 표시 전에 선택 정보를 로컬 변수에 저장
         // (외부 클릭 핸들러가 this.selectedCardIndex를 null로 만들 수 있음)
-        const landIndex = this.selectedCardIndex;
+        const savedLandIndex = this.selectedCardIndex;
         const priceType = this.selectedPriceType;
-        const land = gameState.availableLands[landIndex];
+        const land = gameState.availableLands[savedLandIndex];
 
-        if (landIndex === null || !land) {
+        if (savedLandIndex === null || !land) {
             showNotification('토지를 선택해주세요.', 'error');
             return;
         }
+
+        // 토지 ID 저장 (인덱스 변경에 대비)
+        const landId = land.id;
 
         // 외부 클릭 핸들러 제거 (주사위 모달 중 오작동 방지)
         if (this._outsideClickHandler) {
@@ -466,9 +484,12 @@ class GameApp {
             this._outsideClickHandler = null;
         }
 
+        // 구매 옵션 패널 먼저 숨기기
+        document.getElementById('purchase-options')?.classList.add('hidden');
+
         if (priceType === 'market') {
             // 시세는 항상 성공
-            const result = attemptLandPurchase(gameState.currentPlayerIndex, landIndex, 'market');
+            const result = attemptLandPurchase(gameState.currentPlayerIndex, savedLandIndex, 'market');
             if (result.isSuccess) {
                 showNotification(result.message, 'success');
                 this.nextPlayerOrPhase('land');
@@ -483,10 +504,19 @@ class GameApp {
                 land.diceRequired[priceType]
             );
 
-            // 로컬 변수 사용하여 구매 시도 (this.selectedCardIndex 대신)
+            // 주사위 굴린 후, 토지 ID로 현재 인덱스 다시 찾기 (안전 장치)
+            let currentLandIndex = gameState.availableLands.findIndex(l => l.id === landId);
+
+            // 인덱스를 찾지 못하면 원래 인덱스 사용
+            if (currentLandIndex === -1) {
+                console.warn('Land not found by ID, using original index');
+                currentLandIndex = savedLandIndex;
+            }
+
+            // 토지 구매 시도
             const result = attemptLandPurchase(
                 gameState.currentPlayerIndex,
-                landIndex,
+                currentLandIndex,
                 priceType,
                 diceResult.value  // 이미 굴린 주사위 결과 전달
             );
@@ -500,7 +530,6 @@ class GameApp {
             this.nextPlayerOrPhase('land');
         }
 
-        document.getElementById('purchase-options')?.classList.add('hidden');
         this.selectedCardIndex = null;
     }
 
