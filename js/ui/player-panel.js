@@ -15,36 +15,60 @@ export function renderPlayerPanels() {
 function renderPlayerPanel(player, isActive) {
     const project = player.currentProject;
 
+    // 돈 상태 클래스 결정
+    const moneyClass = player.money >= 200000000 ? 'high' :
+        player.money >= 50000000 ? '' :
+            player.money >= 10000000 ? 'low' : 'critical';
+
+    // 와일드카드 개수
+    const wildcardCount = player.wildcards?.length || 0;
+
     return `
     <div class="player-panel ${isActive ? 'active' : ''}" data-player-id="${player.id}">
       <div class="panel-header">
         <span class="player-name">${player.name}</span>
-        ${isActive ? '<span class="turn-indicator">🎯</span>' : ''}
+        ${isActive ? '<span class="turn-indicator">🎯 내 턴</span>' : ''}
       </div>
-      
+
       <div class="panel-body">
+        <div class="money-display ${moneyClass}">
+          <span class="money-icon">💰</span>
+          <span class="money-value">${gameState.formatMoney(player.money)}</span>
+        </div>
+
         <div class="money-info">
-          <div class="money-row">
-            <span class="label">💰 보유 자금</span>
-            <span class="value">${gameState.formatMoney(player.money)}</span>
-          </div>
           <div class="money-row ${player.loan > 0 ? 'warning' : ''}">
-            <span class="label">🏦 대출금</span>
-            <span class="value">${gameState.formatMoney(player.loan)}</span>
+            <span class="label">🏦 대출</span>
+            <span class="value">${player.loan > 0 ? gameState.formatMoney(player.loan) : '-'}</span>
           </div>
           <div class="money-row">
-            <span class="label">📊 대출 한도</span>
+            <span class="label">📊 한도</span>
             <span class="value">${gameState.formatMoney(gameState.getMaxLoan(player))}</span>
           </div>
+          ${player.loan > 0 ? `
+          <div class="money-row interest">
+            <span class="label">💹 이자율</span>
+            <span class="value">${(player.interestRate * 100).toFixed(1)}%</span>
+          </div>
+          ` : ''}
         </div>
-        
+
         ${project ? renderProjectStatus(project) : ''}
-        
-        <div class="buildings-count">
-          🏢 완성 건물: ${player.buildings.length}개
+
+        <div class="stats-row">
+          <div class="stat-item">
+            <span class="stat-icon">🏢</span>
+            <span class="stat-value">${player.buildings.length}</span>
+            <span class="stat-label">건물</span>
+          </div>
+          ${wildcardCount > 0 ? `
+          <div class="stat-item wildcard">
+            <span class="stat-icon">🎴</span>
+            <span class="stat-value">${wildcardCount}</span>
+            <span class="stat-label">카드</span>
+          </div>
+          ` : ''}
         </div>
-        
-        ${!player.wildcardUsed ? '<div class="wildcard-badge">🃏 와일드카드 보유</div>' : ''}
       </div>
     </div>
   `;

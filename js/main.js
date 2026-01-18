@@ -552,10 +552,24 @@ class GameApp {
         const result = completeDesign(gameState.currentPlayerIndex, this.selectedArchitectIndex, this.selectedBuildingName);
 
         if (result.success) {
+            // 설계 패널 숨기기
+            this.hideDesignPanel();
             // 설계도 모달 표시
             this.showBlueprintModal(architect, building, result);
         } else {
             showNotification(result.message, 'error');
+        }
+    }
+
+    // 설계 패널 숨기기
+    hideDesignPanel() {
+        const designPanel = document.getElementById('design-panel');
+        if (designPanel) {
+            designPanel.remove();
+        }
+        const actionArea = document.getElementById('action-area');
+        if (actionArea) {
+            actionArea.innerHTML = '';
         }
     }
 
@@ -897,38 +911,86 @@ class GameApp {
         }
     }
 
+    // 시공 패널 숨기기
+    hideConstructionPanel() {
+        const constructionPanel = document.getElementById('construction-panel');
+        if (constructionPanel) {
+            constructionPanel.remove();
+        }
+        const actionArea = document.getElementById('action-area');
+        if (actionArea) {
+            actionArea.innerHTML = '';
+        }
+    }
+
     // 시공 실행
     async executeConstruction(constructorIndex, constructor, check) {
+        // 시공 패널 숨기기
+        this.hideConstructionPanel();
+
         // 시공사 선택
         const result = selectConstructor(gameState.currentPlayerIndex, constructorIndex);
 
         if (result.success) {
             showNotification(result.message, 'success');
 
-            // 리스크 카드 뽑기 안내
-            showResultModal('🎴 리스크 카드 뽑기', `
+            // 리스크 카드 자동 공개
+            const player = gameState.getCurrentPlayer();
+            const riskCards = player.currentProject.risks;
+
+            showResultModal('🎴 리스크 카드 공개', `
                 <div class="risk-draw-intro">
                     <p>시공 기간 동안 발생할 수 있는 리스크를 확인합니다.</p>
-                    <p><strong>${result.riskCount}장</strong>의 리스크 카드를 뽑습니다.</p>
+                    <p><strong>${result.riskCount}장</strong>의 리스크 카드가 공개됩니다.</p>
                     ${constructor.riskBlocks > 0
                     ? `<p class="defense-note">🛡️ ${constructor.name}이(가) 최대 ${constructor.riskBlocks}개까지 방어합니다.</p>`
                     : ''
                 }
                 </div>
             `, async () => {
-                // 리스크 카드 공개
-                const player = gameState.getCurrentPlayer();
-                await showRiskCardDraw(player.currentProject.risks);
-
-                // 리스크 처리
-                const riskResult = processRisks(gameState.currentPlayerIndex);
-
-                if (riskResult.success) {
-                    this.showConstructionResult(constructor, riskResult);
-                }
+                // 리스크 카드 자동 공개 (수동 클릭 아닌 자동)
+                await this.showRiskCardsAuto(riskCards, constructor);
             });
         } else {
             showNotification(result.message, 'error');
+        }
+    }
+
+    // 리스크 카드 자동 공개
+    async showRiskCardsAuto(riskCards, constructor) {
+        // 순차적으로 리스크 카드 공개
+        let currentIndex = 0;
+
+        const showNextCard = () => {
+            return new Promise((resolve) => {
+                if (currentIndex >= riskCards.length) {
+                    resolve();
+                    return;
+                }
+
+                const risk = riskCards[currentIndex];
+                const isBlocked = constructor.riskBlocks > currentIndex && risk.blockable !== false;
+
+                // 1초마다 카드 공개
+                setTimeout(() => {
+                    // 카드 공개 알림
+                    const blockText = isBlocked ? ' (🛡️ 방어!)' : '';
+                    showNotification(`${currentIndex + 1}/${riskCards.length}개월: ${risk.emoji} ${risk.name}${blockText}`,
+                        isBlocked ? 'success' : (risk.severity === 'high' ? 'error' : 'warning'));
+
+                    currentIndex++;
+                    showNextCard().then(resolve);
+                }, 800);
+            });
+        };
+
+        await showNextCard();
+
+        // 모든 카드 공개 후 리스크 처리
+        const riskResult = processRisks(gameState.currentPlayerIndex);
+
+        if (riskResult.success) {
+            this.showConstructionResult(constructor, riskResult);
         }
     }
 
@@ -1174,6 +1236,302 @@ class GameApp {
         const cityGrid = document.getElementById('city-grid');
         if (cityGrid && gameState.phase !== 'setup') {
             cityGrid.classList.remove('hidden');
+        }
+
+        // 자산 클릭 이벤트 바인딩
+        this.bindPropertyClickEvents();
+
+        // 와일드카드 패널 업데이트
+        this.updateWildcardPanel();
+    }
+
+    // 자산 클릭 이벤트 바인딩
+    bindPropertyClickEvents() {
+        // 도시 지도의 셀 클릭 이벤트
+        document.querySelectorAll('.city-cell.has-building').forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                const x = parseInt(cell.dataset.x);
+                const y = parseInt(cell.dataset.y);
+                const cellData = gameState.cityMap[y][x];
+
+                if (cellData.owner === gameState.currentPlayerIndex) {
+                    this.showPropertyDetail(cellData);
+                }
+            });
+        });
+
+        // 프로젝트 맵의 건물 클릭 이벤트
+        document.querySelectorAll('.project-tile').forEach(tile => {
+            tile.addEventListener('click', () => {
+                const playerIndex = parseInt(tile.dataset.player);
+                if (playerIndex === gameState.currentPlayerIndex) {
+                    const player = gameState.players[playerIndex];
+                    if (player.currentProject) {
+                        this.showPropertyDetail(player.currentProject);
+                    }
+                }
+            });
+        });
+    }
+
+    // 자산 상세 정보 모달
+    showPropertyDetail(property) {
+        const player = gameState.getCurrentPlayer();
+
+        // property가 cell data인지 project인지 확인
+        const isProject = property.land !== undefined;
+        const project = isProject ? property : property.project;
+
+        if (!project || !project.building) {
+            showNotification('상세 정보를 볼 수 없습니다.', 'warning');
+            return;
+        }
+
+        const totalInvestment = (project.landPrice || 0) +
+            (project.developmentCost || 0) +
+            (project.designFee || 0) +
+            (project.constructionCost || 0);
+
+        const estimatedValue = Math.round(totalInvestment * (project.evaluationFactor || 1));
+
+        showResultModal(`📊 ${project.building.name} 상세 정보`, `
+            <div class="property-detail">
+                <div class="property-header">
+                    <span class="property-emoji">${project.building.emoji}</span>
+                    <div class="property-title">
+                        <h2>${project.building.name}</h2>
+                        <span class="property-location">📍 ${project.land.name}</span>
+                    </div>
+                </div>
+
+                <div class="property-info-grid">
+                    <div class="info-section">
+                        <h4>🏗️ 프로젝트 정보</h4>
+                        <div class="info-row">
+                            <span class="label">건축가</span>
+                            <span class="value">${project.architect?.portrait || ''} ${project.architect?.name || '-'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">시공사</span>
+                            <span class="value">${project.constructor?.emoji || ''} ${project.constructor?.name || '-'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">평가 팩터</span>
+                            <span class="value highlight">x${(project.evaluationFactor || 1).toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>💰 투자 내역</h4>
+                        <div class="info-row">
+                            <span class="label">대지비</span>
+                            <span class="value">${gameState.formatMoney(project.landPrice || 0)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">개발비</span>
+                            <span class="value">${gameState.formatMoney(project.developmentCost || 0)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">설계비</span>
+                            <span class="value">${gameState.formatMoney(project.designFee || 0)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">시공비</span>
+                            <span class="value">${gameState.formatMoney(project.constructionCost || 0)}</span>
+                        </div>
+                        <div class="info-row total">
+                            <span class="label">총 투자</span>
+                            <span class="value">${gameState.formatMoney(totalInvestment)}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>📈 예상 가치</h4>
+                        <div class="info-row large">
+                            <span class="label">현재 예상 가치</span>
+                            <span class="value gold">${gameState.formatMoney(estimatedValue)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">수익률</span>
+                            <span class="value ${estimatedValue > totalInvestment ? 'profit' : 'loss'}">
+                                ${((estimatedValue / totalInvestment - 1) * 100).toFixed(1)}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="property-actions">
+                    <button class="btn-sell-property" id="btn-sell-this-property">
+                        🏷️ 매각하기 (예상: ${gameState.formatMoney(estimatedValue)})
+                    </button>
+                </div>
+            </div>
+        `, null, true);
+
+        // 매각 버튼 이벤트
+        setTimeout(() => {
+            const sellBtn = document.getElementById('btn-sell-this-property');
+            if (sellBtn) {
+                sellBtn.onclick = () => {
+                    this.confirmPropertySale(project, estimatedValue);
+                };
+            }
+        }, 100);
+    }
+
+    // 자산 매각 확인
+    confirmPropertySale(project, estimatedValue) {
+        if (confirm(`정말로 ${project.building.name}을(를) ${gameState.formatMoney(estimatedValue)}에 매각하시겠습니까?`)) {
+            const player = gameState.getCurrentPlayer();
+
+            // 매각 처리
+            player.money += estimatedValue;
+
+            // 대출 상환
+            if (player.loan > 0) {
+                const repayment = Math.min(player.loan, estimatedValue);
+                player.loan -= repayment;
+                gameState.addLog(`${player.name}: 대출 ${gameState.formatMoney(repayment)} 상환`);
+            }
+
+            // 건물 제거
+            const buildingIndex = player.buildings.findIndex(b => b === project);
+            if (buildingIndex !== -1) {
+                player.buildings.splice(buildingIndex, 1);
+            }
+
+            // 지도에서 제거
+            for (let y = 0; y < 5; y++) {
+                for (let x = 0; x < 5; x++) {
+                    if (gameState.cityMap[y][x].project === project) {
+                        gameState.cityMap[y][x].owner = null;
+                        gameState.cityMap[y][x].project = null;
+                        gameState.cityMap[y][x].building = null;
+                    }
+                }
+            }
+
+            gameState.addLog(`${player.name}: ${project.building.name} 매각 (${gameState.formatMoney(estimatedValue)})`);
+            showNotification(`${project.building.name}을(를) 매각했습니다!`, 'success');
+
+            // 모달 닫기 및 UI 업데이트
+            document.querySelector('.modal-overlay')?.remove();
+            this.updateUI();
+        }
+    }
+
+    // 와일드카드 패널 업데이트
+    updateWildcardPanel() {
+        const player = gameState.getCurrentPlayer();
+        if (!player || !player.wildcards || player.wildcards.length === 0) {
+            // 와일드카드 패널 숨기기
+            const wildcardPanel = document.getElementById('wildcard-panel');
+            if (wildcardPanel) wildcardPanel.classList.add('hidden');
+            return;
+        }
+
+        let wildcardPanel = document.getElementById('wildcard-panel');
+        if (!wildcardPanel) {
+            wildcardPanel = document.createElement('div');
+            wildcardPanel.id = 'wildcard-panel';
+            wildcardPanel.className = 'wildcard-panel';
+            document.querySelector('.game-main')?.appendChild(wildcardPanel);
+        }
+
+        wildcardPanel.innerHTML = `
+            <div class="wildcard-header">
+                <h4>🎴 보유 와일드카드</h4>
+                <span class="card-count">${player.wildcards.length}장</span>
+            </div>
+            <div class="wildcard-list">
+                ${player.wildcards.map((card, index) => `
+                    <div class="wildcard-item" data-index="${index}">
+                        <span class="card-name">${card.name}</span>
+                        <span class="card-desc">${card.description}</span>
+                        <button class="btn-use-wildcard" data-index="${index}">사용</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        wildcardPanel.classList.remove('hidden');
+
+        // 와일드카드 사용 버튼 이벤트
+        wildcardPanel.querySelectorAll('.btn-use-wildcard').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.useWildcard(index);
+            });
+        });
+    }
+
+    // 와일드카드 사용
+    useWildcard(index) {
+        const player = gameState.getCurrentPlayer();
+        const card = player.wildcards[index];
+
+        if (!card) return;
+
+        let canUse = false;
+        let message = '';
+
+        switch (card.effect.type) {
+            case 'land_discount':
+                // 대지 구매 단계에서만 사용 가능
+                if (gameState.phase === GAME_PHASES.LAND_PURCHASE) {
+                    player.landDiscountActive = card.effect.value;
+                    canUse = true;
+                    message = `다음 토지 구매 시 ${card.effect.value * 100}% 할인이 적용됩니다!`;
+                } else {
+                    message = '대지 구매 단계에서만 사용할 수 있습니다.';
+                }
+                break;
+
+            case 'design_free':
+                // 설계 단계에서만 사용 가능
+                if (gameState.phase === GAME_PHASES.DESIGN) {
+                    player.designFreeActive = true;
+                    canUse = true;
+                    message = '다음 설계비가 무료가 됩니다!';
+                } else {
+                    message = '설계 단계에서만 사용할 수 있습니다.';
+                }
+                break;
+
+            case 'risk_block':
+                // 시공 단계에서만 사용 가능
+                if (gameState.phase === GAME_PHASES.CONSTRUCTION) {
+                    player.extraRiskBlock = (player.extraRiskBlock || 0) + 1;
+                    canUse = true;
+                    message = '리스크 방어력이 1 증가했습니다!';
+                } else {
+                    message = '시공 단계에서만 사용할 수 있습니다.';
+                }
+                break;
+
+            case 'bonus_dice':
+                // 언제든 사용 가능 (저장해두고 필요할 때 사용)
+                player.bonusDiceActive = true;
+                canUse = true;
+                message = '주사위 재굴림 기회가 생겼습니다!';
+                break;
+
+            case 'loan_rate_cut':
+                // 즉시 적용
+                player.interestRate *= (1 - card.effect.value);
+                canUse = true;
+                message = `이자율이 ${card.effect.value * 100}% 감소했습니다!`;
+                break;
+        }
+
+        if (canUse) {
+            // 카드 제거
+            player.wildcards.splice(index, 1);
+            showNotification(`🎴 ${card.name} 사용! ${message}`, 'success');
+            gameState.addLog(`${player.name}: ${card.name} 사용`);
+            this.updateWildcardPanel();
+        } else {
+            showNotification(message, 'warning');
         }
     }
 

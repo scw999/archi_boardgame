@@ -2444,3 +2444,595 @@ body {
   from { transform: scale(1); }
   to { transform: scale(1.05); }
 }
+/* ===== 자산 상세 정보 모달 ===== */
+.property-detail {
+  padding: 1rem;
+}
+
+.property-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.property-emoji {
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.property-title h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.5rem;
+}
+
+.property-location {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.property-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.property-info-grid .info-section {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.property-info-grid .info-section h4 {
+  margin: 0 0 0.75rem 0;
+  color: var(--accent-gold);
+  font-size: 0.9rem;
+}
+
+.property-info-grid .info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.property-info-grid .info-row:last-child {
+  border-bottom: none;
+}
+
+.property-info-grid .info-row .label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.property-info-grid .info-row .value {
+  font-weight: 600;
+}
+
+.property-info-grid .info-row .value.highlight {
+  color: var(--accent-gold);
+}
+
+.property-info-grid .info-row .value.gold {
+  color: var(--accent-gold);
+  font-size: 1.2rem;
+}
+
+.property-info-grid .info-row .value.profit {
+  color: var(--accent-emerald);
+}
+
+.property-info-grid .info-row .value.loss {
+  color: var(--accent-red);
+}
+
+.property-info-grid .info-row.total {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.property-info-grid .info-row.total .value {
+  color: var(--accent-blue);
+  font-size: 1.1rem;
+}
+
+.property-info-grid .info-row.large {
+  padding: 0.75rem 0;
+}
+
+.property-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-sell-property {
+  padding: 1rem 2rem;
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #1a1a2e;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-sell-property:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+/* ===== 와일드카드 패널 ===== */
+.wildcard-panel {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  max-width: 300px;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wildcard-panel.hidden {
+  display: none;
+}
+
+.wildcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wildcard-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--accent-gold);
+}
+
+.card-count {
+  background: var(--accent-gold);
+  color: #1a1a2e;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.wildcard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.wildcard-item {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wildcard-item .card-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.wildcard-item .card-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  width: 100%;
+}
+
+.btn-use-wildcard {
+  padding: 0.3rem 0.6rem;
+  background: var(--gradient-blue);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-use-wildcard:hover {
+  transform: scale(1.05);
+}
+
+/* ===== 돈 표시 개선 ===== */
+.player-money {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-money::before {
+  content: '💰';
+}
+
+.player-money.high {
+  color: var(--accent-emerald);
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.player-money.low {
+  color: var(--accent-orange);
+}
+
+.player-money.critical {
+  color: var(--accent-red);
+  animation: moneyPulse 1s ease-in-out infinite;
+}
+
+@keyframes moneyPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ===== 진행 상황 표시 개선 ===== */
+.phase-progress {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.phase-step {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+}
+
+.phase-step.active {
+  background: var(--gradient-gold);
+  color: #1a1a2e;
+  font-weight: 700;
+}
+
+.phase-step.completed {
+  background: var(--accent-emerald);
+  color: white;
+}
+
+.phase-step-arrow {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+/* ===== 현재 턴 표시 ===== */
+.current-turn-banner {
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
+  color: #1a1a2e;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.turn-player-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.turn-player-info .avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.turn-player-info .player-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.turn-player-info .player-money-display {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.turn-phase-info {
+  text-align: right;
+}
+
+.turn-phase-info .phase-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.turn-phase-info .phase-desc {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* ===== 액션 버튼 개선 ===== */
+.action-btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-btn.pm {
+  background: var(--gradient-blue);
+  color: white;
+}
+
+.action-btn.sell {
+  background: var(--gradient-gold);
+  color: #1a1a2e;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== 돈 옵션 패널 개선 ===== */
+.money-options-panel {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.money-options-panel h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--accent-red);
+}
+
+.money-options-panel p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.money-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ===== 리스크 카드 자동 표시 ===== */
+.risk-auto-reveal {
+  text-align: center;
+  padding: 2rem;
+}
+
+.risk-auto-reveal .current-risk {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: riskReveal 0.5s ease-out;
+}
+
+.risk-auto-reveal .risk-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.risk-auto-reveal .risk-effect {
+  color: var(--text-secondary);
+}
+
+.risk-auto-reveal .blocked {
+  color: var(--accent-emerald);
+}
+
+.risk-auto-reveal .active {
+  color: var(--accent-red);
+}
+
+@keyframes riskReveal {
+  from {
+    transform: scale(0.5) rotateY(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== 플레이어 패널 돈 표시 개선 ===== */
+.player-card .money-display {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  padding: 0.5rem;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-sm);
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.player-card .money-display .money-icon {
+  font-size: 1.3rem;
+}
+
+.player-card.current .money-display {
+  background: rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+
+/* ===== 건물 선점 표시 개선 ===== */
+.city-cell.my-building {
+  cursor: pointer;
+  position: relative;
+}
+
+.city-cell.my-building::after {
+  content: '👆';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 0.8rem;
+  animation: tapHint 1s ease-in-out infinite;
+}
+
+@keyframes tapHint {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* ===== 플레이어 패널 개선 ===== */
+.player-panel .money-display {
+  text-align: center;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.player-panel .money-display .money-icon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.player-panel .money-display .money-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+
+.player-panel .money-display.high {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.player-panel .money-display.high .money-value {
+  color: var(--accent-emerald);
+}
+
+.player-panel .money-display.low {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.player-panel .money-display.low .money-value {
+  color: var(--accent-orange);
+}
+
+.player-panel .money-display.critical {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+  border-color: rgba(239, 68, 68, 0.3);
+  animation: moneyAlert 1s ease-in-out infinite;
+}
+
+.player-panel .money-display.critical .money-value {
+  color: var(--accent-red);
+}
+
+@keyframes moneyAlert {
+  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+}
+
+.stats-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.stat-item .stat-icon {
+  font-size: 1.2rem;
+}
+
+.stat-item .stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-item .stat-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.stat-item.wildcard {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.stat-item.wildcard .stat-value {
+  color: var(--accent-purple);
+}
+
+.turn-indicator {
+  background: var(--gradient-gold);
+  color: #1a1a2e;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  animation: turnPulse 2s ease-in-out infinite;
+}
+
+@keyframes turnPulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.6); }
+}
+
+.money-row.interest {
+  color: var(--accent-orange);
+}
