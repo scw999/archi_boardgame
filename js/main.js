@@ -448,11 +448,27 @@ class GameApp {
     // 토지 구매 시도
     async attemptPurchase() {
         const player = gameState.getCurrentPlayer();
-        const land = gameState.availableLands[this.selectedCardIndex];
 
-        if (this.selectedPriceType === 'market') {
+        // 주사위 모달 표시 전에 선택 정보를 로컬 변수에 저장
+        // (외부 클릭 핸들러가 this.selectedCardIndex를 null로 만들 수 있음)
+        const landIndex = this.selectedCardIndex;
+        const priceType = this.selectedPriceType;
+        const land = gameState.availableLands[landIndex];
+
+        if (landIndex === null || !land) {
+            showNotification('토지를 선택해주세요.', 'error');
+            return;
+        }
+
+        // 외부 클릭 핸들러 제거 (주사위 모달 중 오작동 방지)
+        if (this._outsideClickHandler) {
+            document.removeEventListener('click', this._outsideClickHandler);
+            this._outsideClickHandler = null;
+        }
+
+        if (priceType === 'market') {
             // 시세는 항상 성공
-            const result = attemptLandPurchase(gameState.currentPlayerIndex, this.selectedCardIndex, 'market');
+            const result = attemptLandPurchase(gameState.currentPlayerIndex, landIndex, 'market');
             if (result.isSuccess) {
                 showNotification(result.message, 'success');
                 this.nextPlayerOrPhase('land');
@@ -463,15 +479,15 @@ class GameApp {
             // 급매/경매는 주사위
             const diceResult = await showLandPurchaseDice(
                 land.name,
-                this.selectedPriceType,
-                land.diceRequired[this.selectedPriceType]
+                priceType,
+                land.diceRequired[priceType]
             );
 
-            // 주사위 결과를 전달하여 이중 굴림 방지
+            // 로컬 변수 사용하여 구매 시도 (this.selectedCardIndex 대신)
             const result = attemptLandPurchase(
                 gameState.currentPlayerIndex,
-                this.selectedCardIndex,
-                this.selectedPriceType,
+                landIndex,
+                priceType,
                 diceResult.value  // 이미 굴린 주사위 결과 전달
             );
 
@@ -485,6 +501,7 @@ class GameApp {
         }
 
         document.getElementById('purchase-options')?.classList.add('hidden');
+        this.selectedCardIndex = null;
     }
 
     // 설계 페이즈
