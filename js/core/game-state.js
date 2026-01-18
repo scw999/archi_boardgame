@@ -472,12 +472,36 @@ class GameState {
     // 라운드 종료
     endRound() {
         // 모든 프로젝트를 완성된 건물로 이동 (자산으로 보유)
-        this.players.forEach(player => {
+        this.players.forEach((player, playerIndex) => {
             if (player.currentProject && player.currentProject.building) {
                 // 건물을 자산으로 추가 (현금은 지급하지 않음 - 매각해야 현금 획득)
                 player.buildings.push({ ...player.currentProject });
                 // 대출은 상환하지 않고 유지 (건물 자산이 담보가 됨)
                 this.addLog(`🏢 ${player.name}: ${player.currentProject.building.name} 완공! (자산가치: ${this.formatMoney(player.currentProject.salePrice)})`);
+
+                // 개발지도에서 해당 프로젝트 셀을 완성 상태로 업데이트
+                // (project를 null로 설정하여 다음 라운드에 새 셀을 사용할 수 있게 함)
+                for (let y = 0; y < 5; y++) {
+                    for (let x = 0; x < 5; x++) {
+                        const cell = this.cityMap[y][x];
+                        if (cell.owner === playerIndex && cell.project === player.currentProject) {
+                            // 건물은 유지하고 project만 null로 (완성 상태)
+                            this.cityMap[y][x].project = null;
+                        }
+                    }
+                }
+            } else if (player.currentProject && player.currentProject.land && !player.currentProject.building) {
+                // 건물 없이 토지만 있는 경우 - 개발지도에서 제거
+                for (let y = 0; y < 5; y++) {
+                    for (let x = 0; x < 5; x++) {
+                        const cell = this.cityMap[y][x];
+                        if (cell.owner === playerIndex && cell.project === player.currentProject) {
+                            this.cityMap[y][x].owner = null;
+                            this.cityMap[y][x].project = null;
+                            this.cityMap[y][x].building = null;
+                        }
+                    }
+                }
             }
             player.currentProject = null;
             // 와일드카드 가로채기 사용 여부 리셋
