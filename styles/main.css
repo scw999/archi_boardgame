@@ -1979,3 +1979,275 @@ body {
   background: var(--gradient-emerald);
   margin-top: 1.5rem;
 }
+
+/* ===== 선점 카드 오버레이 ===== */
+.claimed-badge {
+  background: var(--accent-red);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.claimed-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-red);
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  z-index: 10;
+}
+
+.game-card.claimed {
+  opacity: 0.6;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.game-card.claimed .card-body {
+  position: relative;
+}
+
+/* ===== 돈벌기 옵션 패널 ===== */
+.money-options-panel {
+  background: var(--bg-secondary);
+  border: 2px solid var(--accent-orange);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.money-options-panel h4 {
+  color: var(--accent-orange);
+  margin: 0 0 0.5rem 0;
+}
+
+.money-options-panel p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+}
+
+.money-action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.money-action-buttons .action-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.8rem 1rem;
+}
+
+/* ===== 평가 결과 UI (개선) ===== */
+.evaluation-result.fancy {
+  text-align: center;
+  padding: 1rem;
+}
+
+.eval-building-showcase {
+  margin-bottom: 1.5rem;
+}
+
+.building-icon-large {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+  animation: bounceIn 0.6s ease;
+}
+
+.eval-building-showcase h2 {
+  color: var(--accent-gold);
+  margin: 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.eval-building-showcase .location {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* 수상 섹션 */
+.awards-section {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(245, 158, 11, 0.1));
+  border: 2px solid var(--accent-gold);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.awards-section h3 {
+  color: var(--accent-gold);
+  margin: 0 0 1rem 0;
+}
+
+.awards-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.award-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-tertiary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-gold);
+}
+
+.award-item .award-emoji {
+  font-size: 1.5rem;
+}
+
+.award-item .award-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.award-item .award-bonus {
+  color: var(--accent-emerald);
+  font-weight: 700;
+}
+
+.animate-pop {
+  animation: popIn 0.4s ease forwards;
+  opacity: 0;
+}
+
+.animate-pop:nth-child(1) { animation-delay: 0.1s; }
+.animate-pop:nth-child(2) { animation-delay: 0.2s; }
+.animate-pop:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 평가 상세 */
+.eval-breakdown {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.breakdown-row:last-child {
+  border-bottom: none;
+}
+
+.breakdown-row .label {
+  color: var(--text-secondary);
+}
+
+.breakdown-row .value {
+  font-weight: 600;
+}
+
+.breakdown-row .value.highlight {
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+}
+
+.breakdown-row.loss .value {
+  color: var(--accent-red);
+}
+
+.breakdown-row.bonus .value {
+  color: var(--accent-emerald);
+}
+
+.breakdown-details {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 0.25rem 0;
+}
+
+/* 최종 결과 */
+.eval-final {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.eval-final.profit {
+  border: 2px solid var(--accent-emerald);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent);
+}
+
+.eval-final.loss {
+  border: 2px solid var(--accent-red);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), transparent);
+}
+
+.final-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.final-row .value.large {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.final-row .value.super-large {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.final-row.result.profit .value {
+  color: var(--accent-emerald);
+}
+
+.final-row.result.loss .value {
+  color: var(--accent-red);
+}
+
+.celebration {
+  font-size: 1.2rem;
+  color: var(--accent-gold);
+  animation: celebrate 0.5s ease infinite alternate;
+  margin-top: 1rem;
+}
+
+.consolation {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-top: 1rem;
+}
+
+@keyframes celebrate {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
