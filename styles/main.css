@@ -3751,3 +3751,151 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
 }
+
+/* ===== 리스크 방어 선택 UI ===== */
+.defense-selection-phase {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.selection-header h3 {
+  margin: 0 0 0.5rem;
+  color: var(--accent-gold);
+}
+
+.selection-hint {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.selection-hint span {
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+.btn-confirm-defense {
+  padding: 0.8rem 2rem;
+  background: var(--gradient-blue);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-confirm-defense:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
+}
+
+/* 리스크 카드 유형 배지 */
+.risk-type-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.risk-type-badge.harmful {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.risk-type-badge.safe {
+  background: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+/* 카드 유형별 스타일 */
+.risk-card-large.harmful {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.risk-card-large.safe {
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.risk-card-large.passed {
+  opacity: 0.7;
+}
+
+/* 선택 가능한 카드 */
+.risk-card-large.selectable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.risk-card-large.selectable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+/* 방어 선택된 카드 */
+.risk-card-large.defense-selected {
+  border: 3px solid var(--accent-gold);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
+}
+
+.risk-card-large.defense-selected::before {
+  content: '🛡️';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 1.5rem;
+  z-index: 10;
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+/* 결과 요약 안전 통과 */
+.summary-stat.safe {
+  border-left: 3px solid #10b981;
+}
+
+.summary-stat.safe .stat-value {
+  color: #10b981;
+}
+
+/* 방어 노트 */
+.defense-note {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* ===== 소유자 표시 및 열람 전용 UI ===== */
+.property-owner,
+.land-owner {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--accent-blue);
+  margin-top: 0.3rem;
+}
+
+.property-actions.view-only,
+.land-actions.view-only {
+  background: rgba(100, 100, 100, 0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+}
+
+.view-only-notice {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

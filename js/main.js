@@ -1072,7 +1072,7 @@ class GameApp {
                     <div class="risk-modal-header">
                         <h2>🃏 리스크 카드 공개</h2>
                         <div class="defense-info">
-                            <span class="defense-badge">🛡️ 방어력: ${totalBlocks}개</span>
+                            <span class="defense-badge">🛡️ 방어력: <span id="defense-remaining">${totalBlocks}</span>개</span>
                             ${wildcardBlocks > 0 ? `<span class="wildcard-used">(와일드카드 ${wildcardBlocks}개 포함)</span>` : ''}
                         </div>
                         <div class="risk-progress-bar">
@@ -1097,6 +1097,13 @@ class GameApp {
                             </div>
                         `).join('')}
                     </div>
+                    <div class="defense-selection-phase" style="display: none;">
+                        <div class="selection-header">
+                            <h3>🛡️ 방어할 리스크를 선택하세요</h3>
+                            <p class="selection-hint">유해한 리스크 카드를 클릭하여 방어를 적용하세요. (남은 방어: <span id="defense-count">${totalBlocks}</span>개)</p>
+                        </div>
+                        <button class="btn-confirm-defense" id="btn-confirm-defense">방어 적용 완료</button>
+                    </div>
                     <div class="risk-result-summary" style="display: none;">
                         <div class="summary-content"></div>
                         <button class="btn-continue" id="btn-risk-continue">계속하기</button>
@@ -1106,94 +1113,47 @@ class GameApp {
             document.body.appendChild(modal);
 
             let currentIndex = 0;
-            let blockedCount = 0;
-            let activeCount = 0;
-            let usedWildcards = 0;
+            let revealedCards = [];
+            let selectedDefenses = new Set(); // 방어를 적용할 카드 인덱스
+            let remainingDefense = totalBlocks;
 
+            // 카드가 유해한지 확인 (방어가 필요한 카드)
+            const isHarmfulRisk = (risk) => {
+                return risk.type !== 'positive' && risk.type !== 'neutral' && risk.effect !== 'none';
+            };
+
+            // 카드 공개 함수
             const revealNextCard = () => {
                 if (currentIndex >= riskCards.length) {
-                    // 모든 카드 공개 완료
-                    setTimeout(() => {
-                        // 사용된 와일드카드 제거
-                        if (usedWildcards > 0 && player.wildcards) {
-                            for (let i = 0; i < usedWildcards; i++) {
-                                const idx = player.wildcards.findIndex(w => w.effect.type === 'risk_block');
-                                if (idx !== -1) {
-                                    player.wildcards.splice(idx, 1);
-                                }
-                            }
-                            gameState.addLog(`${player.name}: 리스크 방어권 ${usedWildcards}개 사용`);
-                        }
-
-                        // 결과 요약 표시
-                        const summaryEl = modal.querySelector('.risk-result-summary');
-                        const summaryContent = modal.querySelector('.summary-content');
-                        summaryContent.innerHTML = `
-                            <div class="risk-final-summary">
-                                <div class="summary-stat">
-                                    <span class="stat-label">총 리스크</span>
-                                    <span class="stat-value">${riskCards.length}개</span>
-                                </div>
-                                <div class="summary-stat success">
-                                    <span class="stat-label">🛡️ 방어 성공</span>
-                                    <span class="stat-value">${blockedCount}개</span>
-                                </div>
-                                <div class="summary-stat ${activeCount > 0 ? 'danger' : 'success'}">
-                                    <span class="stat-label">⚠️ 적용됨</span>
-                                    <span class="stat-value">${activeCount}개</span>
-                                </div>
-                            </div>
-                            ${usedWildcards > 0 ? `<p class="wildcard-note">🃏 와일드카드 ${usedWildcards}개 사용됨</p>` : ''}
-                        `;
-                        summaryEl.style.display = 'block';
-
-                        // 계속하기 버튼
-                        document.getElementById('btn-risk-continue').onclick = () => {
-                            modal.remove();
-                            // 리스크 처리
-                            const riskResult = processRisks(gameState.currentPlayerIndex);
-                            if (riskResult.success) {
-                                this.showConstructionResult(constructor, riskResult);
-                            }
-                            resolve();
-                        };
-                    }, 500);
+                    // 모든 카드 공개 완료 - 방어 선택 단계로
+                    setTimeout(() => showDefenseSelection(), 500);
                     return;
                 }
 
                 const risk = riskCards[currentIndex];
-                // 시공사 방어 + 와일드카드 방어
-                const constructorBlocksLeft = Math.max(0, constructor.riskBlocks - currentIndex);
-                const needsWildcard = constructorBlocksLeft === 0 && currentIndex < totalBlocks;
-                const isBlocked = currentIndex < totalBlocks && risk.blockable !== false;
-
-                if (isBlocked) {
-                    blockedCount++;
-                    if (needsWildcard) {
-                        usedWildcards++;
-                    }
-                } else {
-                    activeCount++;
-                }
-
                 const cardEl = modal.querySelector(`.risk-card-large[data-index="${currentIndex}"]`);
                 const cardContent = cardEl.querySelector('.card-content');
 
+                // 카드 유형 판단
+                const isHarmful = isHarmfulRisk(risk);
+                const riskTypeLabel = isHarmful ? '⚠️ 유해' : '✅ 안전';
+                const riskTypeClass = isHarmful ? 'harmful' : 'safe';
+
                 // 카드 내용 설정
-                const blockSource = isBlocked ? (needsWildcard ? '🃏 와일드카드' : `🏗️ ${constructor.name}`) : '';
                 cardContent.innerHTML = `
                     <div class="risk-emoji">${risk.emoji}</div>
                     <div class="risk-name">${risk.name}</div>
                     <div class="risk-effect">${risk.description || ''}</div>
-                    ${isBlocked
-                        ? `<div class="risk-blocked">🛡️ 방어!<br><small>${blockSource}</small></div>`
-                        : '<div class="risk-active">⚠️ 적용</div>'}
+                    <div class="risk-type-badge ${riskTypeClass}">${riskTypeLabel}</div>
                 `;
 
                 // 카드 뒤집기 애니메이션
                 cardEl.classList.add('flipped');
-                if (isBlocked) cardEl.classList.add('blocked');
-                else cardEl.classList.add('active');
+                cardEl.classList.add(riskTypeClass);
+                cardEl.dataset.harmful = isHarmful;
+                cardEl.dataset.riskType = risk.type;
+
+                revealedCards.push({ index: currentIndex, risk, isHarmful });
 
                 // 진행률 업데이트
                 const progressFill = modal.querySelector('.progress-fill');
@@ -1204,7 +1164,224 @@ class GameApp {
                 currentIndex++;
 
                 // 다음 카드
-                setTimeout(revealNextCard, 1000);
+                setTimeout(revealNextCard, 800);
+            };
+
+            // 방어 선택 단계 표시
+            const showDefenseSelection = () => {
+                const harmfulCards = revealedCards.filter(c => c.isHarmful);
+
+                // 유해한 카드가 없으면 바로 결과 표시
+                if (harmfulCards.length === 0 || totalBlocks === 0) {
+                    showFinalResult();
+                    return;
+                }
+
+                // 방어 선택 UI 표시
+                const selectionPhase = modal.querySelector('.defense-selection-phase');
+                selectionPhase.style.display = 'block';
+
+                // 유해한 카드에 클릭 이벤트 추가
+                harmfulCards.forEach(({ index }) => {
+                    const cardEl = modal.querySelector(`.risk-card-large[data-index="${index}"]`);
+                    cardEl.classList.add('selectable');
+
+                    cardEl.addEventListener('click', () => {
+                        if (selectedDefenses.has(index)) {
+                            // 선택 해제
+                            selectedDefenses.delete(index);
+                            cardEl.classList.remove('defense-selected');
+                            remainingDefense++;
+                        } else if (remainingDefense > 0) {
+                            // 선택
+                            selectedDefenses.add(index);
+                            cardEl.classList.add('defense-selected');
+                            remainingDefense--;
+                        } else {
+                            showNotification('남은 방어력이 없습니다!', 'warning');
+                        }
+
+                        // 남은 방어력 업데이트
+                        modal.querySelector('#defense-count').textContent = remainingDefense;
+                        modal.querySelector('#defense-remaining').textContent = remainingDefense;
+                    });
+                });
+
+                // 확인 버튼
+                document.getElementById('btn-confirm-defense').onclick = () => {
+                    selectionPhase.style.display = 'none';
+                    applyDefenses();
+                };
+            };
+
+            // 방어 적용 및 결과 표시
+            const applyDefenses = () => {
+                let blockedCount = 0;
+                let activeCount = 0;
+                let usedConstructorBlocks = 0;
+                let usedWildcardBlocks = 0;
+
+                revealedCards.forEach(({ index, risk, isHarmful }) => {
+                    const cardEl = modal.querySelector(`.risk-card-large[data-index="${index}"]`);
+                    const cardContent = cardEl.querySelector('.card-content');
+
+                    if (!isHarmful) {
+                        // 안전한 카드 - 그대로 통과
+                        cardEl.classList.add('passed');
+                        return;
+                    }
+
+                    if (selectedDefenses.has(index)) {
+                        // 방어 적용
+                        blockedCount++;
+
+                        // 방어 소스 결정 (시공사 먼저, 그다음 와일드카드)
+                        let blockSource;
+                        if (usedConstructorBlocks < constructor.riskBlocks) {
+                            blockSource = `🏗️ ${constructor.name}`;
+                            usedConstructorBlocks++;
+                        } else {
+                            blockSource = '🃏 와일드카드';
+                            usedWildcardBlocks++;
+                        }
+
+                        cardEl.classList.remove('harmful');
+                        cardEl.classList.add('blocked');
+
+                        // 카드 내용 업데이트
+                        cardContent.innerHTML = `
+                            <div class="risk-emoji">${risk.emoji}</div>
+                            <div class="risk-name">${risk.name}</div>
+                            <div class="risk-effect">${risk.description || ''}</div>
+                            <div class="risk-blocked">🛡️ 방어!<br><small>${blockSource}</small></div>
+                        `;
+
+                        // 리스크 카드에 방어 표시
+                        risk.isBlocked = true;
+                    } else {
+                        // 방어 안 함 - 리스크 적용
+                        activeCount++;
+                        cardEl.classList.add('active');
+
+                        cardContent.innerHTML = `
+                            <div class="risk-emoji">${risk.emoji}</div>
+                            <div class="risk-name">${risk.name}</div>
+                            <div class="risk-effect">${risk.description || ''}</div>
+                            <div class="risk-active">⚠️ 적용됨</div>
+                        `;
+
+                        risk.isBlocked = false;
+                    }
+                });
+
+                // 사용된 와일드카드 제거
+                if (usedWildcardBlocks > 0 && player.wildcards) {
+                    for (let i = 0; i < usedWildcardBlocks; i++) {
+                        const idx = player.wildcards.findIndex(w => w.effect.type === 'risk_block');
+                        if (idx !== -1) {
+                            player.wildcards.splice(idx, 1);
+                        }
+                    }
+                    gameState.addLog(`${player.name}: 와일드카드 리스크 방어권 ${usedWildcardBlocks}개 사용`);
+                }
+
+                // 결과 요약 표시
+                setTimeout(() => {
+                    const summaryEl = modal.querySelector('.risk-result-summary');
+                    const summaryContent = modal.querySelector('.summary-content');
+
+                    const safeCount = revealedCards.filter(c => !c.isHarmful).length;
+
+                    summaryContent.innerHTML = `
+                        <div class="risk-final-summary">
+                            <div class="summary-stat">
+                                <span class="stat-label">총 리스크</span>
+                                <span class="stat-value">${riskCards.length}개</span>
+                            </div>
+                            <div class="summary-stat safe">
+                                <span class="stat-label">✅ 안전 통과</span>
+                                <span class="stat-value">${safeCount}개</span>
+                            </div>
+                            <div class="summary-stat success">
+                                <span class="stat-label">🛡️ 방어 성공</span>
+                                <span class="stat-value">${blockedCount}개</span>
+                            </div>
+                            <div class="summary-stat ${activeCount > 0 ? 'danger' : 'success'}">
+                                <span class="stat-label">⚠️ 적용됨</span>
+                                <span class="stat-value">${activeCount}개</span>
+                            </div>
+                        </div>
+                        ${usedWildcardBlocks > 0 ? `<p class="wildcard-note">🃏 와일드카드 ${usedWildcardBlocks}개 사용됨</p>` : ''}
+                        <p class="defense-note">💡 시공사 방어 ${usedConstructorBlocks}개 사용</p>
+                    `;
+                    summaryEl.style.display = 'block';
+
+                    // 계속하기 버튼
+                    document.getElementById('btn-risk-continue').onclick = () => {
+                        modal.remove();
+                        // 리스크 처리
+                        const riskResult = processRisks(gameState.currentPlayerIndex);
+                        if (riskResult.success) {
+                            this.showConstructionResult(constructor, riskResult);
+                        }
+                        resolve();
+                    };
+                }, 500);
+            };
+
+            // 유해한 카드가 없거나 방어력이 0일 때 바로 결과 표시
+            const showFinalResult = () => {
+                let activeCount = 0;
+                const safeCount = revealedCards.filter(c => !c.isHarmful).length;
+
+                revealedCards.forEach(({ index, risk, isHarmful }) => {
+                    const cardEl = modal.querySelector(`.risk-card-large[data-index="${index}"]`);
+                    const cardContent = cardEl.querySelector('.card-content');
+
+                    if (!isHarmful) {
+                        cardEl.classList.add('passed');
+                    } else {
+                        activeCount++;
+                        cardEl.classList.add('active');
+                        cardContent.innerHTML = `
+                            <div class="risk-emoji">${risk.emoji}</div>
+                            <div class="risk-name">${risk.name}</div>
+                            <div class="risk-effect">${risk.description || ''}</div>
+                            <div class="risk-active">⚠️ 적용됨</div>
+                        `;
+                        risk.isBlocked = false;
+                    }
+                });
+
+                const summaryEl = modal.querySelector('.risk-result-summary');
+                const summaryContent = modal.querySelector('.summary-content');
+
+                summaryContent.innerHTML = `
+                    <div class="risk-final-summary">
+                        <div class="summary-stat">
+                            <span class="stat-label">총 리스크</span>
+                            <span class="stat-value">${riskCards.length}개</span>
+                        </div>
+                        <div class="summary-stat safe">
+                            <span class="stat-label">✅ 안전 통과</span>
+                            <span class="stat-value">${safeCount}개</span>
+                        </div>
+                        <div class="summary-stat ${activeCount > 0 ? 'danger' : 'success'}">
+                            <span class="stat-label">⚠️ 적용됨</span>
+                            <span class="stat-value">${activeCount}개</span>
+                        </div>
+                    </div>
+                `;
+                summaryEl.style.display = 'block';
+
+                document.getElementById('btn-risk-continue').onclick = () => {
+                    modal.remove();
+                    const riskResult = processRisks(gameState.currentPlayerIndex);
+                    if (riskResult.success) {
+                        this.showConstructionResult(constructor, riskResult);
+                    }
+                    resolve();
+                };
             };
 
             // 첫 카드 공개 시작
@@ -1499,37 +1676,32 @@ class GameApp {
 
     // 자산 클릭 이벤트 바인딩
     bindPropertyClickEvents() {
-        // 도시 지도의 셀 클릭 이벤트
+        // 도시 지도의 셀 클릭 이벤트 (모든 건물 클릭 가능)
         document.querySelectorAll('.city-cell.has-building').forEach(cell => {
             cell.addEventListener('click', (e) => {
                 const x = parseInt(cell.dataset.x);
                 const y = parseInt(cell.dataset.y);
                 const cellData = gameState.cityMap[y][x];
 
-                if (cellData.owner === gameState.currentPlayerIndex) {
-                    this.showPropertyDetail(cellData);
-                }
+                // 누구의 건물이든 상세 정보 표시 (소유자 정보 전달)
+                this.showPropertyDetail(cellData, cellData.owner);
             });
         });
 
-        // 프로젝트 맵의 건물 클릭 이벤트
+        // 프로젝트 맵의 건물/대지 클릭 이벤트 (모든 프로젝트 클릭 가능)
         document.querySelectorAll('.project-tile').forEach(tile => {
             tile.addEventListener('click', () => {
                 const playerIndex = parseInt(tile.dataset.player);
-                if (playerIndex === gameState.currentPlayerIndex) {
-                    const player = gameState.players[playerIndex];
-                    if (player.currentProject) {
-                        this.showPropertyDetail(player.currentProject);
-                    }
+                const player = gameState.players[playerIndex];
+                if (player && player.currentProject && player.currentProject.land) {
+                    this.showPropertyDetail(player.currentProject, playerIndex);
                 }
             });
         });
     }
 
     // 자산 상세 정보 모달
-    showPropertyDetail(property) {
-        const player = gameState.getCurrentPlayer();
-
+    showPropertyDetail(property, ownerIndex = null) {
         // property가 cell data인지 project인지 확인
         // cell data: {x, y, district, project, building, owner, ...}
         // project: {land, building, architect, constructor, ...}
@@ -1538,6 +1710,7 @@ class GameApp {
         if (property.project) {
             // cell data인 경우 (도시 지도에서 클릭)
             project = property.project;
+            if (ownerIndex === null) ownerIndex = property.owner;
         } else if (property.land) {
             // project 직접 전달된 경우 (프로젝트 맵에서 클릭)
             project = property;
@@ -1556,9 +1729,13 @@ class GameApp {
             return;
         }
 
+        // 소유자 확인 (현재 플레이어인지)
+        const isMyProperty = ownerIndex === gameState.currentPlayerIndex;
+        const ownerName = ownerIndex !== null ? gameState.players[ownerIndex]?.name : '알 수 없음';
+
         // 건물이 없는 경우 (땅만 있는 경우)
         if (!building) {
-            this.showLandDetail(project);
+            this.showLandDetail(project, ownerIndex);
             return;
         }
 
@@ -1577,6 +1754,7 @@ class GameApp {
                     <div class="property-title">
                         <h2>${building.name}</h2>
                         <span class="property-location">📍 ${landName}</span>
+                        <span class="property-owner">👤 소유자: ${ownerName}</span>
                     </div>
                 </div>
 
@@ -1636,23 +1814,31 @@ class GameApp {
                     </div>
                 </div>
 
+                ${isMyProperty ? `
                 <div class="property-actions">
                     <button class="btn-sell-property" id="btn-sell-this-property">
                         🏷️ 매각하기 (예상: ${gameState.formatMoney(estimatedValue)})
                     </button>
                 </div>
+                ` : `
+                <div class="property-actions view-only">
+                    <p class="view-only-notice">👁️ 다른 플레이어의 자산입니다 (열람만 가능)</p>
+                </div>
+                `}
             </div>
         `, null, true);
 
-        // 매각 버튼 이벤트
-        setTimeout(() => {
-            const sellBtn = document.getElementById('btn-sell-this-property');
-            if (sellBtn) {
-                sellBtn.onclick = () => {
-                    this.confirmPropertySale(project, estimatedValue);
-                };
-            }
-        }, 100);
+        // 매각 버튼 이벤트 (본인 자산인 경우만)
+        if (isMyProperty) {
+            setTimeout(() => {
+                const sellBtn = document.getElementById('btn-sell-this-property');
+                if (sellBtn) {
+                    sellBtn.onclick = () => {
+                        this.confirmPropertySale(project, estimatedValue);
+                    };
+                }
+            }, 100);
+        }
     }
 
     // 자산 매각 확인
@@ -1697,9 +1883,13 @@ class GameApp {
     }
 
     // 대지 상세 정보 모달 (건물 없는 경우)
-    showLandDetail(project) {
+    showLandDetail(project, ownerIndex = null) {
         const land = project.land;
         const currentPhase = this.getProjectCurrentPhase(project);
+
+        // 소유자 확인
+        const isMyProperty = ownerIndex === gameState.currentPlayerIndex;
+        const ownerName = ownerIndex !== null ? gameState.players[ownerIndex]?.name : '알 수 없음';
 
         const totalInvestment = (project.landPrice || 0) + (project.developmentCost || 0) + (project.designFee || 0);
 
@@ -1710,6 +1900,7 @@ class GameApp {
                     <div class="land-title">
                         <h2>${land.name}</h2>
                         <span class="land-region">📍 ${land.region || '알 수 없음'}</span>
+                        <span class="land-owner">👤 소유자: ${ownerName}</span>
                     </div>
                 </div>
 
@@ -1765,23 +1956,31 @@ class GameApp {
                     </div>
                 </div>
 
+                ${isMyProperty ? `
                 <div class="land-actions">
                     <button class="btn-sell-land" id="btn-sell-this-land">
                         🏷️ 대지 매각 (${gameState.formatMoney(Math.floor(totalInvestment * 0.8))})
                     </button>
                 </div>
+                ` : `
+                <div class="land-actions view-only">
+                    <p class="view-only-notice">👁️ 다른 플레이어의 자산입니다 (열람만 가능)</p>
+                </div>
+                `}
             </div>
         `, null, true);
 
-        // 매각 버튼 이벤트
-        setTimeout(() => {
-            const sellBtn = document.getElementById('btn-sell-this-land');
-            if (sellBtn) {
-                sellBtn.onclick = () => {
-                    this.confirmLandSale(project);
-                };
-            }
-        }, 100);
+        // 매각 버튼 이벤트 (본인 자산인 경우만)
+        if (isMyProperty) {
+            setTimeout(() => {
+                const sellBtn = document.getElementById('btn-sell-this-land');
+                if (sellBtn) {
+                    sellBtn.onclick = () => {
+                        this.confirmLandSale(project);
+                    };
+                }
+            }, 100);
+        }
     }
 
     // 프로젝트 현재 단계 반환
