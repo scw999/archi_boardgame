@@ -63,7 +63,7 @@ function renderPlayerPanel(player, isActive) {
           </div>
           ${wildcardCount > 0 ? `
           <div class="stat-item wildcard">
-            <span class="stat-icon">🎴</span>
+            <span class="stat-icon">🃏</span>
             <span class="stat-value">${wildcardCount}</span>
             <span class="stat-label">카드</span>
           </div>

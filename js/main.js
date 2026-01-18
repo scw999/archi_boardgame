@@ -1032,14 +1032,19 @@ class GameApp {
             const player = gameState.getCurrentPlayer();
             const riskCards = player.currentProject.risks;
 
-            showResultModal('🎴 리스크 카드 공개', `
+            // 와일드카드 방어권 개수 확인
+            const wildcardBlocks = player.wildcards?.filter(w => w.effect.type === 'risk_block').length || 0;
+            const totalDefense = constructor.riskBlocks + wildcardBlocks + (player.extraRiskBlock || 0);
+
+            showResultModal('🃏 리스크 카드 공개', `
                 <div class="risk-draw-intro">
                     <p>시공 기간 동안 발생할 수 있는 리스크를 확인합니다.</p>
                     <p><strong>${result.riskCount}장</strong>의 리스크 카드가 공개됩니다.</p>
-                    ${constructor.riskBlocks > 0
-                    ? `<p class="defense-note">🛡️ ${constructor.name}이(가) 최대 ${constructor.riskBlocks}개까지 방어합니다.</p>`
-                    : ''
-                }
+                    <div class="defense-summary">
+                        <p class="defense-note">🛡️ 총 방어력: <strong>${totalDefense}개</strong></p>
+                        ${constructor.riskBlocks > 0 ? `<p class="defense-detail">🏗️ ${constructor.name}: ${constructor.riskBlocks}개</p>` : ''}
+                        ${wildcardBlocks > 0 ? `<p class="defense-detail">🃏 와일드카드: ${wildcardBlocks}개</p>` : ''}
+                    </div>
                 </div>
             `, async () => {
                 // 리스크 카드 자동 공개 (수동 클릭 아닌 자동)
@@ -1052,6 +1057,12 @@ class GameApp {
 
     // 리스크 카드 자동 공개 (큰 카드 + 애니메이션 모달)
     async showRiskCardsAuto(riskCards, constructor) {
+        const player = gameState.getCurrentPlayer();
+        // 와일드카드 리스크 방어권 개수 확인
+        const wildcardBlocks = player.wildcards?.filter(w => w.effect.type === 'risk_block').length || 0;
+        const extraBlocks = player.extraRiskBlock || 0;
+        const totalBlocks = constructor.riskBlocks + wildcardBlocks + extraBlocks;
+
         return new Promise((resolve) => {
             // 리스크 카드 모달 생성
             const modal = document.createElement('div');
@@ -1059,7 +1070,11 @@ class GameApp {
             modal.innerHTML = `
                 <div class="risk-card-modal">
                     <div class="risk-modal-header">
-                        <h2>🎴 리스크 카드 공개</h2>
+                        <h2>🃏 리스크 카드 공개</h2>
+                        <div class="defense-info">
+                            <span class="defense-badge">🛡️ 방어력: ${totalBlocks}개</span>
+                            ${wildcardBlocks > 0 ? `<span class="wildcard-used">(와일드카드 ${wildcardBlocks}개 포함)</span>` : ''}
+                        </div>
                         <div class="risk-progress-bar">
                             <div class="progress-fill" style="width: 0%"></div>
                         </div>
@@ -1070,8 +1085,10 @@ class GameApp {
                             <div class="risk-card-large" data-index="${i}">
                                 <div class="card-inner">
                                     <div class="card-back">
-                                        <span class="card-back-icon">🎴</span>
-                                        <span class="card-back-text">${i + 1}개월</span>
+                                        <div class="card-back-design">
+                                            <span class="card-pattern">⚠️</span>
+                                            <span class="card-back-text">${i + 1}개월</span>
+                                        </div>
                                     </div>
                                     <div class="card-front">
                                         <div class="card-content"></div>
@@ -1091,12 +1108,109 @@ class GameApp {
             let currentIndex = 0;
             let blockedCount = 0;
             let activeCount = 0;
+            let usedWildcards = 0;
 
             const revealNextCard = () => {
                 if (currentIndex >= riskCards.length) {
                     // 모든 카드 공개 완료
                     setTimeout(() => {
+                        // 사용된 와일드카드 제거
+                        if (usedWildcards > 0 && player.wildcards) {
+                            for (let i = 0; i < usedWildcards; i++) {
+                                const idx = player.wildcards.findIndex(w => w.effect.type === 'risk_block');
+                                if (idx !== -1) {
+                                    player.wildcards.splice(idx, 1);
+                                }
+                            }
+                            gameState.addLog(`${player.name}: 리스크 방어권 ${usedWildcards}개 사용`);
+                        }
+
                         // 결과 요약 표시
+                        const summaryEl = modal.querySelector('.risk-result-summary');
+                        const summaryContent = modal.querySelector('.summary-content');
+                        summaryContent.innerHTML = `
+                            <div class="risk-final-summary">
+                                <div class="summary-stat">
+                                    <span class="stat-label">총 리스크</span>
+                                    <span class="stat-value">${riskCards.length}개</span>
+                                </div>
+                                <div class="summary-stat success">
+                                    <span class="stat-label">🛡️ 방어 성공</span>
+                                    <span class="stat-value">${blockedCount}개</span>
+                                </div>
+                                <div class="summary-stat ${activeCount > 0 ? 'danger' : 'success'}">
+                                    <span class="stat-label">⚠️ 적용됨</span>
+                                    <span class="stat-value">${activeCount}개</span>
+                                </div>
+                            </div>
+                            ${usedWildcards > 0 ? `<p class="wildcard-note">🃏 와일드카드 ${usedWildcards}개 사용됨</p>` : ''}
+                        `;
+                        summaryEl.style.display = 'block';
+
+                        // 계속하기 버튼
+                        document.getElementById('btn-risk-continue').onclick = () => {
+                            modal.remove();
+                            // 리스크 처리
+                            const riskResult = processRisks(gameState.currentPlayerIndex);
+                            if (riskResult.success) {
+                                this.showConstructionResult(constructor, riskResult);
+                            }
+                            resolve();
+                        };
+                    }, 500);
+                    return;
+                }
+
+                const risk = riskCards[currentIndex];
+                // 시공사 방어 + 와일드카드 방어
+                const constructorBlocksLeft = Math.max(0, constructor.riskBlocks - currentIndex);
+                const needsWildcard = constructorBlocksLeft === 0 && currentIndex < totalBlocks;
+                const isBlocked = currentIndex < totalBlocks && risk.blockable !== false;
+
+                if (isBlocked) {
+                    blockedCount++;
+                    if (needsWildcard) {
+                        usedWildcards++;
+                    }
+                } else {
+                    activeCount++;
+                }
+
+                const cardEl = modal.querySelector(`.risk-card-large[data-index="${currentIndex}"]`);
+                const cardContent = cardEl.querySelector('.card-content');
+
+                // 카드 내용 설정
+                const blockSource = isBlocked ? (needsWildcard ? '🃏 와일드카드' : `🏗️ ${constructor.name}`) : '';
+                cardContent.innerHTML = `
+                    <div class="risk-emoji">${risk.emoji}</div>
+                    <div class="risk-name">${risk.name}</div>
+                    <div class="risk-effect">${risk.description || ''}</div>
+                    ${isBlocked
+                        ? `<div class="risk-blocked">🛡️ 방어!<br><small>${blockSource}</small></div>`
+                        : '<div class="risk-active">⚠️ 적용</div>'}
+                `;
+
+                // 카드 뒤집기 애니메이션
+                cardEl.classList.add('flipped');
+                if (isBlocked) cardEl.classList.add('blocked');
+                else cardEl.classList.add('active');
+
+                // 진행률 업데이트
+                const progressFill = modal.querySelector('.progress-fill');
+                const counter = modal.querySelector('.risk-counter');
+                progressFill.style.width = `${((currentIndex + 1) / riskCards.length) * 100}%`;
+                counter.textContent = `${currentIndex + 1} / ${riskCards.length}개월`;
+
+                currentIndex++;
+
+                // 다음 카드
+                setTimeout(revealNextCard, 1000);
+            };
+
+            // 첫 카드 공개 시작
+            setTimeout(revealNextCard, 500);
+        });
+    }
                         const summaryEl = modal.querySelector('.risk-result-summary');
                         const summaryContent = modal.querySelector('.summary-content');
                         summaryContent.innerHTML = `
@@ -1665,7 +1779,7 @@ class GameApp {
 
         wildcardPanel.innerHTML = `
             <div class="wildcard-header">
-                <h4>🎴 보유 와일드카드</h4>
+                <h4>🃏 보유 와일드카드</h4>
                 <span class="card-count">${player.wildcards.length}장</span>
             </div>
             <div class="wildcard-list">
@@ -1752,7 +1866,7 @@ class GameApp {
         if (canUse) {
             // 카드 제거
             player.wildcards.splice(index, 1);
-            showNotification(`🎴 ${card.name} 사용! ${message}`, 'success');
+            showNotification(`🃏 ${card.name} 사용! ${message}`, 'success');
             gameState.addLog(`${player.name}: ${card.name} 사용`);
             this.updateWildcardPanel();
         } else {

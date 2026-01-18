@@ -109,7 +109,7 @@ export function renderCityGrid() {
 
             gridHtml += `
                 <div class="city-cell ${ownerClass} ${tierClass} ${hasBuilding ? 'has-building' : ''}"
-                     data-x="${x}" data-y="${y}"
+                     data-x="${x}" data-y="${y}" data-lot="${String.fromCharCode(65 + y)}${x + 1}"
                      style="--cell-bg: ${bgPattern}">
                     <div class="cell-terrain"></div>
                     ${hasBuilding ? `
