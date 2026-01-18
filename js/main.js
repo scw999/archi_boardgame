@@ -114,6 +114,11 @@ class GameApp {
     startRound() {
         gameState.startRound();
         this.updateUI();
+
+        // 라운드 시작 알림 (선 플레이어 표시)
+        const startingPlayer = gameState.players[gameState.roundStartingPlayer];
+        showNotification(`🎮 라운드 ${gameState.currentRound} 시작! 선: ${startingPlayer.name}`, 'info');
+
         this.runPhase();
     }
 
@@ -308,6 +313,7 @@ class GameApp {
     }
 
     // 가로챌 수 있는 토지 목록 가져오기
+    // 설계나 시공이 시작된 토지는 가로챌 수 없음
     getStealableLands(currentPlayer) {
         const stealable = [];
         const currentPlayerIndex = gameState.currentPlayerIndex;
@@ -315,7 +321,8 @@ class GameApp {
         gameState.players.forEach((player, index) => {
             if (index !== currentPlayerIndex &&
                 player.currentProject &&
-                player.currentProject.land) {
+                player.currentProject.land &&
+                !player.currentProject.architect) {  // 설계 시작 전만 가로채기 가능
                 stealable.push({
                     playerIndex: index,
                     playerName: player.name,
@@ -368,8 +375,9 @@ class GameApp {
         showResultModal('🃏 토지 가로채기', `
             <div class="steal-land-modal">
                 <p class="steal-description">
-                    다른 플레이어가 이번 라운드에 구매한 토지를 10% 추가 비용으로 가로챌 수 있습니다.
+                    다른 플레이어가 구매한 토지를 10% 추가 비용으로 가로챌 수 있습니다.
                     <br><strong>⚠️ 라운드당 1회만 사용 가능!</strong>
+                    <br><span style="color: #f59e0b;">📐 설계가 시작된 토지는 가로챌 수 없습니다.</span>
                 </p>
                 <div class="steal-land-list">
                     ${stealableList}
