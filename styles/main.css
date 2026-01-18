@@ -7,36 +7,36 @@
   --bg-secondary: #16213e;
   --bg-tertiary: #0f3460;
   --bg-card: #1f2937;
-  
+
   --text-primary: #e8e8e8;
   --text-secondary: #a0a0a0;
   --text-muted: #6b7280;
-  
+
   --accent-gold: #f59e0b;
   --accent-emerald: #10b981;
   --accent-blue: #3b82f6;
   --accent-purple: #8b5cf6;
   --accent-red: #ef4444;
   --accent-orange: #f97316;
-  
+
   /* 그라데이션 */
   --gradient-gold: linear-gradient(135deg, #f59e0b, #d97706);
   --gradient-blue: linear-gradient(135deg, #3b82f6, #1d4ed8);
   --gradient-purple: linear-gradient(135deg, #8b5cf6, #6d28d9);
   --gradient-emerald: linear-gradient(135deg, #10b981, #059669);
-  
+
   /* 그림자 */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 20px rgba(245, 158, 11, 0.3);
-  
+
   /* 크기 */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
   --radius-xl: 24px;
-  
+
   /* 전환 */
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
@@ -44,7 +44,9 @@
 }
 
 /* ===== 리셋 & 기본 ===== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -71,7 +73,7 @@ body {
   justify-content: center;
   min-height: 100vh;
   padding: 2rem;
-  background: 
+  background:
     radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
     var(--bg-primary);
@@ -84,8 +86,15 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .game-title {
@@ -255,11 +264,13 @@ body {
   margin-bottom: 1.5rem;
 }
 
-.round-info, .phase-info {
+.round-info,
+.phase-info {
   text-align: center;
 }
 
-.round-label, .phase-label {
+.round-label,
+.phase-label {
   display: block;
   font-size: 0.8rem;
   color: var(--text-secondary);
@@ -381,8 +392,15 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .money-info {
@@ -668,7 +686,8 @@ body {
 }
 
 /* ===== 모달 & 오버레이 ===== */
-.modal-overlay, .dialog-overlay {
+.modal-overlay,
+.dialog-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -683,11 +702,18 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-.result-modal, .detail-modal, .dialog {
+.result-modal,
+.detail-modal,
+.dialog {
   background: var(--bg-secondary);
   border-radius: var(--radius-xl);
   max-width: 500px;
@@ -698,8 +724,15 @@ body {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-header {
@@ -791,14 +824,15 @@ body {
   #game-container {
     grid-template-columns: 1fr;
   }
-  
-  #player-panels, #game-log {
+
+  #player-panels,
+  #game-log {
     grid-column: 1;
     grid-row: auto;
     flex-direction: row;
     overflow-x: auto;
   }
-  
+
   .player-panel {
     min-width: 250px;
   }
@@ -808,8 +842,597 @@ body {
   .game-title {
     font-size: 2rem;
   }
-  
+
   .card-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===== 설계 패널 ===== */
+.design-panel {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  width: 100%;
+}
+
+.design-panel-content h3 {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--accent-gold);
+}
+
+.design-panel-content h4 {
+  margin: 1rem 0 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.architect-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.architect-info .portrait {
+  font-size: 2rem;
+}
+
+.architect-info .name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.architect-info .trait {
+  font-size: 0.8rem;
+  color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.design-panel .building-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.design-panel .building-option {
+  background: var(--bg-tertiary);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.design-panel .building-option:hover {
+  border-color: var(--accent-blue);
+}
+
+.design-panel .building-option.selected {
+  border-color: var(--accent-gold);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.design-panel .building-option.suitable {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.masterpiece-badge {
+  font-size: 0.75rem;
+  color: var(--accent-gold);
+  margin-top: 0.3rem;
+}
+
+.design-panel .building-costs {
+  margin-top: 0.5rem;
+}
+
+.design-panel .cost-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  padding: 0.2rem 0;
+}
+
+.design-panel .cost-label {
+  color: var(--text-muted);
+}
+
+.design-panel .cost-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.selected-building-info {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.summary-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.summary-item.highlight {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--accent-gold);
+}
+
+.summary-item .label {
+  color: var(--text-secondary);
+}
+
+.summary-item .value {
+  font-weight: 600;
+}
+
+.masterpiece-note {
+  text-align: center;
+  padding: 0.5rem;
+  color: var(--accent-gold);
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.non-masterpiece-note {
+  text-align: center;
+  padding: 0.5rem;
+  color: var(--accent-orange);
+  background: rgba(249, 115, 22, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.btn-confirm-design {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #1a1a2e;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-confirm-design:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ===== 설계도 모달 ===== */
+.blueprint-modal {
+  text-align: center;
+}
+
+.blueprint-header {
+  margin-bottom: 1.5rem;
+}
+
+.blueprint-header .building-icon {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.blueprint-header h2 {
+  font-size: 1.5rem;
+  color: var(--accent-gold);
+}
+
+.blueprint-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.blueprint-image {
+  display: flex;
+  justify-content: center;
+}
+
+.blueprint-frame {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, #1e3a5f, #0d2137);
+  border: 3px solid var(--accent-blue);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.blueprint-grid {
+  font-size: 4rem;
+}
+
+.blueprint-label {
+  position: absolute;
+  bottom: -10px;
+  background: var(--accent-blue);
+  padding: 0.2rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.design-details {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row .label {
+  color: var(--text-secondary);
+}
+
+.detail-row .value {
+  font-weight: 600;
+}
+
+.detail-row .value.paid {
+  color: var(--accent-red);
+}
+
+.next-phase-notice {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--accent-blue);
+  font-size: 0.9rem;
+}
+
+/* ===== 시공 패널 ===== */
+.construction-panel {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  width: 100%;
+}
+
+.construction-panel-content h3 {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--accent-emerald);
+}
+
+.construction-panel-content h4 {
+  margin: 1rem 0 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.constructor-info {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.constructor-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.constructor-header .emoji {
+  font-size: 2rem;
+}
+
+.constructor-header .name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.constructor-header .size {
+  font-size: 0.8rem;
+  color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.constructor-info .description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.construction-details {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.detail-item.highlight {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--accent-gold);
+}
+
+.detail-item.bonus {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid var(--accent-purple);
+  grid-column: span 2;
+}
+
+.detail-item .label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.detail-item .value {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.payment-schedule {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.schedule-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.schedule-item {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.schedule-item .stage {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.schedule-item .amount {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.risk-warning {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid var(--accent-orange);
+  border-radius: var(--radius-md);
+}
+
+.risk-warning h4 {
+  margin: 0 0 0.5rem !important;
+  color: var(--accent-orange) !important;
+}
+
+.risk-warning p {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+.risk-warning .defense {
+  color: var(--accent-emerald);
+}
+
+.risk-warning .no-defense {
+  color: var(--accent-red);
+}
+
+.construction-panel .action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.btn-confirm-construction {
+  width: 100%;
+  padding: 1rem;
+  background: var(--gradient-emerald);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-confirm-construction:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-confirm-construction.disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-cancel:hover {
+  background: var(--bg-card);
+  border-color: var(--accent-blue);
+}
+
+/* ===== 시공 결과 ===== */
+.construction-result {
+  text-align: center;
+}
+
+.result-header {
+  margin-bottom: 1.5rem;
+}
+
+.result-header .building-emoji {
+  font-size: 3rem;
+}
+
+.result-header h2 {
+  font-size: 1.3rem;
+  margin-top: 0.5rem;
+}
+
+.risk-summary {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.risk-summary h4 {
+  margin-bottom: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.risk-summary .summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.risk-summary .summary-item {
+  flex-direction: column;
+  align-items: center;
+  padding: 0.8rem;
+}
+
+.risk-summary .summary-item.success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--accent-emerald);
+}
+
+.risk-summary .summary-item.warning {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--accent-red);
+}
+
+.total-loss-warning {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.2);
+  border: 2px solid var(--accent-red);
+  border-radius: var(--radius-md);
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.success-message {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(16, 185, 129, 0.2);
+  border: 2px solid var(--accent-emerald);
+  border-radius: var(--radius-md);
+  color: var(--accent-emerald);
+  font-weight: 600;
+}
+
+.final-costs {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.final-costs h4 {
+  margin-bottom: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cost-row:last-child {
+  border-bottom: none;
+}
+
+.cost-row .value.warning {
+  color: var(--accent-red);
+}
+
+/* ===== 리스크 카드 뽑기 ===== */
+.risk-draw-intro {
+  text-align: center;
+  padding: 1rem;
+}
+
+.risk-draw-intro p {
+  margin: 0.5rem 0;
+}
+
+.risk-draw-intro .defense-note {
+  color: var(--accent-emerald);
+  font-weight: 500;
 }
