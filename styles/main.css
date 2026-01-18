@@ -1600,6 +1600,88 @@ body {
 .tile-phase.design { background: var(--accent-blue); color: white; }
 .tile-phase.construction { background: var(--accent-orange); color: white; }
 .tile-phase.complete { background: var(--accent-gold); color: #1a1a2e; }
+.tile-phase.sold { background: #6b7280; color: white; }
+
+/* 매각 완료 타일 */
+.project-tile.sold {
+  opacity: 0.8;
+  border-color: #6b7280;
+}
+
+.project-tile.sold .land-visual.sold {
+  filter: grayscale(50%);
+  background: linear-gradient(135deg, #4a4a4a 0%, #6b6b6b 50%, #5a5a5a 100%);
+}
+
+.project-tile.sold .building-3d.sold {
+  position: relative;
+  filter: grayscale(30%);
+}
+
+.project-tile.sold .sold-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  z-index: 10;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.project-tile.sold .tile-cost.sold-price {
+  color: #9ca3af;
+}
+
+.project-tile.sold .progress-fill.sold {
+  background: linear-gradient(90deg, #6b7280, #9ca3af);
+  width: 100%;
+}
+
+/* 매각 상세 모달 */
+.sold-detail {
+  padding: 1rem 0;
+}
+
+.sold-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.sold-emoji {
+  font-size: 3rem;
+  filter: grayscale(30%);
+}
+
+.sold-title h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.3rem;
+}
+
+.sold-location, .sold-owner {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.sold-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #6b7280;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sold-info-grid {
+  display: grid;
+  gap: 1rem;
+}
 
 /* 대지 시각화 */
 .tile-land {
@@ -3553,12 +3635,93 @@ body {
   75% { transform: translateX(1px); }
 }
 
+/* 건설 중 셀 (기본) */
 .city-cell:has(.cell-project) {
   animation: constructionVibrate 0.3s infinite;
   border-color: rgba(245, 158, 11, 0.6);
   box-shadow:
     0 0 15px rgba(245, 158, 11, 0.3),
     inset 0 0 10px rgba(245, 158, 11, 0.1);
+}
+
+/* 토지만 구매한 상태 (녹색) */
+.city-cell.land-only {
+  animation: none;
+  border-width: 3px;
+  border-style: dashed;
+  border-color: rgba(34, 197, 94, 0.9);
+  box-shadow:
+    0 0 20px rgba(34, 197, 94, 0.5),
+    inset 0 0 15px rgba(34, 197, 94, 0.2);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+}
+
+.city-cell.land-only .cell-project {
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+}
+
+.city-cell.land-only .project-icon {
+  font-size: 1.8rem;
+  animation: landPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(34, 197, 94, 0.6));
+}
+
+@keyframes landPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* 토지 소유자별 색상 (플레이어 구분) */
+.city-cell.land-only.owner-0 {
+  border-color: #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), inset 0 0 15px rgba(239, 68, 68, 0.2);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+}
+.city-cell.land-only.owner-0 .cell-project { background: rgba(239, 68, 68, 0.2); }
+.city-cell.land-only.owner-0 .project-icon { filter: drop-shadow(0 2px 8px rgba(239, 68, 68, 0.6)); }
+
+.city-cell.land-only.owner-1 {
+  border-color: #3b82f6;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+}
+.city-cell.land-only.owner-1 .cell-project { background: rgba(59, 130, 246, 0.2); }
+.city-cell.land-only.owner-1 .project-icon { filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.6)); }
+
+.city-cell.land-only.owner-2 {
+  border-color: #a855f7;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5), inset 0 0 15px rgba(168, 85, 247, 0.2);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05));
+}
+.city-cell.land-only.owner-2 .cell-project { background: rgba(168, 85, 247, 0.2); }
+.city-cell.land-only.owner-2 .project-icon { filter: drop-shadow(0 2px 8px rgba(168, 85, 247, 0.6)); }
+
+.city-cell.land-only.owner-3 {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), inset 0 0 15px rgba(245, 158, 11, 0.2);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+}
+.city-cell.land-only.owner-3 .cell-project { background: rgba(245, 158, 11, 0.2); }
+.city-cell.land-only.owner-3 .project-icon { filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.6)); }
+
+/* 설계 중 상태 (파란색) */
+.city-cell.designing {
+  animation: none;
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow:
+    0 0 15px rgba(59, 130, 246, 0.3),
+    inset 0 0 10px rgba(59, 130, 246, 0.1);
+}
+
+.city-cell.designing .project-icon {
+  animation: designPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes designPulse {
+  0%, 100% { transform: rotate(-5deg) scale(1); }
+  50% { transform: rotate(5deg) scale(1.05); }
 }
 
 /* ===== 와일드카드 상세 모달 ===== */
@@ -4127,10 +4290,15 @@ body {
 }
 
 #design-preview-modal .blueprint-label {
-  font-size: 0.75rem;
+  position: static;
+  font-size: 0.85rem;
   color: var(--accent-blue);
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin-top: 0.75rem;
+  padding: 0.4rem 1rem;
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-sm);
 }
 
 #design-preview-modal .design-details {
@@ -4384,6 +4552,76 @@ body {
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* 와일드카드 헤더 우측 영역 */
+.wildcard-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 와일드카드 닫기 버튼 */
+.wildcard-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.wildcard-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+
+/* 와일드카드 토글 버튼 */
+.wildcard-toggle-btn {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  background: linear-gradient(135deg, var(--accent-gold), #d4a500);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+  transition: all var(--transition-fast);
+}
+
+.wildcard-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+}
+
+.wildcard-toggle-btn .badge {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}
+
+.wildcard-toggle-btn.hidden {
+  display: none;
+}
+
+/* 와일드카드 패널 위치 조정 (버튼 위에) */
+#wildcard-panel {
+  bottom: 4.5rem;
 }
 
 /* ===== 토지 가로채기 모달 ===== */

@@ -107,8 +107,21 @@ export function renderCityGrid() {
             // 지역별 배경 테마
             const bgPattern = getTierBackgroundPattern(regionInfo.tier);
 
+            // 프로젝트 상태에 따른 아이콘 결정
+            let projectIcon = '🏗️';
+            let projectClass = 'constructing';
+            if (hasProject && cell.project) {
+                if (!cell.project.building) {
+                    projectIcon = '🏞️'; // 토지만 구매
+                    projectClass = 'land-only';
+                } else if (!cell.project.constructor) {
+                    projectIcon = '📐'; // 설계 중
+                    projectClass = 'designing';
+                }
+            }
+
             gridHtml += `
-                <div class="city-cell ${ownerClass} ${tierClass} ${hasBuilding ? 'has-building' : ''}"
+                <div class="city-cell ${ownerClass} ${tierClass} ${hasBuilding ? 'has-building' : ''} ${hasProject ? projectClass : ''}"
                      data-x="${x}" data-y="${y}" data-lot="${String.fromCharCode(65 + y)}${x + 1}"
                      style="--cell-bg: ${bgPattern}">
                     <div class="cell-terrain"></div>
@@ -119,7 +132,7 @@ export function renderCityGrid() {
                         </div>
                     ` : hasProject ? `
                         <div class="cell-project">
-                            <span class="project-icon">🏗️</span>
+                            <span class="project-icon">${projectIcon}</span>
                         </div>
                     ` : `
                         <div class="cell-empty">
@@ -281,9 +294,10 @@ export function renderCompletedBuildings() {
     const tiles = [];
 
     gameState.players.forEach((player, playerIndex) => {
+        // 보유 중인 완성 건물
         player.buildings.forEach((building, buildingIndex) => {
             tiles.push(`
-                <div class="project-tile player-${playerIndex} completed" data-player="${playerIndex}" data-building="${buildingIndex}">
+                <div class="project-tile player-${playerIndex} completed" data-player="${playerIndex}" data-building="${buildingIndex}" data-type="owned">
                     <div class="tile-header">
                         <span class="tile-player">${player.name}</span>
                         <span class="tile-phase complete">완료</span>
@@ -301,7 +315,7 @@ export function renderCompletedBuildings() {
                     <div class="tile-info">
                         <div class="tile-land-name">${building.land.name}</div>
                         <div class="tile-building-name">${building.building.emoji} ${building.building.name}</div>
-                        <div class="tile-cost">매각: ${gameState.formatMoney(building.salePrice)}</div>
+                        <div class="tile-cost">가치: ${gameState.formatMoney(building.salePrice)}</div>
                     </div>
 
                     <div class="progress-bar">
@@ -310,6 +324,65 @@ export function renderCompletedBuildings() {
                 </div>
             `);
         });
+
+        // 매각 이력
+        if (player.soldHistory) {
+            player.soldHistory.forEach((sold, soldIndex) => {
+                if (sold.type === 'building') {
+                    tiles.push(`
+                        <div class="project-tile player-${playerIndex} sold" data-player="${playerIndex}" data-sold="${soldIndex}" data-type="sold">
+                            <div class="tile-header">
+                                <span class="tile-player">${player.name}</span>
+                                <span class="tile-phase sold">매각 완료</span>
+                            </div>
+
+                            <div class="tile-land">
+                                <div class="land-visual sold">
+                                    <div class="building-3d ${getBuildingSizeClass(sold.building)} sold">
+                                        <span class="building-icon">${sold.building.emoji}</span>
+                                        <div class="sold-overlay">💰</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tile-info">
+                                <div class="tile-land-name">${sold.land.name}</div>
+                                <div class="tile-building-name">${sold.building.emoji} ${sold.building.name}</div>
+                                <div class="tile-cost sold-price">매각가: ${gameState.formatMoney(sold.sellPrice)}</div>
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill sold"></div>
+                            </div>
+                        </div>
+                    `);
+                } else if (sold.type === 'land') {
+                    tiles.push(`
+                        <div class="project-tile player-${playerIndex} sold land-sold" data-player="${playerIndex}" data-sold="${soldIndex}" data-type="sold-land">
+                            <div class="tile-header">
+                                <span class="tile-player">${player.name}</span>
+                                <span class="tile-phase sold">토지 매각</span>
+                            </div>
+
+                            <div class="tile-land">
+                                <div class="land-visual sold">
+                                    <span style="font-size: 2rem;">🏞️💰</span>
+                                </div>
+                            </div>
+
+                            <div class="tile-info">
+                                <div class="tile-land-name">${sold.land.name}</div>
+                                <div class="tile-cost sold-price">매각가: ${gameState.formatMoney(sold.sellPrice)}</div>
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill sold"></div>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+        }
     });
 
     return tiles.join('');

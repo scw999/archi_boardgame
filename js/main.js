@@ -198,6 +198,8 @@ class GameApp {
             if (result.success) {
                 showNotification(result.message, 'success');
                 this.updateUI();
+                // PM 활동 후 자동으로 턴 넘기기
+                this.nextPlayerOrPhase(this.getCurrentCheckField());
             }
         });
 
@@ -646,6 +648,13 @@ class GameApp {
             return;
         }
 
+        // 이미 건축가와 계약을 했으면 설계 변경 불가 - 다음 플레이어로
+        if (player.currentProject.architect) {
+            showNotification(`${player.name}님은 이미 ${player.currentProject.architect.name} 건축가와 계약했습니다.`, 'info');
+            this.nextPlayerOrPhase('architect');
+            return;
+        }
+
         renderCardGrid(gameState.availableArchitects, 'architect', (index, architect) => {
             this.selectedArchitectIndex = index;
             highlightCard(index);
@@ -1012,6 +1021,9 @@ class GameApp {
 
     // 시공 페이즈
     runConstructionPhase() {
+        // 이전 돈벌기 옵션 패널 제거 (중복 방지)
+        document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
+
         const player = gameState.getCurrentPlayer();
 
         // 설계가 완료되지 않은 경우
@@ -1077,6 +1089,9 @@ class GameApp {
         const actionArea = document.getElementById('action-area');
         if (!actionArea) return;
 
+        // 기존 돈벌기 옵션 패널이 있으면 제거
+        document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
+
         const pmIncome = 50000000 + (player.buildings.length * 20000000);
 
         const moneyOptionsHtml = `
@@ -1101,9 +1116,8 @@ class GameApp {
             </div>
         `;
 
-        // 기존 액션 영역 위에 추가
-        const existingContent = actionArea.innerHTML;
-        actionArea.innerHTML = moneyOptionsHtml + existingContent;
+        // 기존 액션 영역 내용 교체 (중복 방지)
+        actionArea.innerHTML = moneyOptionsHtml;
 
         // PM 활동 버튼
         const pmBtn = document.getElementById('btn-pm-construction');
@@ -1954,8 +1968,31 @@ class GameApp {
             tile.addEventListener('click', () => {
                 const playerIndex = parseInt(tile.dataset.player);
                 const player = gameState.players[playerIndex];
-                if (player && player.currentProject && player.currentProject.land) {
-                    this.showPropertyDetail(player.currentProject, playerIndex);
+                const tileType = tile.dataset.type;
+
+                if (tileType === 'owned') {
+                    // 보유 중인 완성 건물
+                    const buildingIndex = parseInt(tile.dataset.building);
+                    if (player && player.buildings[buildingIndex]) {
+                        this.showPropertyDetail(player.buildings[buildingIndex], playerIndex);
+                    }
+                } else if (tileType === 'sold') {
+                    // 매각된 건물
+                    const soldIndex = parseInt(tile.dataset.sold);
+                    if (player && player.soldHistory && player.soldHistory[soldIndex]) {
+                        this.showSoldDetail(player.soldHistory[soldIndex], playerIndex);
+                    }
+                } else if (tileType === 'sold-land') {
+                    // 매각된 토지
+                    const soldIndex = parseInt(tile.dataset.sold);
+                    if (player && player.soldHistory && player.soldHistory[soldIndex]) {
+                        this.showSoldLandDetail(player.soldHistory[soldIndex], playerIndex);
+                    }
+                } else {
+                    // 현재 진행 중인 프로젝트
+                    if (player && player.currentProject && player.currentProject.land) {
+                        this.showPropertyDetail(player.currentProject, playerIndex);
+                    }
                 }
             });
         });
@@ -2279,9 +2316,102 @@ class GameApp {
         }
     }
 
+    // 매각된 건물 상세 정보 표시
+    showSoldDetail(sold, ownerIndex) {
+        const ownerName = gameState.players[ownerIndex]?.name || '알 수 없음';
+        const profitLossText = sold.profitLoss >= 0
+            ? `+${gameState.formatMoney(sold.profitLoss)}`
+            : `-${gameState.formatMoney(Math.abs(sold.profitLoss))}`;
+        const marketStatus = sold.marketFactor >= 1.0 ? '호황' : '불황';
+
+        showResultModal(`💰 ${sold.building.name} 매각 이력`, `
+            <div class="sold-detail">
+                <div class="sold-header">
+                    <span class="sold-emoji">${sold.building.emoji}</span>
+                    <div class="sold-title">
+                        <h2>${sold.building.name}</h2>
+                        <span class="sold-location">📍 ${sold.land.name}</span>
+                        <span class="sold-owner">👤 ${ownerName}</span>
+                    </div>
+                    <span class="sold-badge">매각 완료</span>
+                </div>
+
+                <div class="sold-info-grid">
+                    <div class="info-section">
+                        <h4>🏗️ 건물 정보</h4>
+                        <div class="info-row">
+                            <span class="label">건축가</span>
+                            <span class="value">${sold.architect?.portrait || ''} ${sold.architect?.name || '-'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">매각 라운드</span>
+                            <span class="value">라운드 ${sold.soldAt}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>💰 매각 정보</h4>
+                        <div class="info-row large">
+                            <span class="label">매각가</span>
+                            <span class="value gold">${gameState.formatMoney(sold.sellPrice)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">손익</span>
+                            <span class="value ${sold.profitLoss >= 0 ? 'profit' : 'loss'}">${profitLossText}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">시장 상황</span>
+                            <span class="value">${marketStatus} (x${sold.marketFactor.toFixed(2)})</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `, null, true);
+    }
+
+    // 매각된 토지 상세 정보 표시
+    showSoldLandDetail(sold, ownerIndex) {
+        const ownerName = gameState.players[ownerIndex]?.name || '알 수 없음';
+
+        showResultModal(`💰 ${sold.land.name} 토지 매각 이력`, `
+            <div class="sold-detail land-sold">
+                <div class="sold-header">
+                    <span class="sold-emoji">🏞️</span>
+                    <div class="sold-title">
+                        <h2>${sold.land.name}</h2>
+                        <span class="sold-owner">👤 ${ownerName}</span>
+                    </div>
+                    <span class="sold-badge">토지 매각</span>
+                </div>
+
+                <div class="sold-info-grid">
+                    <div class="info-section">
+                        <h4>💰 매각 정보</h4>
+                        <div class="info-row large">
+                            <span class="label">매각가</span>
+                            <span class="value gold">${gameState.formatMoney(sold.sellPrice)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">수익</span>
+                            <span class="value profit">+${gameState.formatMoney(sold.profit)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">매각 라운드</span>
+                            <span class="value">라운드 ${sold.soldAt}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `, null, true);
+    }
+
     // 와일드카드 패널 업데이트
     updateWildcardPanel() {
         const player = gameState.getCurrentPlayer();
+
+        // 와일드카드 토글 버튼 업데이트/생성
+        this.updateWildcardToggleButton(player);
+
         if (!player || !player.wildcards || player.wildcards.length === 0) {
             // 와일드카드 패널 숨기기
             const wildcardPanel = document.getElementById('wildcard-panel');
@@ -2293,7 +2423,7 @@ class GameApp {
         if (!wildcardPanel) {
             wildcardPanel = document.createElement('div');
             wildcardPanel.id = 'wildcard-panel';
-            wildcardPanel.className = 'wildcard-panel';
+            wildcardPanel.className = 'wildcard-panel hidden'; // 기본적으로 숨김
             // game-container에 추가
             const gameContainer = document.getElementById('game-container');
             if (gameContainer) {
@@ -2304,7 +2434,10 @@ class GameApp {
         wildcardPanel.innerHTML = `
             <div class="wildcard-header">
                 <h4>🃏 보유 와일드카드</h4>
-                <span class="card-count">${player.wildcards.length}장</span>
+                <div class="wildcard-header-right">
+                    <span class="card-count">${player.wildcards.length}장</span>
+                    <button class="wildcard-close-btn" id="wildcard-close-btn">&times;</button>
+                </div>
             </div>
             <div class="wildcard-list">
                 ${player.wildcards.map((card, index) => `
@@ -2317,7 +2450,10 @@ class GameApp {
             </div>
         `;
 
-        wildcardPanel.classList.remove('hidden');
+        // 닫기 버튼 이벤트
+        document.getElementById('wildcard-close-btn')?.addEventListener('click', () => {
+            wildcardPanel.classList.add('hidden');
+        });
 
         // 와일드카드 아이템 클릭 시 상세보기
         wildcardPanel.querySelectorAll('.wildcard-item').forEach(item => {
@@ -2336,6 +2472,39 @@ class GameApp {
                 this.useWildcard(index);
             });
         });
+    }
+
+    // 와일드카드 토글 버튼 업데이트/생성
+    updateWildcardToggleButton(player) {
+        let toggleBtn = document.getElementById('wildcard-toggle-btn');
+
+        // 와일드카드가 없으면 버튼 숨기기
+        if (!player || !player.wildcards || player.wildcards.length === 0) {
+            if (toggleBtn) toggleBtn.classList.add('hidden');
+            return;
+        }
+
+        if (!toggleBtn) {
+            toggleBtn = document.createElement('button');
+            toggleBtn.id = 'wildcard-toggle-btn';
+            toggleBtn.className = 'wildcard-toggle-btn';
+            // game-container에 추가
+            const gameContainer = document.getElementById('game-container');
+            if (gameContainer) {
+                gameContainer.appendChild(toggleBtn);
+            }
+        }
+
+        toggleBtn.innerHTML = `🃏 와일드카드 <span class="badge">${player.wildcards.length}</span>`;
+        toggleBtn.classList.remove('hidden');
+
+        // 토글 이벤트 (새로 바인딩)
+        toggleBtn.onclick = () => {
+            const panel = document.getElementById('wildcard-panel');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
+        };
     }
 
     // 와일드카드 상세 보기

@@ -45,6 +45,7 @@ function createPlayer(id, name) {
         interestRate: 0.1,        // 대출 이자율 10%
         maxLoanMultiplier: 2.33,  // 최대 대출 배율
         buildings: [],            // 완성된 건물들
+        soldHistory: [],          // 매각 이력
         currentProject: null,     // 현재 진행중인 프로젝트
         wildcardUsed: false,      // 토지 와일드카드 사용 여부
         totalScore: 0
@@ -199,6 +200,25 @@ class GameState {
         };
 
         return bestSlot;
+    }
+
+    // 지도에서 프로젝트 제거 (매각 시)
+    removeProjectFromMap(playerIndex) {
+        for (let y = 0; y < 5; y++) {
+            for (let x = 0; x < 5; x++) {
+                const cell = this.cityMap[y][x];
+                if (cell.owner === playerIndex && !cell.building) {
+                    // 건물이 없는 프로젝트(토지만 있는 상태)만 제거
+                    this.cityMap[y][x] = {
+                        ...cell,
+                        owner: null,
+                        project: null
+                    };
+                    return { x, y };
+                }
+            }
+        }
+        return null;
     }
 
     // 인접 점수 계산
@@ -580,6 +600,18 @@ class GameState {
         const profit = sellPrice - purchasePrice;
         player.money += sellPrice;
 
+        // 매각 이력에 추가
+        player.soldHistory.push({
+            type: 'land',
+            land: project.land,
+            sellPrice,
+            profit,
+            soldAt: this.round
+        });
+
+        // 개발 지도에서 제거
+        this.removeProjectFromMap(playerIndex);
+
         // 프로젝트 초기화
         const landName = project.land.name;
         project.land = null;
@@ -632,6 +664,20 @@ class GameState {
         player.money += sellPrice;
 
         const buildingName = `${building.building.name} @ ${building.land.name}`;
+
+        // 매각 이력에 추가
+        player.soldHistory.push({
+            type: 'building',
+            building: building.building,
+            land: building.land,
+            architect: building.architect,
+            sellPrice,
+            profitLoss,
+            marketFactor,
+            soldAt: this.round,
+            originalProject: { ...building }
+        });
+
         player.buildings.splice(buildingIndex, 1);
 
         const marketStatus = marketFactor >= 1.0 ? '호황' : '불황';
