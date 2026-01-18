@@ -237,12 +237,12 @@ export function completeEvaluation(playerIndex) {
         gameState.addLog(`🏘️ 인접 보너스: +${(adjacencyBonus * 100).toFixed(0)}%`);
     }
 
-    // 프로젝트에 평가 결과 저장
+    // 프로젝트에 평가 결과 저장 (건물 가치만 저장, 현금은 지급하지 않음)
     project.evaluationFactor = bd.finalFactor;
-    project.salePrice = bd.netProfit;
+    project.salePrice = bd.salePrice;  // 대출 상환 전 매각 금액 저장
 
-    // 대출 상환
-    player.loan = 0;
+    // 대출은 유지 (건물 매각 시에만 상환)
+    // player.loan = 0; // 자동 상환 제거
 
     // 지도에 프로젝트 배치
     const mapPosition = gameState.placeProjectOnMap(playerIndex, project);

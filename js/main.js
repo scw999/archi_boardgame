@@ -5,7 +5,7 @@ import { renderPlayerPanels } from './ui/player-panel.js';
 import { renderCardGrid, highlightCard, renderBuildingSelector } from './ui/card-display.js';
 import { showDiceRoll, showStartingDiceRoll, showLandPurchaseDice, showRiskCardDraw } from './ui/dice-roller.js';
 import { initProjectMap, renderProjectMap, renderCityGrid } from './ui/game-map.js';
-import { selectLand, attemptLandPurchase, attemptLandPurchaseByLand, checkLandPhaseComplete, getLandDisplayInfo } from './phases/land-phase.js';
+import { selectLand, attemptLandPurchase, attemptLandPurchaseByLand, checkLandPhaseComplete, getLandDisplayInfo, useWildcard as useLandWildcard } from './phases/land-phase.js';
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
 import { calculateSalePrice, completeEvaluation, checkEvaluationPhaseComplete, getRoundSummary, getFinalResults } from './phases/evaluation-phase.js';
@@ -261,6 +261,12 @@ class GameApp {
             actions.splice(2, 0, { id: 'sell-building', label: '건물 매각', icon: '🏢' });
         }
 
+        // 토지 가로채기 가능한 경우 버튼 추가
+        const canStealLand = this.getStealableLands(player);
+        if (canStealLand.length > 0 && !player.wildcardUsed) {
+            actions.push({ id: 'steal-land', label: '토지 가로채기 🃏', icon: '🃏' });
+        }
+
         renderActionArea(actions);
 
         // PM 활동
@@ -292,6 +298,109 @@ class GameApp {
             showNotification(`${player.name} 토지 구매 패스`, 'info');
             this.nextPlayerOrPhase('land');
         });
+
+        // 토지 가로채기
+        document.querySelector('[data-action="steal-land"]')?.addEventListener('click', () => {
+            this.showStealLandModal();
+        });
+    }
+
+    // 가로챌 수 있는 토지 목록 가져오기
+    getStealableLands(currentPlayer) {
+        const stealable = [];
+        const currentPlayerIndex = gameState.currentPlayerIndex;
+
+        gameState.players.forEach((player, index) => {
+            if (index !== currentPlayerIndex &&
+                player.currentProject &&
+                player.currentProject.land) {
+                stealable.push({
+                    playerIndex: index,
+                    playerName: player.name,
+                    land: player.currentProject.land,
+                    price: player.currentProject.landPrice
+                });
+            }
+        });
+
+        return stealable;
+    }
+
+    // 토지 가로채기 모달 표시
+    showStealLandModal() {
+        const player = gameState.getCurrentPlayer();
+        const stealable = this.getStealableLands(player);
+
+        if (stealable.length === 0) {
+            showNotification('가로챌 수 있는 토지가 없습니다.', 'error');
+            return;
+        }
+
+        if (player.wildcardUsed) {
+            showNotification('이번 라운드에 이미 가로채기를 사용했습니다.', 'error');
+            return;
+        }
+
+        const stealableList = stealable.map(item => {
+            const stealCost = Math.floor(item.price * 1.1);
+            const canAfford = player.money + gameState.getMaxLoan(player) - player.loan >= stealCost + (item.land.attributes?.slope === 'high' ? 50000000 : 0);
+
+            return `
+                <div class="steal-land-item ${canAfford ? '' : 'cannot-afford'}" data-player="${item.playerIndex}">
+                    <div class="steal-info">
+                        <span class="player-name">🎯 ${item.playerName}의 토지</span>
+                        <span class="land-name">${item.land.name}</span>
+                    </div>
+                    <div class="steal-cost">
+                        <span class="original-price">원가: ${gameState.formatMoney(item.price)}</span>
+                        <span class="steal-price">가로채기 비용: ${gameState.formatMoney(stealCost)} (+10%)</span>
+                    </div>
+                    <button class="btn-steal ${canAfford ? '' : 'disabled'}" data-player="${item.playerIndex}"
+                        ${canAfford ? '' : 'disabled'}>
+                        ${canAfford ? '🃏 가로채기!' : '자금 부족'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        showResultModal('🃏 토지 가로채기', `
+            <div class="steal-land-modal">
+                <p class="steal-description">
+                    다른 플레이어가 이번 라운드에 구매한 토지를 10% 추가 비용으로 가로챌 수 있습니다.
+                    <br><strong>⚠️ 라운드당 1회만 사용 가능!</strong>
+                </p>
+                <div class="steal-land-list">
+                    ${stealableList}
+                </div>
+            </div>
+        `, () => {}, false);
+
+        // 가로채기 버튼 이벤트
+        setTimeout(() => {
+            document.querySelectorAll('.btn-steal:not(.disabled)').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const targetPlayerIndex = parseInt(e.target.dataset.player);
+                    this.executeStealLand(targetPlayerIndex);
+                });
+            });
+        }, 100);
+    }
+
+    // 토지 가로채기 실행
+    executeStealLand(targetPlayerIndex) {
+        const result = useLandWildcard(gameState.currentPlayerIndex, targetPlayerIndex);
+
+        // 모달 닫기
+        const overlay = document.querySelector('.modal-overlay');
+        if (overlay) overlay.remove();
+
+        if (result.success) {
+            showNotification(result.message, 'success');
+            this.updateUI();
+            this.nextPlayerOrPhase('land');
+        } else {
+            showNotification(result.message, 'error');
+        }
     }
 
     // 건물 매각 모달 표시
@@ -2185,7 +2294,11 @@ class GameApp {
             wildcardPanel = document.createElement('div');
             wildcardPanel.id = 'wildcard-panel';
             wildcardPanel.className = 'wildcard-panel';
-            document.querySelector('.game-main')?.appendChild(wildcardPanel);
+            // game-container에 추가
+            const gameContainer = document.getElementById('game-container');
+            if (gameContainer) {
+                gameContainer.appendChild(wildcardPanel);
+            }
         }
 
         wildcardPanel.innerHTML = `
