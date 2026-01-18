@@ -137,18 +137,20 @@ function renderArchitectCard(architect, index) {
 // 시공사 카드
 function renderConstructorCard(constructor, index) {
     const info = getConstructorDisplayInfo(constructor);
+    const isClaimed = constructor.isClaimed === true;
 
     return `
-    <div class="game-card constructor-card" data-index="${index}">
+    <div class="game-card constructor-card ${isClaimed ? 'claimed' : ''}" data-index="${index}">
       <div class="card-header constructor">
         <span class="card-type">🏗️ 시공사</span>
+        ${isClaimed ? '<span class="claimed-badge">선점됨</span>' : ''}
       </div>
       <div class="card-body">
         <div class="portrait">${info.emoji}</div>
         <div class="card-title">${info.name}</div>
-        
+
         <div class="size-badge">${info.size}</div>
-        
+
         <div class="card-stats">
           <div class="stat">
             <span class="stat-label">시공비</span>
@@ -163,15 +165,17 @@ function renderConstructorCard(constructor, index) {
             <span class="stat-value">${info.paymentStages}</span>
           </div>
         </div>
-        
+
         ${info.artistryBonus ? `<div class="special-bonus">${info.artistryBonus}</div>` : ''}
-        
+
         <div class="can-build">
           <span class="label">시공 가능:</span>
           <span class="value">${info.canBuild}</span>
         </div>
-        
+
         <div class="card-description">${info.description}</div>
+
+        ${isClaimed ? '<div class="claimed-overlay">🚫 다른 플레이어가 선택</div>' : ''}
       </div>
     </div>
   `;

@@ -120,21 +120,35 @@ class GameState {
         // 와일드카드 풀 (평가 시 획득 가능)
         this.wildcardPool = [];
 
+        // 프리미엄 대지 추가 여부
+        this.premiumLandsAdded = false;
+
         // 이벤트 로그
         this.log = [];
     }
 
     // 도시 지도 초기화 (5x5 그리드)
+    // 지방 → 경기 외곽 → 경기 주요 → 서울 → 서울 핵심 순서로 배치
     initCityMap() {
         const map = [];
-        const districts = ['강남구', '서초구', '마포구', '용산구', '성동구'];
+        // 행별 지역 정보 (위에서 아래로: 시골 → 서울 핵심)
+        const regionData = [
+            { name: '지방/시골', tier: 1, emoji: '🌾', color: '#4a7c4e' },
+            { name: '경기 외곽', tier: 2, emoji: '🏘️', color: '#6b8e6b' },
+            { name: '경기 주요', tier: 3, emoji: '🏙️', color: '#7a9ec2' },
+            { name: '서울', tier: 4, emoji: '🌆', color: '#9b7cb8' },
+            { name: '서울 핵심', tier: 5, emoji: '✨', color: '#d4af37' }
+        ];
 
         for (let y = 0; y < 5; y++) {
             map[y] = [];
             for (let x = 0; x < 5; x++) {
                 map[y][x] = {
                     x, y,
-                    district: districts[y],
+                    district: regionData[y].name,
+                    tier: regionData[y].tier,
+                    emoji: regionData[y].emoji,
+                    color: regionData[y].color,
                     owner: null,
                     project: null,
                     building: null,
@@ -252,12 +266,8 @@ class GameState {
 
     // 라운드 시작
     startRound() {
-        // 덱 리필 (부족하면 새로 생성하여 추가)
-        this.refillDecks();
-
-        // 라운드별 대지 덱 사용 (라운드 2부터 프리미엄 대지 추가, 가격 상승)
-        const roundLandDeck = createRoundLandDeck(this.currentRound);
-        this.landDeck = [...this.landDeck, ...roundLandDeck].sort(() => Math.random() - 0.5);
+        // 덱 리필 (부족하면 새로 생성하여 추가) - 라운드 정보 전달
+        this.refillDecks(this.currentRound);
 
         // 선점 초기화 (매 라운드마다 리셋)
         this.selectedArchitects = new Set();
@@ -277,33 +287,44 @@ class GameState {
         });
 
         this.addLog(`===== 라운드 ${this.currentRound} 시작 =====`);
-        if (this.currentRound >= 2) {
+        if (this.currentRound >= 2 && !this.premiumLandsAdded) {
             this.addLog(`💎 프리미엄 대지가 추가되었습니다!`);
         }
     }
 
     // 덱 리필 (부족하면 새로 추가)
-    refillDecks() {
+    refillDecks(currentRound = 1) {
         const minCards = 8; // 최소 필요 카드 수
+
+        // 대지 덱 리필
+        if (this.landDeck.length < minCards) {
+            // 라운드 2부터는 프리미엄 대지 포함
+            const newCards = createRoundLandDeck(currentRound);
+            this.landDeck = [...this.landDeck, ...newCards].sort(() => Math.random() - 0.5);
+            this.addLog('🗺️ 토지 카드가 보충되었습니다.');
+            if (currentRound >= 2) {
+                this.premiumLandsAdded = true;
+            }
+        }
 
         // 건축가 덱 리필
         if (this.architectDeck.length < minCards) {
             const newCards = createArchitectDeck();
-            this.architectDeck = [...this.architectDeck, ...newCards];
+            this.architectDeck = [...this.architectDeck, ...newCards].sort(() => Math.random() - 0.5);
             this.addLog('🎨 건축가 카드가 보충되었습니다.');
         }
 
         // 시공사 덱 리필
         if (this.constructorDeck.length < minCards) {
             const newCards = createConstructorDeck();
-            this.constructorDeck = [...this.constructorDeck, ...newCards];
+            this.constructorDeck = [...this.constructorDeck, ...newCards].sort(() => Math.random() - 0.5);
             this.addLog('🏗️ 시공사 카드가 보충되었습니다.');
         }
 
         // 리스크 덱 리필
         if (this.riskDeck.length < 20) {
             const newCards = createRiskDeck();
-            this.riskDeck = [...this.riskDeck, ...newCards];
+            this.riskDeck = [...this.riskDeck, ...newCards].sort(() => Math.random() - 0.5);
         }
     }
 

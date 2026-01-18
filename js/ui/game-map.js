@@ -61,6 +61,7 @@ export function renderProjectMap() {
 }
 
 // 도시 지도 그리드 렌더링 (5x5)
+// 지방 → 경기 외곽 → 경기 주요 → 서울 → 서울 핵심 순서
 export function renderCityGrid() {
     const cityGridSection = document.getElementById('city-grid');
     if (!cityGridSection) return;
@@ -68,12 +69,34 @@ export function renderCityGrid() {
     const cityMap = gameState.cityMap;
     if (!cityMap) return;
 
-    let gridHtml = '<div class="city-grid-container">';
-    const districts = ['강남구', '서초구', '마포구', '용산구', '성동구'];
+    let gridHtml = `
+        <div class="city-map-wrapper">
+            <div class="city-map-title">🗺️ 개발 지도</div>
+            <div class="city-map-legend">
+                <span class="legend-item tier-1">🌾 지방</span>
+                <span class="legend-arrow">→</span>
+                <span class="legend-item tier-2">🏘️ 경기 외곽</span>
+                <span class="legend-arrow">→</span>
+                <span class="legend-item tier-3">🏙️ 경기 주요</span>
+                <span class="legend-arrow">→</span>
+                <span class="legend-item tier-4">🌆 서울</span>
+                <span class="legend-arrow">→</span>
+                <span class="legend-item tier-5">✨ 서울 핵심</span>
+            </div>
+            <div class="city-grid-container">
+    `;
 
     for (let y = 0; y < 5; y++) {
-        gridHtml += `<div class="city-row" data-district="${districts[y]}">`;
-        gridHtml += `<div class="district-label">${districts[y]}</div>`;
+        const regionInfo = cityMap[y][0]; // 같은 행은 같은 지역
+        const tierClass = `tier-${regionInfo.tier}`;
+
+        gridHtml += `
+            <div class="city-row ${tierClass}" data-district="${regionInfo.district}" style="--region-color: ${regionInfo.color}">
+                <div class="district-label">
+                    <span class="district-emoji">${regionInfo.emoji}</span>
+                    <span class="district-name">${regionInfo.district}</span>
+                </div>
+        `;
 
         for (let x = 0; x < 5; x++) {
             const cell = cityMap[y][x];
@@ -81,26 +104,66 @@ export function renderCityGrid() {
             const hasBuilding = cell.building !== null;
             const ownerClass = cell.owner !== null ? `owner-${cell.owner}` : '';
 
+            // 지역별 배경 테마
+            const bgPattern = getTierBackgroundPattern(regionInfo.tier);
+
             gridHtml += `
-                <div class="city-cell ${ownerClass} ${hasBuilding ? 'has-building' : ''}"
-                     data-x="${x}" data-y="${y}">
+                <div class="city-cell ${ownerClass} ${tierClass} ${hasBuilding ? 'has-building' : ''}"
+                     data-x="${x}" data-y="${y}" data-lot="${String.fromCharCode(65 + y)}${x + 1}"
+                     style="--cell-bg: ${bgPattern}">
+                    <div class="cell-terrain"></div>
                     ${hasBuilding ? `
                         <div class="cell-building">
                             <span class="building-emoji">${cell.building.emoji}</span>
+                            <div class="building-glow"></div>
                         </div>
                     ` : hasProject ? `
-                        <div class="cell-project">🏗️</div>
+                        <div class="cell-project">
+                            <span class="project-icon">🏗️</span>
+                        </div>
                     ` : `
-                        <div class="cell-empty">·</div>
+                        <div class="cell-empty">
+                            <span class="empty-icon">${getEmptySlotIcon(regionInfo.tier)}</span>
+                        </div>
                     `}
                 </div>
             `;
         }
         gridHtml += '</div>';
     }
-    gridHtml += '</div>';
+    gridHtml += `
+            </div>
+            <div class="city-map-footer">
+                <span>📍 건물을 지으면 지도에 표시됩니다</span>
+            </div>
+        </div>
+    `;
 
     cityGridSection.innerHTML = gridHtml;
+}
+
+// 지역 티어별 배경 패턴
+function getTierBackgroundPattern(tier) {
+    const patterns = {
+        1: 'linear-gradient(135deg, #3d5c3d 0%, #4a7c4e 100%)', // 시골 - 녹색
+        2: 'linear-gradient(135deg, #5a7a5a 0%, #6b8e6b 100%)', // 경기 외곽 - 연녹색
+        3: 'linear-gradient(135deg, #5a7a9a 0%, #7a9ec2 100%)', // 경기 주요 - 청색
+        4: 'linear-gradient(135deg, #7a5a8a 0%, #9b7cb8 100%)', // 서울 - 보라색
+        5: 'linear-gradient(135deg, #b8962b 0%, #d4af37 100%)'  // 서울 핵심 - 금색
+    };
+    return patterns[tier] || patterns[1];
+}
+
+// 빈 슬롯 아이콘 (지역별)
+function getEmptySlotIcon(tier) {
+    const icons = {
+        1: '🌿', // 시골 - 풀
+        2: '🌳', // 경기 외곽 - 나무
+        3: '🏛️', // 경기 주요 - 건물
+        4: '🏢', // 서울 - 빌딩
+        5: '💎'  // 서울 핵심 - 다이아
+    };
+    return icons[tier] || '·';
 }
 
 // 개별 프로젝트 타일 렌더링
