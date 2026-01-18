@@ -117,16 +117,17 @@ export async function showStartingDiceRoll(playerName, onComplete) {
                 el.textContent = getDiceEmoji(result.dice[idx]);
             });
 
-            // 합계 표시
+            // 합계 표시 - 증가된 자금 테이블
             const moneyTable = {
-                18: '10억', 17: '10억', 16: '5억', 15: '5억',
-                14: '3억', 13: '3억', 12: '3억',
-                11: '2억', 10: '2억', 9: '2억', 8: '2억', 7: '2억', 6: '2억', 5: '2억', 4: '2억', 3: '2억'
+                18: '20억', 17: '20억', 16: '15억', 15: '15억',
+                14: '10억', 13: '10억', 12: '8억', 11: '8억',
+                10: '7억', 9: '7억', 8: '6억', 7: '6억',
+                6: '5억', 5: '5억', 4: '5억', 3: '5억'
             };
 
             totalEl.innerHTML = `
         <div class="total-sum">합계: ${result.total}</div>
-        <div class="starting-money">시작 자금: ${moneyTable[result.total] || '2억'}</div>
+        <div class="starting-money">시작 자금: ${moneyTable[result.total] || '5억'}</div>
       `;
 
             rollBtn.textContent = '확인';
