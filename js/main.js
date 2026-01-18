@@ -4,7 +4,7 @@ import { renderGameBoard, renderGameLog, renderActionArea, showNotification, sho
 import { renderPlayerPanels } from './ui/player-panel.js';
 import { renderCardGrid, highlightCard, renderBuildingSelector } from './ui/card-display.js';
 import { showDiceRoll, showStartingDiceRoll, showLandPurchaseDice, showRiskCardDraw } from './ui/dice-roller.js';
-import { initProjectMap, renderProjectMap } from './ui/game-map.js';
+import { initProjectMap, renderProjectMap, renderCityGrid } from './ui/game-map.js';
 import { selectLand, attemptLandPurchase, checkLandPhaseComplete, getLandDisplayInfo } from './phases/land-phase.js';
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
@@ -947,6 +947,13 @@ class GameApp {
         renderPlayerPanels();
         renderGameLog();
         renderProjectMap();
+        renderCityGrid();
+
+        // 도시 지도 표시
+        const cityGrid = document.getElementById('city-grid');
+        if (cityGrid && gameState.phase !== 'setup') {
+            cityGrid.classList.remove('hidden');
+        }
     }
 
     // 게임 불러오기

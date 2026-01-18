@@ -49,12 +49,58 @@ export function renderProjectMap() {
         return renderProjectTile(player, index);
     }).join('');
 
-    mapGrid.innerHTML = tiles;
+    // 완성된 건물들도 함께 표시
+    const completedTiles = renderCompletedBuildings();
+
+    mapGrid.innerHTML = tiles + completedTiles;
 
     // 3D 보기 상태 유지
     if (is3DView) {
         mapGrid.classList.add('view-3d');
     }
+}
+
+// 도시 지도 그리드 렌더링 (5x5)
+export function renderCityGrid() {
+    const cityGridSection = document.getElementById('city-grid');
+    if (!cityGridSection) return;
+
+    const cityMap = gameState.cityMap;
+    if (!cityMap) return;
+
+    let gridHtml = '<div class="city-grid-container">';
+    const districts = ['강남구', '서초구', '마포구', '용산구', '성동구'];
+
+    for (let y = 0; y < 5; y++) {
+        gridHtml += `<div class="city-row" data-district="${districts[y]}">`;
+        gridHtml += `<div class="district-label">${districts[y]}</div>`;
+
+        for (let x = 0; x < 5; x++) {
+            const cell = cityMap[y][x];
+            const hasProject = cell.project !== null;
+            const hasBuilding = cell.building !== null;
+            const ownerClass = cell.owner !== null ? `owner-${cell.owner}` : '';
+
+            gridHtml += `
+                <div class="city-cell ${ownerClass} ${hasBuilding ? 'has-building' : ''}"
+                     data-x="${x}" data-y="${y}">
+                    ${hasBuilding ? `
+                        <div class="cell-building">
+                            <span class="building-emoji">${cell.building.emoji}</span>
+                        </div>
+                    ` : hasProject ? `
+                        <div class="cell-project">🏗️</div>
+                    ` : `
+                        <div class="cell-empty">·</div>
+                    `}
+                </div>
+            `;
+        }
+        gridHtml += '</div>';
+    }
+    gridHtml += '</div>';
+
+    cityGridSection.innerHTML = gridHtml;
 }
 
 // 개별 프로젝트 타일 렌더링

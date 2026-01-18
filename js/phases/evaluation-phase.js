@@ -151,6 +151,71 @@ export function calculateSalePrice(playerIndex) {
     };
 }
 
+// 와일드카드 종류
+const WILDCARDS = {
+    LAND_DISCOUNT: {
+        id: 'land_discount',
+        name: '🎫 토지 할인권',
+        description: '다음 토지 구매 시 20% 할인',
+        effect: { type: 'land_discount', value: 0.2 }
+    },
+    DESIGN_FREE: {
+        id: 'design_free',
+        name: '🎫 설계비 면제권',
+        description: '다음 설계비 무료',
+        effect: { type: 'design_free', value: 1 }
+    },
+    RISK_BLOCK: {
+        id: 'risk_block',
+        name: '🛡️ 리스크 방어권',
+        description: '리스크 카드 1장 무효화',
+        effect: { type: 'risk_block', value: 1 }
+    },
+    BONUS_DICE: {
+        id: 'bonus_dice',
+        name: '🎲 행운 주사위',
+        description: '주사위 재굴림 1회',
+        effect: { type: 'bonus_dice', value: 1 }
+    },
+    LOAN_RATE_CUT: {
+        id: 'loan_rate_cut',
+        name: '💰 금리 인하권',
+        description: '대출 이자율 50% 감소',
+        effect: { type: 'loan_rate_cut', value: 0.5 }
+    }
+};
+
+// 평가에 따른 와일드카드 지급
+function grantWildcard(playerIndex, awards) {
+    const player = gameState.players[playerIndex];
+
+    // 상을 받은 경우 와일드카드 지급
+    if (awards.length >= 2) {
+        // 2개 이상의 상을 받으면 와일드카드 2개
+        const wildcards = Object.values(WILDCARDS);
+        const card1 = wildcards[Math.floor(Math.random() * wildcards.length)];
+        const card2 = wildcards[Math.floor(Math.random() * wildcards.length)];
+
+        if (!player.wildcards) player.wildcards = [];
+        player.wildcards.push({ ...card1 }, { ...card2 });
+
+        gameState.addLog(`🎁 ${player.name}: 와일드카드 2장 획득! (${card1.name}, ${card2.name})`);
+        return [card1, card2];
+    } else if (awards.length === 1) {
+        // 1개의 상을 받으면 와일드카드 1개
+        const wildcards = Object.values(WILDCARDS);
+        const card = wildcards[Math.floor(Math.random() * wildcards.length)];
+
+        if (!player.wildcards) player.wildcards = [];
+        player.wildcards.push({ ...card });
+
+        gameState.addLog(`🎁 ${player.name}: 와일드카드 획득! (${card.name})`);
+        return [card];
+    }
+
+    return [];
+}
+
 // 건물 평가 완료 및 매각
 export function completeEvaluation(playerIndex) {
     const result = calculateSalePrice(playerIndex);
@@ -163,12 +228,27 @@ export function completeEvaluation(playerIndex) {
     const project = player.currentProject;
     const bd = result.breakdown;
 
+    // 인접 보너스 적용
+    const adjacencyBonus = gameState.calculateAdjacencyBonus(playerIndex);
+    if (adjacencyBonus > 0) {
+        bd.finalFactor *= (1 + adjacencyBonus);
+        bd.salePrice = Math.round(bd.totalInvestment * bd.finalFactor - bd.lossCost);
+        bd.netProfit = bd.salePrice - bd.loanRepayment;
+        gameState.addLog(`🏘️ 인접 보너스: +${(adjacencyBonus * 100).toFixed(0)}%`);
+    }
+
     // 프로젝트에 평가 결과 저장
     project.evaluationFactor = bd.finalFactor;
     project.salePrice = bd.netProfit;
 
     // 대출 상환
     player.loan = 0;
+
+    // 지도에 프로젝트 배치
+    const mapPosition = gameState.placeProjectOnMap(playerIndex, project);
+    if (mapPosition) {
+        gameState.addLog(`📍 건물 배치: ${gameState.cityMap[mapPosition.y][mapPosition.x].district} (${mapPosition.x}, ${mapPosition.y})`);
+    }
 
     // 로그 기록
     gameState.addLog(`===== ${player.name} 건물 평가 =====`);
@@ -186,12 +266,17 @@ export function completeEvaluation(playerIndex) {
     gameState.addLog(`대출 상환: ${gameState.formatMoney(bd.loanRepayment)}`);
     gameState.addLog(`최종 수익: ${gameState.formatMoney(bd.netProfit)}`);
 
+    // 와일드카드 지급
+    const grantedWildcards = grantWildcard(playerIndex, bd.awards);
+
     const profitRate = ((bd.netProfit / bd.totalInvestment) * 100).toFixed(1);
     const profitSign = bd.netProfit >= bd.totalInvestment ? '+' : '';
 
     return {
         success: true,
         ...result,
+        grantedWildcards,
+        adjacencyBonus,
         profitRate: `${profitSign}${profitRate}%`,
         message: bd.netProfit >= bd.totalInvestment
             ? `🎉 수익 실현! ${gameState.formatMoney(bd.netProfit)} (${profitSign}${profitRate}%)`

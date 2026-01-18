@@ -221,8 +221,93 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 리스크 카드 뽑기 애니메이션
+// 리스크 카드 뽑기 애니메이션 (수동 모드)
 export async function showRiskCardDraw(risks, onComplete) {
+    return new Promise((resolve) => {
+        const container = createDiceContainer();
+        let currentCardIndex = 0;
+
+        const renderCards = () => {
+            container.innerHTML = `
+            <div class="dice-overlay">
+              <div class="dice-modal large">
+                <div class="dice-title">⚠️ 리스크 카드 공개</div>
+                <div class="risk-progress">
+                  <span>진행: ${currentCardIndex} / ${risks.length}</span>
+                </div>
+                <div class="risk-cards-container manual">
+                  ${risks.map((risk, idx) => `
+                    <div class="risk-card-slot ${idx < currentCardIndex ? 'revealed' : ''} ${idx === currentCardIndex ? 'clickable' : ''}"
+                         data-index="${idx}">
+                      ${idx < currentCardIndex ? `
+                        <div class="risk-revealed ${risk.severity}">
+                          <span class="risk-emoji">${risk.emoji}</span>
+                          <span class="risk-name">${risk.name}</span>
+                        </div>
+                      ` : `
+                        <div class="card-back ${idx === currentCardIndex ? 'pulse' : ''}">
+                          ${idx === currentCardIndex ? '클릭!' : '?'}
+                        </div>
+                      `}
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="risk-instruction">
+                  ${currentCardIndex < risks.length
+                    ? `<p>🖱️ 카드 ${currentCardIndex + 1}번을 클릭하여 공개하세요!</p>`
+                    : '<p>✅ 모든 카드가 공개되었습니다!</p>'
+                  }
+                </div>
+                ${currentCardIndex >= risks.length ? `
+                  <button class="reveal-button complete">결과 확인</button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        };
+
+        const handleCardClick = async (index) => {
+            if (index !== currentCardIndex) return;
+
+            const slot = container.querySelector(`[data-index="${index}"]`);
+            if (!slot) return;
+
+            slot.classList.add('revealing');
+            await delay(300);
+
+            currentCardIndex++;
+            renderCards();
+
+            // 모든 카드가 공개되면 완료 버튼 활성화
+            if (currentCardIndex >= risks.length) {
+                const completeBtn = container.querySelector('.reveal-button.complete');
+                if (completeBtn) {
+                    completeBtn.addEventListener('click', () => {
+                        container.classList.remove('active');
+                        container.innerHTML = '';
+                        if (onComplete) onComplete(risks);
+                        resolve(risks);
+                    });
+                }
+            }
+        };
+
+        container.classList.add('active');
+        renderCards();
+
+        // 카드 클릭 이벤트 위임
+        container.addEventListener('click', (e) => {
+            const slot = e.target.closest('.risk-card-slot.clickable');
+            if (slot) {
+                const index = parseInt(slot.dataset.index);
+                handleCardClick(index);
+            }
+        });
+    });
+}
+
+// 리스크 카드 뽑기 (자동 모드 - 레거시 호환)
+export async function showRiskCardDrawAuto(risks, onComplete) {
     const container = createDiceContainer();
 
     container.innerHTML = `

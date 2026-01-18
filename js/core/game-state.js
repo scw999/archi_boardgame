@@ -1,7 +1,7 @@
 // 게임 상태 관리
-import { createLandDeck } from '../data/lands.js';
-import { createArchitectDeck } from '../data/architects.js';
-import { createConstructorDeck } from '../data/constructors.js';
+import { createLandDeck, createRoundLandDeck, lands, premiumLands } from '../data/lands.js';
+import { createArchitectDeck, architects } from '../data/architects.js';
+import { createConstructorDeck, constructors } from '../data/constructors.js';
 import { createRiskDeck } from '../data/risks.js';
 
 // 게임 페이즈
@@ -104,14 +104,120 @@ class GameState {
         // 거래 진행중인 토지 (다른 플레이어가 실패한 경우)
         this.pendingLands = [];
 
+        // 선점된 카드 추적 (라운드당)
+        this.selectedArchitects = new Set();  // 이번 라운드에 선택된 건축가 ID
+        this.selectedConstructors = new Set(); // 이번 라운드에 선택된 시공사 ID
+
+        // 도시 지도 (인접 보너스용)
+        this.cityMap = this.initCityMap();
+
         // 게임 설정
         this.settings = {
             easyStart: false,       // 같은 금액으로 시작
             startingMoney: 1000000000 // 쉬운 시작시 기본 금액 10억
         };
 
+        // 와일드카드 풀 (평가 시 획득 가능)
+        this.wildcardPool = [];
+
         // 이벤트 로그
         this.log = [];
+    }
+
+    // 도시 지도 초기화 (5x5 그리드)
+    initCityMap() {
+        const map = [];
+        const districts = ['강남구', '서초구', '마포구', '용산구', '성동구'];
+
+        for (let y = 0; y < 5; y++) {
+            map[y] = [];
+            for (let x = 0; x < 5; x++) {
+                map[y][x] = {
+                    x, y,
+                    district: districts[y],
+                    owner: null,
+                    project: null,
+                    building: null,
+                    adjacentBonus: 0
+                };
+            }
+        }
+        return map;
+    }
+
+    // 지도에 프로젝트 배치
+    placeProjectOnMap(playerIndex, project) {
+        // 빈 칸 중 랜덤 선택 또는 가장 유리한 위치 선택
+        const emptySlots = [];
+        for (let y = 0; y < 5; y++) {
+            for (let x = 0; x < 5; x++) {
+                if (!this.cityMap[y][x].project) {
+                    emptySlots.push({ x, y });
+                }
+            }
+        }
+
+        if (emptySlots.length === 0) return null;
+
+        // 인접한 자기 건물 근처 우선 선택
+        const player = this.players[playerIndex];
+        let bestSlot = emptySlots[0];
+        let bestAdjacency = 0;
+
+        for (const slot of emptySlots) {
+            const adjacency = this.calculateAdjacencyScore(slot.x, slot.y, playerIndex);
+            if (adjacency > bestAdjacency) {
+                bestAdjacency = adjacency;
+                bestSlot = slot;
+            }
+        }
+
+        // 배치
+        this.cityMap[bestSlot.y][bestSlot.x] = {
+            ...this.cityMap[bestSlot.y][bestSlot.x],
+            owner: playerIndex,
+            project: project,
+            building: project.building
+        };
+
+        return bestSlot;
+    }
+
+    // 인접 점수 계산
+    calculateAdjacencyScore(x, y, playerIndex) {
+        let score = 0;
+        const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]; // 상하좌우
+
+        for (const [dx, dy] of directions) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < 5 && ny >= 0 && ny < 5) {
+                const cell = this.cityMap[ny][nx];
+                if (cell.owner === playerIndex) {
+                    score += 0.1; // 같은 플레이어 인접 보너스 10%
+                }
+                if (cell.building) {
+                    score += 0.05; // 아무 건물이나 인접하면 5%
+                }
+            }
+        }
+        return score;
+    }
+
+    // 인접 보너스 계산 (평가 시 사용)
+    calculateAdjacencyBonus(playerIndex) {
+        let totalBonus = 0;
+
+        for (let y = 0; y < 5; y++) {
+            for (let x = 0; x < 5; x++) {
+                const cell = this.cityMap[y][x];
+                if (cell.owner === playerIndex && cell.building) {
+                    totalBonus += this.calculateAdjacencyScore(x, y, playerIndex);
+                }
+            }
+        }
+
+        return totalBonus;
     }
 
     // 게임 초기화
@@ -146,6 +252,17 @@ class GameState {
 
     // 라운드 시작
     startRound() {
+        // 덱 리필 (부족하면 새로 생성하여 추가)
+        this.refillDecks();
+
+        // 라운드별 대지 덱 사용 (라운드 2부터 프리미엄 대지 추가, 가격 상승)
+        const roundLandDeck = createRoundLandDeck(this.currentRound);
+        this.landDeck = [...this.landDeck, ...roundLandDeck].sort(() => Math.random() - 0.5);
+
+        // 선점 초기화 (매 라운드마다 리셋)
+        this.selectedArchitects = new Set();
+        this.selectedConstructors = new Set();
+
         // 카드 8장씩 공개
         this.availableLands = this.drawCards(this.landDeck, 8);
         this.availableArchitects = this.drawCards(this.architectDeck, 8);
@@ -160,6 +277,34 @@ class GameState {
         });
 
         this.addLog(`===== 라운드 ${this.currentRound} 시작 =====`);
+        if (this.currentRound >= 2) {
+            this.addLog(`💎 프리미엄 대지가 추가되었습니다!`);
+        }
+    }
+
+    // 덱 리필 (부족하면 새로 추가)
+    refillDecks() {
+        const minCards = 8; // 최소 필요 카드 수
+
+        // 건축가 덱 리필
+        if (this.architectDeck.length < minCards) {
+            const newCards = createArchitectDeck();
+            this.architectDeck = [...this.architectDeck, ...newCards];
+            this.addLog('🎨 건축가 카드가 보충되었습니다.');
+        }
+
+        // 시공사 덱 리필
+        if (this.constructorDeck.length < minCards) {
+            const newCards = createConstructorDeck();
+            this.constructorDeck = [...this.constructorDeck, ...newCards];
+            this.addLog('🏗️ 시공사 카드가 보충되었습니다.');
+        }
+
+        // 리스크 덱 리필
+        if (this.riskDeck.length < 20) {
+            const newCards = createRiskDeck();
+            this.riskDeck = [...this.riskDeck, ...newCards];
+        }
     }
 
     // 카드 드로우
@@ -169,6 +314,44 @@ class GameState {
             drawn.push(deck.pop());
         }
         return drawn;
+    }
+
+    // 건축가 선점 확인
+    isArchitectAvailable(architectId) {
+        return !this.selectedArchitects.has(architectId);
+    }
+
+    // 건축가 선점
+    claimArchitect(architectId, playerIndex) {
+        if (this.selectedArchitects.has(architectId)) {
+            return { success: false, message: '이미 다른 플레이어가 선택한 건축가입니다.' };
+        }
+        this.selectedArchitects.add(architectId);
+        return { success: true };
+    }
+
+    // 시공사 선점 확인
+    isConstructorAvailable(constructorId) {
+        return !this.selectedConstructors.has(constructorId);
+    }
+
+    // 시공사 선점
+    claimConstructor(constructorId, playerIndex) {
+        if (this.selectedConstructors.has(constructorId)) {
+            return { success: false, message: '이미 다른 플레이어가 선택한 시공사입니다.' };
+        }
+        this.selectedConstructors.add(constructorId);
+        return { success: true };
+    }
+
+    // 선점 가능한 건축가 목록 반환
+    getAvailableArchitects() {
+        return this.availableArchitects.filter(a => !this.selectedArchitects.has(a.id));
+    }
+
+    // 선점 가능한 시공사 목록 반환
+    getAvailableConstructors() {
+        return this.availableConstructors.filter(c => !this.selectedConstructors.has(c.id));
     }
 
     // 현재 플레이어 가져오기
