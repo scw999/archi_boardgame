@@ -1600,6 +1600,88 @@ body {
 .tile-phase.design { background: var(--accent-blue); color: white; }
 .tile-phase.construction { background: var(--accent-orange); color: white; }
 .tile-phase.complete { background: var(--accent-gold); color: #1a1a2e; }
+.tile-phase.sold { background: #6b7280; color: white; }
+
+/* 매각 완료 타일 */
+.project-tile.sold {
+  opacity: 0.8;
+  border-color: #6b7280;
+}
+
+.project-tile.sold .land-visual.sold {
+  filter: grayscale(50%);
+  background: linear-gradient(135deg, #4a4a4a 0%, #6b6b6b 50%, #5a5a5a 100%);
+}
+
+.project-tile.sold .building-3d.sold {
+  position: relative;
+  filter: grayscale(30%);
+}
+
+.project-tile.sold .sold-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  z-index: 10;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.project-tile.sold .tile-cost.sold-price {
+  color: #9ca3af;
+}
+
+.project-tile.sold .progress-fill.sold {
+  background: linear-gradient(90deg, #6b7280, #9ca3af);
+  width: 100%;
+}
+
+/* 매각 상세 모달 */
+.sold-detail {
+  padding: 1rem 0;
+}
+
+.sold-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.sold-emoji {
+  font-size: 3rem;
+  filter: grayscale(30%);
+}
+
+.sold-title h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.3rem;
+}
+
+.sold-location, .sold-owner {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.sold-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #6b7280;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sold-info-grid {
+  display: grid;
+  gap: 1rem;
+}
 
 /* 대지 시각화 */
 .tile-land {

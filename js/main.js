@@ -1968,8 +1968,31 @@ class GameApp {
             tile.addEventListener('click', () => {
                 const playerIndex = parseInt(tile.dataset.player);
                 const player = gameState.players[playerIndex];
-                if (player && player.currentProject && player.currentProject.land) {
-                    this.showPropertyDetail(player.currentProject, playerIndex);
+                const tileType = tile.dataset.type;
+
+                if (tileType === 'owned') {
+                    // 보유 중인 완성 건물
+                    const buildingIndex = parseInt(tile.dataset.building);
+                    if (player && player.buildings[buildingIndex]) {
+                        this.showPropertyDetail(player.buildings[buildingIndex], playerIndex);
+                    }
+                } else if (tileType === 'sold') {
+                    // 매각된 건물
+                    const soldIndex = parseInt(tile.dataset.sold);
+                    if (player && player.soldHistory && player.soldHistory[soldIndex]) {
+                        this.showSoldDetail(player.soldHistory[soldIndex], playerIndex);
+                    }
+                } else if (tileType === 'sold-land') {
+                    // 매각된 토지
+                    const soldIndex = parseInt(tile.dataset.sold);
+                    if (player && player.soldHistory && player.soldHistory[soldIndex]) {
+                        this.showSoldLandDetail(player.soldHistory[soldIndex], playerIndex);
+                    }
+                } else {
+                    // 현재 진행 중인 프로젝트
+                    if (player && player.currentProject && player.currentProject.land) {
+                        this.showPropertyDetail(player.currentProject, playerIndex);
+                    }
                 }
             });
         });
@@ -2291,6 +2314,95 @@ class GameApp {
             document.querySelector('.modal-overlay')?.remove();
             this.updateUI();
         }
+    }
+
+    // 매각된 건물 상세 정보 표시
+    showSoldDetail(sold, ownerIndex) {
+        const ownerName = gameState.players[ownerIndex]?.name || '알 수 없음';
+        const profitLossText = sold.profitLoss >= 0
+            ? `+${gameState.formatMoney(sold.profitLoss)}`
+            : `-${gameState.formatMoney(Math.abs(sold.profitLoss))}`;
+        const marketStatus = sold.marketFactor >= 1.0 ? '호황' : '불황';
+
+        showResultModal(`💰 ${sold.building.name} 매각 이력`, `
+            <div class="sold-detail">
+                <div class="sold-header">
+                    <span class="sold-emoji">${sold.building.emoji}</span>
+                    <div class="sold-title">
+                        <h2>${sold.building.name}</h2>
+                        <span class="sold-location">📍 ${sold.land.name}</span>
+                        <span class="sold-owner">👤 ${ownerName}</span>
+                    </div>
+                    <span class="sold-badge">매각 완료</span>
+                </div>
+
+                <div class="sold-info-grid">
+                    <div class="info-section">
+                        <h4>🏗️ 건물 정보</h4>
+                        <div class="info-row">
+                            <span class="label">건축가</span>
+                            <span class="value">${sold.architect?.portrait || ''} ${sold.architect?.name || '-'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">매각 라운드</span>
+                            <span class="value">라운드 ${sold.soldAt}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>💰 매각 정보</h4>
+                        <div class="info-row large">
+                            <span class="label">매각가</span>
+                            <span class="value gold">${gameState.formatMoney(sold.sellPrice)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">손익</span>
+                            <span class="value ${sold.profitLoss >= 0 ? 'profit' : 'loss'}">${profitLossText}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">시장 상황</span>
+                            <span class="value">${marketStatus} (x${sold.marketFactor.toFixed(2)})</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `, null, true);
+    }
+
+    // 매각된 토지 상세 정보 표시
+    showSoldLandDetail(sold, ownerIndex) {
+        const ownerName = gameState.players[ownerIndex]?.name || '알 수 없음';
+
+        showResultModal(`💰 ${sold.land.name} 토지 매각 이력`, `
+            <div class="sold-detail land-sold">
+                <div class="sold-header">
+                    <span class="sold-emoji">🏞️</span>
+                    <div class="sold-title">
+                        <h2>${sold.land.name}</h2>
+                        <span class="sold-owner">👤 ${ownerName}</span>
+                    </div>
+                    <span class="sold-badge">토지 매각</span>
+                </div>
+
+                <div class="sold-info-grid">
+                    <div class="info-section">
+                        <h4>💰 매각 정보</h4>
+                        <div class="info-row large">
+                            <span class="label">매각가</span>
+                            <span class="value gold">${gameState.formatMoney(sold.sellPrice)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">수익</span>
+                            <span class="value profit">+${gameState.formatMoney(sold.profit)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">매각 라운드</span>
+                            <span class="value">라운드 ${sold.soldAt}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `, null, true);
     }
 
     // 와일드카드 패널 업데이트
