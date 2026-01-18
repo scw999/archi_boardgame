@@ -446,7 +446,216 @@ export function calculateLandDevelopmentCost(land) {
   return extraCost;
 }
 
-// 카드 덱 생성을 위한 함수
+// 라운드별 추가 프리미엄 대지 (라운드 2+)
+export const premiumLands = [
+  // 강남권 고급 필지
+  {
+    id: 'land_premium_gangnam_1',
+    type: LAND_TYPES.COMMERCIAL,
+    name: '강남 역세권 필지',
+    description: '강남역 도보 5분, 최고 입지',
+    suitableBuildings: ['대형카페', '상가', '복합몰', '호텔'],
+    suitabilityBonus: 1.4,
+    area: 250,
+    prices: {
+      market: 1500000000,  // 15억
+      urgent: null,
+      auction: null
+    },
+    diceRequired: {
+      market: [1, 2, 3, 4, 5, 6],
+      urgent: [],
+      auction: []
+    },
+    attributes: {
+      slope: 'low',
+      infrastructure: true,
+      roadAccess: true
+    },
+    bonuses: ['🚉 역세권보너스', '🚉 입지보너스', '💎 프리미엄'],
+    tier: 'premium'
+  },
+  {
+    id: 'land_premium_gangnam_2',
+    type: LAND_TYPES.COMMERCIAL,
+    name: '청담동 고급 필지',
+    description: '명품거리 인접 초프리미엄 부지',
+    suitableBuildings: ['대형카페', '상가', '호텔'],
+    suitabilityBonus: 1.5,
+    area: 180,
+    prices: {
+      market: 2000000000,  // 20억
+      urgent: null,
+      auction: null
+    },
+    diceRequired: {
+      market: [1, 2, 3, 4, 5, 6],
+      urgent: [],
+      auction: []
+    },
+    attributes: {
+      slope: 'low',
+      infrastructure: true,
+      roadAccess: true
+    },
+    bonuses: ['💎 럭셔리', '🚉 입지보너스'],
+    tier: 'ultra_premium'
+  },
+  // 해운대 고급 필지
+  {
+    id: 'land_premium_haeundae',
+    type: LAND_TYPES.SEASIDE,
+    name: '해운대 오션뷰 필지',
+    description: '해운대 해변 최전선 부지',
+    suitableBuildings: ['풀빌라', '호텔', '펜션', '대형카페'],
+    suitabilityBonus: 1.4,
+    area: 200,
+    prices: {
+      market: 1200000000,  // 12억
+      urgent: 960000000,
+      auction: null
+    },
+    diceRequired: {
+      market: [1, 2, 3, 4, 5, 6],
+      urgent: [3, 4, 5, 6],
+      auction: []
+    },
+    attributes: {
+      slope: 'low',
+      infrastructure: true,
+      roadAccess: true
+    },
+    bonuses: ['🏞️ 오션뷰보너스', '💎 프리미엄', '🚉 입지보너스'],
+    tier: 'premium'
+  },
+  // 제주 프리미엄
+  {
+    id: 'land_premium_jeju',
+    type: LAND_TYPES.SEASIDE,
+    name: '제주 서귀포 절경 필지',
+    description: '한라산과 바다가 함께 보이는 명당',
+    suitableBuildings: ['풀빌라', '펜션', '카페', '호텔'],
+    suitabilityBonus: 1.35,
+    area: 300,
+    prices: {
+      market: 900000000,  // 9억
+      urgent: 720000000,
+      auction: 450000000
+    },
+    diceRequired: {
+      market: [1, 2, 3, 4, 5, 6],
+      urgent: [3, 4, 5, 6],
+      auction: [5, 6]
+    },
+    attributes: {
+      slope: 'medium',
+      infrastructure: true,
+      roadAccess: true
+    },
+    bonuses: ['🏞️ 경관보너스', '🏞️ 오션뷰보너스', '💎 프리미엄'],
+    tier: 'premium'
+  },
+  // 판교 테크밸리
+  {
+    id: 'land_premium_pangyo',
+    type: LAND_TYPES.COMMERCIAL,
+    name: '판교 테크노밸리 필지',
+    description: 'IT기업 밀집지역 상업용지',
+    suitableBuildings: ['상가', '대형카페', '복합몰'],
+    suitabilityBonus: 1.3,
+    area: 220,
+    prices: {
+      market: 1100000000,  // 11억
+      urgent: null,
+      auction: null
+    },
+    diceRequired: {
+      market: [1, 2, 3, 4, 5, 6],
+      urgent: [],
+      auction: []
+    },
+    attributes: {
+      slope: 'low',
+      infrastructure: true,
+      roadAccess: true
+    },
+    bonuses: ['🚉 직장보너스', '🚉 역세권보너스', '💎 프리미엄'],
+    tier: 'premium'
+  },
+  // 고급 전원주택 필지
+  {
+    id: 'land_premium_rural',
+    type: LAND_TYPES.RURAL,
+    name: '양평 프리미엄 전원 필지',
+    description: '한강이 보이는 고급 전원주택 단지',
+    suitableBuildings: ['단독주택', '풀빌라', '펜션'],
+    suitabilityBonus: 1.3,
+    area: 200,
+    prices: {
+      market: 500000000,  // 5억
+      urgent: 400000000,
+      auction: 250000000
+    },
+    diceRequired: {
+      market: [1, 2, 3, 4, 5, 6],
+      urgent: [2, 3, 4, 5, 6],
+      auction: [4, 5, 6]
+    },
+    attributes: {
+      slope: 'low',
+      infrastructure: true,
+      roadAccess: true
+    },
+    bonuses: ['🏞️ 경관보너스', '💎 프리미엄'],
+    tier: 'premium'
+  }
+];
+
+// 라운드에 따른 가격 배율 (라운드가 올라갈수록 땅값 상승)
+export function getRoundPriceMultiplier(round) {
+  const multipliers = {
+    1: 1.0,
+    2: 1.15,
+    3: 1.3,
+    4: 1.5
+  };
+  return multipliers[round] || 1.0;
+}
+
+// 라운드별 대지 가격 적용
+export function applyRoundPricing(land, round) {
+  const multiplier = getRoundPriceMultiplier(round);
+  return {
+    ...land,
+    prices: {
+      market: land.prices.market ? Math.floor(land.prices.market * multiplier) : null,
+      urgent: land.prices.urgent ? Math.floor(land.prices.urgent * multiplier) : null,
+      auction: land.prices.auction ? Math.floor(land.prices.auction * multiplier) : null
+    }
+  };
+}
+
+// 기본 대지 덱 생성
 export function createLandDeck() {
   return [...lands].sort(() => Math.random() - 0.5);
+}
+
+// 프리미엄 대지 덱 생성 (라운드 2+)
+export function createPremiumLandDeck() {
+  return [...premiumLands].sort(() => Math.random() - 0.5);
+}
+
+// 라운드별 대지 덱 생성 (기본 + 프리미엄)
+export function createRoundLandDeck(round) {
+  let deck = [...lands];
+
+  // 라운드 2부터 프리미엄 대지 추가
+  if (round >= 2) {
+    deck = [...deck, ...premiumLands];
+  }
+
+  // 가격 배율 적용
+  deck = deck.map(land => applyRoundPricing(land, round));
+
+  return deck.sort(() => Math.random() - 0.5);
 }

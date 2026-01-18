@@ -18,6 +18,15 @@ export function canSelectConstructor(playerIndex, constructorIndex) {
         return { success: false, message: '먼저 설계를 완료해야 합니다.' };
     }
 
+    // 선점 확인 (다른 플레이어가 이미 선택했는지)
+    if (!gameState.isConstructorAvailable(constructor.id)) {
+        return {
+            success: false,
+            message: `${constructor.name}은(는) 이미 다른 플레이어가 선택했습니다.`,
+            isClaimed: true
+        };
+    }
+
     // 시공사가 해당 건물을 지을 수 있는지 확인
     if (!canConstructorBuild(constructor, project.building.name)) {
         return {
@@ -98,6 +107,9 @@ export function selectConstructor(playerIndex, constructorIndex) {
     // 리스크 카드 뽑기 (시공 기간만큼)
     const riskCount = project.building.constructionPeriod;
     project.risks = drawCards(gameState.riskDeck, riskCount);
+
+    // 시공사 선점 등록 (다른 플레이어가 사용 못하게)
+    gameState.claimConstructor(check.constructor.id, playerIndex);
 
     // 사용된 시공사 목록에서 제거
     gameState.availableConstructors.splice(constructorIndex, 1);

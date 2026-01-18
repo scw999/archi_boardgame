@@ -33,6 +33,15 @@ export function selectArchitect(playerIndex, architectIndex) {
         return { success: false, message: '먼저 토지를 구매해야 합니다.' };
     }
 
+    // 선점 확인 (다른 플레이어가 이미 선택했는지)
+    if (!gameState.isArchitectAvailable(architect.id)) {
+        return {
+            success: false,
+            message: `${architect.name} 건축가는 이미 다른 플레이어가 선택했습니다.`,
+            isClaimed: true
+        };
+    }
+
     return {
         success: true,
         architect,
@@ -131,6 +140,9 @@ export function completeDesign(playerIndex, architectIndex, buildingName) {
 
     // 평가 팩터 초기 계산 (토지 + 건축가 보너스)
     project.evaluationFactor = preview.landBonus * preview.architectBonus;
+
+    // 건축가 선점 등록 (다른 플레이어가 사용 못하게)
+    gameState.claimArchitect(preview.architect.id, playerIndex);
 
     // 사용된 건축가 목록에서 제거
     gameState.availableArchitects.splice(architectIndex, 1);
