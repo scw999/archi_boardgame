@@ -108,6 +108,9 @@ class GameApp {
 
     // 현재 페이즈 실행
     runPhase() {
+        // 공통 액션 패널 항상 표시
+        this.showCommonActionPanel();
+
         switch (gameState.phase) {
             case GAME_PHASES.LAND_PURCHASE:
                 this.runLandPhase();
@@ -127,6 +130,97 @@ class GameApp {
             case GAME_PHASES.GAME_END:
                 this.showFinalResults();
                 break;
+        }
+    }
+
+    // 공통 액션 패널 (모든 페이즈에서 표시)
+    showCommonActionPanel() {
+        const player = gameState.getCurrentPlayer();
+        if (!player) return;
+
+        // 기존 패널 제거
+        document.getElementById('common-action-panel')?.remove();
+
+        const pmIncome = 50000000 + (player.buildings.length * 20000000);
+
+        const panel = document.createElement('div');
+        panel.id = 'common-action-panel';
+        panel.className = 'common-action-panel';
+        panel.innerHTML = `
+            <div class="panel-title">💼 항상 가능한 액션</div>
+            <div class="action-buttons-row">
+                <button class="common-action-btn pm" id="common-pm">
+                    <span class="btn-icon">👷</span>
+                    <span class="btn-text">PM 컨설팅</span>
+                    <span class="btn-value">+${gameState.formatMoney(pmIncome)}</span>
+                </button>
+                ${player.currentProject?.land ? `
+                <button class="common-action-btn sell-land" id="common-sell-land">
+                    <span class="btn-icon">🏞️</span>
+                    <span class="btn-text">대지 매각</span>
+                    <span class="btn-value">${gameState.formatMoney(Math.floor((player.currentProject.landPrice + (player.currentProject.developmentCost || 0)) * 1.1))}</span>
+                </button>
+                ` : ''}
+                ${player.buildings.length > 0 ? `
+                <button class="common-action-btn sell-building" id="common-sell-building">
+                    <span class="btn-icon">🏢</span>
+                    <span class="btn-text">건물 매각</span>
+                    <span class="btn-value">${player.buildings.length}개 보유</span>
+                </button>
+                ` : ''}
+                <button class="common-action-btn skip" id="common-skip">
+                    <span class="btn-icon">⏭️</span>
+                    <span class="btn-text">턴 넘기기</span>
+                </button>
+            </div>
+        `;
+
+        // 게임 보드에 패널 추가
+        const gameMain = document.querySelector('.game-main');
+        if (gameMain) {
+            gameMain.insertBefore(panel, gameMain.firstChild);
+        }
+
+        // 이벤트 바인딩
+        document.getElementById('common-pm')?.addEventListener('click', () => {
+            const result = gameState.doPMActivity(gameState.currentPlayerIndex);
+            if (result.success) {
+                showNotification(result.message, 'success');
+                this.updateUI();
+            }
+        });
+
+        document.getElementById('common-sell-land')?.addEventListener('click', () => {
+            if (confirm('정말로 현재 대지를 매각하시겠습니까? 진행 중인 프로젝트가 취소됩니다.')) {
+                const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    this.updateUI();
+                    this.nextPlayerOrPhase(this.getCurrentCheckField());
+                }
+            }
+        });
+
+        document.getElementById('common-sell-building')?.addEventListener('click', () => {
+            this.showBuildingSellModal(() => this.updateUI());
+        });
+
+        document.getElementById('common-skip')?.addEventListener('click', () => {
+            if (confirm('이번 턴을 넘기시겠습니까?')) {
+                gameState.addLog(`${player.name}: 턴 패스`);
+                this.nextPlayerOrPhase(this.getCurrentCheckField());
+            }
+        });
+    }
+
+    // 현재 체크 필드 반환
+    getCurrentCheckField() {
+        switch (gameState.phase) {
+            case GAME_PHASES.LAND_PURCHASE: return 'land';
+            case GAME_PHASES.DESIGN: return 'architect';
+            case GAME_PHASES.CONSTRUCTION: return 'constructor';
+            case GAME_PHASES.EVALUATION: return 'salePrice';
+            default: return 'land';
         }
     }
 
@@ -956,42 +1050,124 @@ class GameApp {
         }
     }
 
-    // 리스크 카드 자동 공개
+    // 리스크 카드 자동 공개 (큰 카드 + 애니메이션 모달)
     async showRiskCardsAuto(riskCards, constructor) {
-        // 순차적으로 리스크 카드 공개
-        let currentIndex = 0;
+        return new Promise((resolve) => {
+            // 리스크 카드 모달 생성
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay risk-modal-overlay';
+            modal.innerHTML = `
+                <div class="risk-card-modal">
+                    <div class="risk-modal-header">
+                        <h2>🎴 리스크 카드 공개</h2>
+                        <div class="risk-progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p class="risk-counter">0 / ${riskCards.length}개월</p>
+                    </div>
+                    <div class="risk-cards-display">
+                        ${riskCards.map((_, i) => `
+                            <div class="risk-card-large" data-index="${i}">
+                                <div class="card-inner">
+                                    <div class="card-back">
+                                        <span class="card-back-icon">🎴</span>
+                                        <span class="card-back-text">${i + 1}개월</span>
+                                    </div>
+                                    <div class="card-front">
+                                        <div class="card-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="risk-result-summary" style="display: none;">
+                        <div class="summary-content"></div>
+                        <button class="btn-continue" id="btn-risk-continue">계속하기</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
 
-        const showNextCard = () => {
-            return new Promise((resolve) => {
+            let currentIndex = 0;
+            let blockedCount = 0;
+            let activeCount = 0;
+
+            const revealNextCard = () => {
                 if (currentIndex >= riskCards.length) {
-                    resolve();
+                    // 모든 카드 공개 완료
+                    setTimeout(() => {
+                        // 결과 요약 표시
+                        const summaryEl = modal.querySelector('.risk-result-summary');
+                        const summaryContent = modal.querySelector('.summary-content');
+                        summaryContent.innerHTML = `
+                            <div class="risk-final-summary">
+                                <div class="summary-stat">
+                                    <span class="stat-label">총 리스크</span>
+                                    <span class="stat-value">${riskCards.length}개</span>
+                                </div>
+                                <div class="summary-stat success">
+                                    <span class="stat-label">🛡️ 방어 성공</span>
+                                    <span class="stat-value">${blockedCount}개</span>
+                                </div>
+                                <div class="summary-stat ${activeCount > 0 ? 'danger' : 'success'}">
+                                    <span class="stat-label">⚠️ 적용됨</span>
+                                    <span class="stat-value">${activeCount}개</span>
+                                </div>
+                            </div>
+                        `;
+                        summaryEl.style.display = 'block';
+
+                        // 계속하기 버튼
+                        document.getElementById('btn-risk-continue').onclick = () => {
+                            modal.remove();
+                            // 리스크 처리
+                            const riskResult = processRisks(gameState.currentPlayerIndex);
+                            if (riskResult.success) {
+                                this.showConstructionResult(constructor, riskResult);
+                            }
+                            resolve();
+                        };
+                    }, 500);
                     return;
                 }
 
                 const risk = riskCards[currentIndex];
                 const isBlocked = constructor.riskBlocks > currentIndex && risk.blockable !== false;
 
-                // 1초마다 카드 공개
-                setTimeout(() => {
-                    // 카드 공개 알림
-                    const blockText = isBlocked ? ' (🛡️ 방어!)' : '';
-                    showNotification(`${currentIndex + 1}/${riskCards.length}개월: ${risk.emoji} ${risk.name}${blockText}`,
-                        isBlocked ? 'success' : (risk.severity === 'high' ? 'error' : 'warning'));
+                if (isBlocked) blockedCount++;
+                else activeCount++;
 
-                    currentIndex++;
-                    showNextCard().then(resolve);
-                }, 800);
-            });
-        };
+                const cardEl = modal.querySelector(`.risk-card-large[data-index="${currentIndex}"]`);
+                const cardContent = cardEl.querySelector('.card-content');
 
-        await showNextCard();
+                // 카드 내용 설정
+                cardContent.innerHTML = `
+                    <div class="risk-emoji">${risk.emoji}</div>
+                    <div class="risk-name">${risk.name}</div>
+                    <div class="risk-effect">${risk.description || ''}</div>
+                    ${isBlocked ? '<div class="risk-blocked">🛡️ 방어!</div>' : '<div class="risk-active">⚠️ 적용</div>'}
+                `;
 
-        // 모든 카드 공개 후 리스크 처리
-        const riskResult = processRisks(gameState.currentPlayerIndex);
+                // 카드 뒤집기 애니메이션
+                cardEl.classList.add('flipped');
+                if (isBlocked) cardEl.classList.add('blocked');
+                else cardEl.classList.add('active');
 
-        if (riskResult.success) {
-            this.showConstructionResult(constructor, riskResult);
-        }
+                // 진행률 업데이트
+                const progressFill = modal.querySelector('.progress-fill');
+                const counter = modal.querySelector('.risk-counter');
+                progressFill.style.width = `${((currentIndex + 1) / riskCards.length) * 100}%`;
+                counter.textContent = `${currentIndex + 1} / ${riskCards.length}개월`;
+
+                currentIndex++;
+
+                // 다음 카드
+                setTimeout(revealNextCard, 1000);
+            };
+
+            // 첫 카드 공개 시작
+            setTimeout(revealNextCard, 500);
+        });
     }
 
     // 시공 결과 표시
@@ -1179,18 +1355,52 @@ class GameApp {
     // 라운드 종료
     endRound() {
         const summary = getRoundSummary();
+        const medalEmojis = ['🥇', '🥈', '🥉', '4️⃣'];
 
-        showResultModal(`라운드 ${summary.round} 결과`, `
-      <div class="round-summary">
-        <h3>🏆 순위</h3>
-        <ol>
-          ${summary.rankings.map((r, i) => `
-            <li>${r.name}: ${r.building} - ${gameState.formatMoney(r.salePrice)}</li>
-          `).join('')}
-        </ol>
-        <p>다음 라운드 선: ${summary.nextRoundFirst}</p>
-      </div>
-    `, () => {
+        showResultModal(`🎉 라운드 ${summary.round} 완료!`, `
+            <div class="round-result-fancy">
+                <div class="round-header">
+                    <div class="round-badge">ROUND ${summary.round}</div>
+                    <h2>라운드 결과</h2>
+                </div>
+
+                <div class="rankings-podium">
+                    ${summary.rankings.map((r, i) => {
+            const player = gameState.players.find(p => p.name === r.name);
+            return `
+                            <div class="ranking-card ${i === 0 ? 'winner' : ''}" style="--rank: ${i + 1}">
+                                <div class="rank-medal">${medalEmojis[i] || ''}</div>
+                                <div class="rank-number">${i + 1}위</div>
+                                <div class="player-info">
+                                    <div class="player-name">${r.name}</div>
+                                    <div class="player-building">${r.building || '건물 없음'}</div>
+                                </div>
+                                <div class="player-stats">
+                                    <div class="stat-item">
+                                        <span class="label">수익</span>
+                                        <span class="value ${r.salePrice > 0 ? 'profit' : 'loss'}">${gameState.formatMoney(r.salePrice)}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">총 자산</span>
+                                        <span class="value">${gameState.formatMoney(player?.money || 0)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
+
+                <div class="round-footer">
+                    <div class="next-round-info">
+                        ${summary.round < gameState.maxRounds ?
+            `<p>📍 다음 라운드 선공: <strong>${summary.nextRoundFirst}</strong></p>
+                             <p class="round-remaining">남은 라운드: ${gameState.maxRounds - summary.round}라운드</p>` :
+            `<p class="final-notice">🏆 최종 결과를 확인하세요!</p>`
+        }
+                    </div>
+                </div>
+            </div>
+        `, () => {
             const hasNextRound = gameState.endRound();
             if (hasNextRound) {
                 this.startRound();
@@ -1279,11 +1489,25 @@ class GameApp {
         const player = gameState.getCurrentPlayer();
 
         // property가 cell data인지 project인지 확인
-        const isProject = property.land !== undefined;
-        const project = isProject ? property : property.project;
+        // cell data: {x, y, district, project, building, owner, ...}
+        // project: {land, building, architect, constructor, ...}
+        let project;
 
-        if (!project || !project.building) {
+        if (property.project) {
+            // cell data인 경우
+            project = property.project;
+        } else if (property.land) {
+            // project 직접 전달된 경우
+            project = property;
+        } else {
             showNotification('상세 정보를 볼 수 없습니다.', 'warning');
+            return;
+        }
+
+        // building 체크 (project 또는 property에서)
+        const building = project.building || property.building;
+        if (!building) {
+            showNotification('건물 정보가 없습니다.', 'warning');
             return;
         }
 
@@ -1293,14 +1517,15 @@ class GameApp {
             (project.constructionCost || 0);
 
         const estimatedValue = Math.round(totalInvestment * (project.evaluationFactor || 1));
+        const landName = project.land?.name || property.district || '알 수 없음';
 
-        showResultModal(`📊 ${project.building.name} 상세 정보`, `
+        showResultModal(`📊 ${building.name} 상세 정보`, `
             <div class="property-detail">
                 <div class="property-header">
-                    <span class="property-emoji">${project.building.emoji}</span>
+                    <span class="property-emoji">${building.emoji}</span>
                     <div class="property-title">
-                        <h2>${project.building.name}</h2>
-                        <span class="property-location">📍 ${project.land.name}</span>
+                        <h2>${building.name}</h2>
+                        <span class="property-location">📍 ${landName}</span>
                     </div>
                 </div>
 
@@ -1354,7 +1579,7 @@ class GameApp {
                         <div class="info-row">
                             <span class="label">수익률</span>
                             <span class="value ${estimatedValue > totalInvestment ? 'profit' : 'loss'}">
-                                ${((estimatedValue / totalInvestment - 1) * 100).toFixed(1)}%
+                                ${totalInvestment > 0 ? ((estimatedValue / totalInvestment - 1) * 100).toFixed(1) : 0}%
                             </span>
                         </div>
                     </div>

@@ -242,19 +242,24 @@ body {
 /* ===== 게임 컨테이너 ===== */
 #game-container {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
+  grid-template-columns: 260px 1fr 320px;
   grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "players board map"
+    "players board map"
+    "log log log";
   gap: 1rem;
   min-height: 100vh;
   padding: 1rem;
 }
 
-/* ===== 게임 보드 (상단) ===== */
+/* ===== 게임 보드 (중앙) ===== */
 #game-board {
-  grid-column: 2;
+  grid-area: board;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
+  overflow-y: auto;
 }
 
 .board-header {
@@ -352,11 +357,11 @@ body {
 
 /* ===== 플레이어 패널 (좌측) ===== */
 #player-panels {
-  grid-column: 1;
-  grid-row: 1 / 4;
+  grid-area: players;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  overflow-y: auto;
   overflow-y: auto;
 }
 
@@ -478,15 +483,15 @@ body {
   gap: 1rem;
 }
 
-/* ===== 게임 로그 (우측) ===== */
+/* ===== 게임 로그 (하단) ===== */
 #game-log {
-  grid-column: 3;
-  grid-row: 1 / 4;
+  grid-area: log;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
+  max-height: 150px;
 }
 
 .log-header {
@@ -1805,13 +1810,13 @@ body {
   color: white;
 }
 
-/* ===== 도시 지도 ===== */
+/* ===== 도시 지도 (우측) ===== */
 #city-grid {
-  grid-column: 2;
+  grid-area: map;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   padding: 1rem;
-  margin: 1rem 0;
+  overflow-y: auto;
 }
 
 .city-map-wrapper {
@@ -1863,17 +1868,9 @@ body {
   flex-direction: column;
   gap: 4px;
   padding: 1rem;
-  background: linear-gradient(180deg,
-    #2a4a2a 0%,     /* 시골 - 짙은 녹색 */
-    #3a5a3a 20%,    /* 경기 외곽 */
-    #4a6a8a 40%,    /* 경기 주요 - 청색 */
-    #5a4a6a 60%,    /* 서울 - 보라 */
-    #3a3528 80%,    /* 서울 핵심 - 금색 배경 */
-    #2a2820 100%
-  );
+  background: var(--bg-tertiary);
   border-radius: var(--radius-lg);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .city-row {
@@ -1881,14 +1878,15 @@ body {
   gap: 4px;
   align-items: center;
   padding: 2px 0;
+  background: transparent;
 }
 
-/* 지역별 행 스타일 */
-.city-row.tier-1 { background: linear-gradient(90deg, rgba(74, 124, 78, 0.2), transparent 30%); }
-.city-row.tier-2 { background: linear-gradient(90deg, rgba(107, 142, 107, 0.2), transparent 30%); }
-.city-row.tier-3 { background: linear-gradient(90deg, rgba(122, 158, 194, 0.2), transparent 30%); }
-.city-row.tier-4 { background: linear-gradient(90deg, rgba(155, 124, 184, 0.2), transparent 30%); }
-.city-row.tier-5 { background: linear-gradient(90deg, rgba(212, 175, 55, 0.3), transparent 30%); }
+/* 지역별 행 스타일 - 단순화 */
+.city-row.tier-1 { border-left: 3px solid #4a7c4e; }
+.city-row.tier-2 { border-left: 3px solid #6b8e6b; }
+.city-row.tier-3 { border-left: 3px solid #7a9ec2; }
+.city-row.tier-4 { border-left: 3px solid #9b7cb8; }
+.city-row.tier-5 { border-left: 3px solid #d4af37; }
 
 .district-label {
   width: 90px;
@@ -1939,15 +1937,12 @@ body {
   pointer-events: none;
 }
 
-/* 지역 티어별 셀 배경 */
-.city-cell.tier-1 { background: linear-gradient(135deg, #3d5c3d 0%, #4a7c4e 100%); }
-.city-cell.tier-2 { background: linear-gradient(135deg, #5a7a5a 0%, #6b8e6b 100%); }
-.city-cell.tier-3 { background: linear-gradient(135deg, #5a7a9a 0%, #7a9ec2 100%); }
-.city-cell.tier-4 { background: linear-gradient(135deg, #7a5a8a 0%, #9b7cb8 100%); }
-.city-cell.tier-5 {
-  background: linear-gradient(135deg, #8a7a2a 0%, #d4af37 100%);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-}
+/* 지역 티어별 셀 배경 - 단순화 */
+.city-cell.tier-1 { background: rgba(74, 124, 78, 0.3); }
+.city-cell.tier-2 { background: rgba(107, 142, 107, 0.3); }
+.city-cell.tier-3 { background: rgba(122, 158, 194, 0.3); }
+.city-cell.tier-4 { background: rgba(155, 124, 184, 0.3); }
+.city-cell.tier-5 { background: rgba(212, 175, 55, 0.3); }
 
 .city-cell:hover {
   transform: scale(1.08);
@@ -3036,3 +3031,397 @@ body {
 .money-row.interest {
   color: var(--accent-orange);
 }
+
+/* ===== 리스크 카드 모달 (대형 카드 + 플립 애니메이션) ===== */
+.risk-modal-overlay {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.risk-card-modal {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  max-width: 800px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.risk-modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.risk-modal-header h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.risk-progress-bar {
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.risk-progress-bar .progress-fill {
+  height: 100%;
+  background: var(--gradient-gold);
+  transition: width 0.3s ease;
+}
+
+.risk-counter {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.risk-cards-display {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.risk-card-large {
+  width: 140px;
+  height: 200px;
+  perspective: 1000px;
+}
+
+.risk-card-large .card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.risk-card-large.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.risk-card-large .card-back,
+.risk-card-large .card-front {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.risk-card-large .card-back {
+  background: linear-gradient(135deg, #4a5568, #2d3748);
+  border: 3px solid #718096;
+}
+
+.risk-card-large .card-back-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.risk-card-large .card-back-text {
+  font-size: 1rem;
+  color: #a0aec0;
+}
+
+.risk-card-large .card-front {
+  background: var(--bg-card);
+  border: 3px solid var(--text-muted);
+  transform: rotateY(180deg);
+}
+
+.risk-card-large.blocked .card-front {
+  border-color: var(--accent-emerald);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), var(--bg-card));
+}
+
+.risk-card-large.active .card-front {
+  border-color: var(--accent-red);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), var(--bg-card));
+}
+
+.risk-card-large .card-content {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.risk-card-large .risk-emoji {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.risk-card-large .risk-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.risk-card-large .risk-effect {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.risk-card-large .risk-blocked {
+  color: var(--accent-emerald);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.risk-card-large .risk-active {
+  color: var(--accent-red);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.risk-result-summary {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.risk-final-summary {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.risk-final-summary .summary-stat {
+  text-align: center;
+}
+
+.risk-final-summary .summary-stat .stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
+}
+
+.risk-final-summary .summary-stat .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.risk-final-summary .summary-stat.success .stat-value {
+  color: var(--accent-emerald);
+}
+
+.risk-final-summary .summary-stat.danger .stat-value {
+  color: var(--accent-red);
+}
+
+.btn-continue {
+  padding: 0.8rem 2rem;
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #1a1a2e;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* ===== 라운드 결과 UI ===== */
+.round-result-fancy {
+  padding: 1rem;
+}
+
+.round-result-fancy .round-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.round-result-fancy .round-badge {
+  display: inline-block;
+  background: var(--gradient-gold);
+  color: #1a1a2e;
+  padding: 0.3rem 1rem;
+  border-radius: var(--radius-xl);
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.round-result-fancy .round-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.rankings-podium {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.ranking-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.ranking-card.winner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), var(--bg-tertiary));
+  border-left-color: var(--accent-gold);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+}
+
+.ranking-card .rank-medal {
+  font-size: 2rem;
+  width: 50px;
+  text-align: center;
+}
+
+.ranking-card .rank-number {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  width: 40px;
+}
+
+.ranking-card.winner .rank-number {
+  color: var(--accent-gold);
+}
+
+.ranking-card .player-info {
+  flex: 1;
+}
+
+.ranking-card .player-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.ranking-card .player-building {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.ranking-card .player-stats {
+  text-align: right;
+}
+
+.ranking-card .player-stats .stat-item {
+  margin-bottom: 0.3rem;
+}
+
+.ranking-card .player-stats .label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-right: 0.5rem;
+}
+
+.ranking-card .player-stats .value {
+  font-weight: 700;
+}
+
+.ranking-card .player-stats .value.profit {
+  color: var(--accent-emerald);
+}
+
+.ranking-card .player-stats .value.loss {
+  color: var(--accent-red);
+}
+
+.round-footer {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.round-footer .next-round-info p {
+  margin: 0.5rem 0;
+}
+
+.round-footer .round-remaining {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.round-footer .final-notice {
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ===== 공통 액션 패널 ===== */
+.common-action-panel {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.common-action-panel .panel-title {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.action-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.common-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 100px;
+}
+
+.common-action-btn:hover {
+  background: var(--bg-card);
+  border-color: var(--accent-gold);
+  transform: translateY(-2px);
+}
+
+.common-action-btn .btn-icon {
+  font-size: 1.3rem;
+  margin-bottom: 0.2rem;
+}
+
+.common-action-btn .btn-text {
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.common-action-btn .btn-value {
+  font-size: 0.65rem;
+  color: var(--accent-gold);
+}
+
+.common-action-btn.pm { border-color: rgba(59, 130, 246, 0.3); }
+.common-action-btn.pm:hover { border-color: var(--accent-blue); }
+
+.common-action-btn.sell-land { border-color: rgba(16, 185, 129, 0.3); }
+.common-action-btn.sell-land:hover { border-color: var(--accent-emerald); }
+
+.common-action-btn.sell-building { border-color: rgba(139, 92, 246, 0.3); }
+.common-action-btn.sell-building:hover { border-color: var(--accent-purple); }
+
+.common-action-btn.skip { border-color: rgba(107, 114, 128, 0.3); }
+.common-action-btn.skip:hover { border-color: var(--text-muted); }
