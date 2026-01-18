@@ -9,6 +9,8 @@ import { selectLand, attemptLandPurchase, checkLandPhaseComplete, getLandDisplay
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
 import { calculateSalePrice, completeEvaluation, checkEvaluationPhaseComplete, getRoundSummary, getFinalResults } from './phases/evaluation-phase.js';
+import { buildings } from './data/buildings.js';
+import { constructors } from './data/constructors.js';
 
 // 게임 앱 클래스
 class GameApp {
@@ -36,6 +38,9 @@ class GameApp {
         // 플레이어 설정
         document.getElementById('btn-start-game')?.addEventListener('click', () => this.startGame());
         document.getElementById('btn-back')?.addEventListener('click', () => this.showMainMenu());
+
+        // 유틸리티 버튼
+        document.getElementById('btn-budget-table')?.addEventListener('click', () => this.showBudgetTable());
     }
 
     // 메인 메뉴 표시
@@ -87,8 +92,11 @@ class GameApp {
     async determineStartingMoney() {
         if (gameState.settings.easyStart) {
             gameState.players.forEach((player, index) => {
-                gameState.setStartingMoney(index, 14); // 3억
+                gameState.setStartingMoney(index, 14); // 10억
             });
+            // 쉬운 시작 시 첫 번째 플레이어가 선
+            gameState.startingPlayerIndex = 0;
+            gameState.roundStartingPlayer = 0;
             return;
         }
 
@@ -97,6 +105,9 @@ class GameApp {
             const result = await showStartingDiceRoll(player.name);
             gameState.setStartingMoney(i, result.total);
         }
+
+        // 주사위 합이 가장 높은 플레이어가 선 플레이어
+        gameState.determineStartingPlayer();
     }
 
     // 라운드 시작
@@ -175,10 +186,10 @@ class GameApp {
             </div>
         `;
 
-        // 게임 보드에 패널 추가
-        const gameMain = document.querySelector('.game-main');
-        if (gameMain) {
-            gameMain.insertBefore(panel, gameMain.firstChild);
+        // 게임 보드에 패널 추가 (action-area 위에)
+        const actionArea = document.getElementById('action-area');
+        if (actionArea) {
+            actionArea.parentNode.insertBefore(panel, actionArea);
         }
 
         // 이벤트 바인딩
@@ -636,19 +647,124 @@ class GameApp {
         }
     }
 
-    // 설계 확정 및 설계도 표시
+    // 설계 확정 및 설계도 표시 (미리보기 먼저)
     confirmDesignWithBlueprint(architect, building, designFee) {
         if (this.selectedArchitectIndex === null || !this.selectedBuildingName) {
             showNotification('건축가와 건물을 선택해주세요.', 'error');
             return;
         }
 
+        const player = gameState.getCurrentPlayer();
+        const constructionCost = Math.round(building.constructionCost * architect.constructionMultiplier);
+        const isMasterpiece = architect.masterpieces.includes(building.name);
+
+        // 미리보기 모달 표시 (확정 전)
+        this.showDesignPreviewModal(architect, building, designFee, constructionCost, isMasterpiece);
+    }
+
+    // 설계 미리보기 모달 (확정/취소 선택)
+    showDesignPreviewModal(architect, building, designFee, constructionCost, isMasterpiece) {
+        const container = document.createElement('div');
+        container.id = 'design-preview-modal';
+        container.className = 'modal-overlay';
+        container.innerHTML = `
+            <div class="modal-content design-preview">
+                <div class="modal-header">
+                    <h2>📐 설계 확인</h2>
+                    <button class="modal-close-btn" id="close-preview">&times;</button>
+                </div>
+
+                <div class="blueprint-modal">
+                    <div class="blueprint-header">
+                        <div class="building-icon">${building.emoji}</div>
+                        <h2>${building.name}</h2>
+                        ${isMasterpiece ? '<span class="masterpiece-badge">✨ 대표작</span>' : ''}
+                    </div>
+
+                    <div class="blueprint-content">
+                        <div class="blueprint-image">
+                            <div class="blueprint-frame">
+                                <div class="blueprint-grid">
+                                    ${building.emoji}
+                                </div>
+                                <div class="blueprint-label">설계도 미리보기</div>
+                            </div>
+                        </div>
+
+                        <div class="design-details">
+                            <div class="detail-row">
+                                <span class="label">건축가</span>
+                                <span class="value">${architect.portrait} ${architect.name}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">건물 면적</span>
+                                <span class="value">${building.area}평</span>
+                            </div>
+                            <div class="detail-row highlight">
+                                <span class="label">설계비</span>
+                                <span class="value">-${gameState.formatMoney(designFee)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">예상 시공비</span>
+                                <span class="value">${gameState.formatMoney(constructionCost)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">시공 기간</span>
+                                <span class="value">${building.constructionPeriod}개월</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preview-warning">
+                        <p>⚠️ 설계를 확정하면 설계비가 지불되고, 이 건축가는 다른 플레이어가 사용할 수 없게 됩니다.</p>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-cancel-design" id="btn-cancel-preview">취소 (다른 건축가 선택)</button>
+                    <button class="btn-confirm-design" id="btn-confirm-preview">✓ 설계 확정</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(container);
+
+        // 확정 버튼
+        document.getElementById('btn-confirm-preview').onclick = () => {
+            container.remove();
+            this.executeDesign(architect, building);
+        };
+
+        // 취소 버튼 - 다른 건축가 선택할 수 있게
+        document.getElementById('btn-cancel-preview').onclick = () => {
+            container.remove();
+            // 설계 패널 숨기고 다시 건축가 선택 화면으로
+            this.hideDesignPanel();
+            this.selectedArchitectIndex = null;
+            this.selectedBuildingName = null;
+            showNotification('설계를 취소했습니다. 다른 건축가를 선택해주세요.', 'info');
+            this.runDesignPhase();
+        };
+
+        // X 버튼 - 취소와 동일
+        document.getElementById('close-preview').onclick = () => {
+            container.remove();
+            this.hideDesignPanel();
+            this.selectedArchitectIndex = null;
+            this.selectedBuildingName = null;
+            showNotification('설계를 취소했습니다. 다른 건축가를 선택해주세요.', 'info');
+            this.runDesignPhase();
+        };
+    }
+
+    // 설계 실행 (확정 후)
+    executeDesign(architect, building) {
         const result = completeDesign(gameState.currentPlayerIndex, this.selectedArchitectIndex, this.selectedBuildingName);
 
         if (result.success) {
             // 설계 패널 숨기기
             this.hideDesignPanel();
-            // 설계도 모달 표시
+            // 설계도 완료 모달 표시
             this.showBlueprintModal(architect, building, result);
         } else {
             showNotification(result.message, 'error');
@@ -2232,13 +2348,90 @@ class GameApp {
         }
     }
 
+    // 단가표 보기
+    showBudgetTable() {
+        const buildingRows = Object.values(buildings).map(b => `
+            <tr>
+                <td class="building-cell">${b.emoji} ${b.name}</td>
+                <td class="number-cell">${b.area}평</td>
+                <td class="number-cell">${gameState.formatMoney(b.designFee)}</td>
+                <td class="number-cell">${gameState.formatMoney(b.constructionCost)}</td>
+                <td class="number-cell total">${gameState.formatMoney(b.designFee + b.constructionCost)}</td>
+                <td class="number-cell">${b.constructionPeriod}개월</td>
+            </tr>
+        `).join('');
+
+        const constructorRows = constructors.map(c => `
+            <tr>
+                <td class="constructor-cell">${c.emoji} ${c.name}</td>
+                <td class="type-cell">${c.type === 'small' ? '영세' : c.type === 'medium' ? '중견' : '대형'}</td>
+                <td class="number-cell">${(c.costMultiplier * 100).toFixed(0)}%</td>
+                <td class="number-cell">${c.paymentStages}단계</td>
+                <td class="number-cell">${c.riskBlocks}개</td>
+                <td class="desc-cell">${c.description}</td>
+            </tr>
+        `).join('');
+
+        showResultModal('💰 건설 단가표', `
+            <div class="budget-table-container">
+                <div class="table-section">
+                    <h3>🏗️ 건물별 비용</h3>
+                    <table class="budget-table">
+                        <thead>
+                            <tr>
+                                <th>건물</th>
+                                <th>면적</th>
+                                <th>설계비</th>
+                                <th>시공비</th>
+                                <th>총 비용</th>
+                                <th>공사기간</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${buildingRows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-section">
+                    <h3>🏗️ 시공사 정보</h3>
+                    <table class="budget-table constructor-table">
+                        <thead>
+                            <tr>
+                                <th>시공사</th>
+                                <th>유형</th>
+                                <th>시공비 배율</th>
+                                <th>분할납부</th>
+                                <th>리스크 방어</th>
+                                <th>특징</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${constructorRows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="budget-notes">
+                    <p>💡 <strong>참고사항:</strong></p>
+                    <ul>
+                        <li>설계비는 건축가의 설계비 배율에 따라 달라집니다</li>
+                        <li>대표작이 아닌 건물은 설계비 30% 할인, 보너스 반감</li>
+                        <li>시공비는 건축가의 시공비 배율과 시공사 배율이 적용됩니다</li>
+                        <li>대형 시공사는 리스크 카드를 막을 수 있지만 비용이 높습니다</li>
+                    </ul>
+                </div>
+            </div>
+        `, null, true);
+    }
+
     // 규칙 보기
     showRules() {
         showResultModal('📜 게임 규칙', `
       <div class="rules-content">
         <h3>🎯 목표</h3>
         <p>4라운드 동안 부동산 개발로 최대 수익을 올리세요!</p>
-        
+
         <h3>📋 게임 진행</h3>
         <ol>
           <li><strong>대지 구매:</strong> 토지를 선택하고 주사위로 낙찰</li>
@@ -2246,7 +2439,7 @@ class GameApp {
           <li><strong>시공:</strong> 시공사 선택 후 리스크 카드 처리</li>
           <li><strong>평가:</strong> 건물 가치 산정 및 매각</li>
         </ol>
-        
+
         <h3>💡 팁</h3>
         <ul>
           <li>토지에 적합한 건물을 지으면 보너스!</li>

@@ -90,6 +90,10 @@ class GameState {
         this.maxRounds = 4;
         this.phase = GAME_PHASES.SETUP;
 
+        // 선 플레이어 관리
+        this.startingPlayerIndex = 0;  // 첫 라운드 선 플레이어 (주사위로 결정)
+        this.roundStartingPlayer = 0;  // 현재 라운드 선 플레이어
+
         // 카드 덱들
         this.landDeck = [];
         this.architectDeck = [];
@@ -261,7 +265,29 @@ class GameState {
         } else {
             this.players[playerIndex].money = STARTING_MONEY[diceTotal] || 500000000;
         }
+        // 시작 자금 주사위 결과 저장 (선 플레이어 결정용)
+        this.players[playerIndex].startingDiceTotal = diceTotal;
         this.addLog(`${this.players[playerIndex].name}: 시작 자금 ${this.formatMoney(this.players[playerIndex].money)}`);
+    }
+
+    // 선 플레이어 결정 (주사위 합계가 가장 높은 플레이어)
+    determineStartingPlayer() {
+        if (this.players.length === 0) return;
+
+        let highestTotal = -1;
+        let startingIndex = 0;
+
+        this.players.forEach((player, index) => {
+            const total = player.startingDiceTotal || 0;
+            if (total > highestTotal) {
+                highestTotal = total;
+                startingIndex = index;
+            }
+        });
+
+        this.startingPlayerIndex = startingIndex;
+        this.roundStartingPlayer = startingIndex;
+        this.addLog(`🎲 선 플레이어: ${this.players[startingIndex].name} (주사위 합: ${highestTotal})`);
     }
 
     // 라운드 시작
@@ -279,14 +305,25 @@ class GameState {
         this.availableConstructors = this.drawCards(this.constructorDeck, 8);
 
         this.phase = GAME_PHASES.LAND_PURCHASE;
-        this.currentPlayerIndex = 0;
+
+        // 선 플레이어 설정 (라운드마다 돌아가면서)
+        if (this.currentRound === 1) {
+            // 첫 라운드는 주사위로 결정된 선 플레이어
+            this.currentPlayerIndex = this.startingPlayerIndex;
+            this.roundStartingPlayer = this.startingPlayerIndex;
+        } else {
+            // 이후 라운드는 다음 플레이어가 선
+            this.roundStartingPlayer = (this.roundStartingPlayer + 1) % this.players.length;
+            this.currentPlayerIndex = this.roundStartingPlayer;
+        }
 
         // 각 플레이어 프로젝트 초기화
         this.players.forEach(player => {
             player.currentProject = createProject();
         });
 
-        this.addLog(`===== 라운드 ${this.currentRound} 시작 =====`);
+        const startingPlayerName = this.players[this.roundStartingPlayer]?.name || '플레이어';
+        this.addLog(`===== 라운드 ${this.currentRound} 시작 (선: ${startingPlayerName}) =====`);
         if (this.currentRound >= 2 && !this.premiumLandsAdded) {
             this.addLog(`💎 프리미엄 대지가 추가되었습니다!`);
         }
