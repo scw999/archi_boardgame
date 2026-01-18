@@ -29,17 +29,32 @@ export function canSelectConstructor(playerIndex, constructorIndex) {
     // 시공비 계산
     const constructionCost = calculateConstructionCost(constructor, project.building, project.architect);
 
-    // 자금 체크
-    const totalNeeded = constructionCost;
-    const maxAvailable = player.money + gameState.getMaxLoan(player) - player.loan;
+    // 예상 이자 비용 계산 (시공 기간 동안의 이자)
+    const constructionPeriod = project.building.constructionPeriod;
+    const currentLoan = player.loan;
+    const estimatedInterest = Math.floor(currentLoan * player.interestRate * constructionPeriod);
+
+    // 시공비 + 예상 이자 총비용
+    const totalNeeded = constructionCost + estimatedInterest;
+
+    // 대출 가능 금액 계산 (현재 보유 자금 기준 최대 대출)
+    const maxLoanAvailable = gameState.getMaxLoan(player) - currentLoan;
+    const maxAvailable = player.money + maxLoanAvailable;
+
+    // 대출이 필요한 금액
+    const loanNeeded = Math.max(0, totalNeeded - player.money);
 
     return {
         success: true,
         constructor,
         constructionCost,
+        estimatedInterest,
+        totalNeeded,
+        loanNeeded,
         paymentSchedule: calculatePaymentSchedule(constructor, constructionCost),
         canAfford: totalNeeded <= maxAvailable,
-        constructionPeriod: project.building.constructionPeriod,
+        maxAvailable,
+        constructionPeriod,
         riskBlocks: constructor.riskBlocks,
         artistryBonus: constructor.artistryBonus
     };
@@ -56,12 +71,24 @@ export function selectConstructor(playerIndex, constructorIndex) {
     if (!check.canAfford) {
         return {
             success: false,
-            message: `자금이 부족합니다. (필요: ${gameState.formatMoney(check.constructionCost)})`
+            message: `자금이 부족합니다. (필요: ${gameState.formatMoney(check.totalNeeded)}, 가용: ${gameState.formatMoney(check.maxAvailable)})`
         };
     }
 
     const player = gameState.players[playerIndex];
     const project = player.currentProject;
+
+    // 시공비 대출 필요 시 미리 대출 실행
+    if (check.loanNeeded > 0) {
+        const loanSuccess = gameState.takeLoan(playerIndex, check.loanNeeded);
+        if (!loanSuccess) {
+            return {
+                success: false,
+                message: `대출 한도 초과로 시공이 불가합니다. (필요 대출: ${gameState.formatMoney(check.loanNeeded)})`
+            };
+        }
+        gameState.addLog(`${player.name}: 시공비 대출 ${gameState.formatMoney(check.loanNeeded)} (이자 포함)`);
+    }
 
     // 프로젝트에 시공사 정보 저장
     project.constructor = check.constructor;
@@ -75,7 +102,8 @@ export function selectConstructor(playerIndex, constructorIndex) {
     // 사용된 시공사 목록에서 제거
     gameState.availableConstructors.splice(constructorIndex, 1);
 
-    const message = `🏗️ ${check.constructor.name}와 시공 계약 완료! (리스크 카드 ${riskCount}장)`;
+    const loanInfo = check.loanNeeded > 0 ? ` (대출: ${gameState.formatMoney(check.loanNeeded)})` : '';
+    const message = `🏗️ ${check.constructor.name}와 시공 계약 완료!${loanInfo} (리스크 카드 ${riskCount}장)`;
     gameState.addLog(`${player.name}: ${message}`);
 
     return {

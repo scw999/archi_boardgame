@@ -15,24 +15,24 @@ export const GAME_PHASES = {
     GAME_END: 'game_end'
 };
 
-// 초기 자금 테이블 (주사위 합계에 따라)
+// 초기 자금 테이블 (주사위 합계에 따라) - 증가된 자금으로 게임 플레이 원활화
 const STARTING_MONEY = {
-    18: 1000000000,  // 10억 (주사위 합 18)
-    17: 1000000000,
-    16: 500000000,   // 5억
-    15: 500000000,
-    14: 300000000,   // 3억
-    13: 300000000,
-    12: 300000000,
-    11: 200000000,   // 2억
-    10: 200000000,
-    9: 200000000,
-    8: 200000000,
-    7: 200000000,
-    6: 200000000,
-    5: 200000000,
-    4: 200000000,
-    3: 200000000     // 최소 2억
+    18: 2000000000,  // 20억 (주사위 합 18)
+    17: 2000000000,
+    16: 1500000000,  // 15억
+    15: 1500000000,
+    14: 1000000000,  // 10억
+    13: 1000000000,
+    12: 800000000,   // 8억
+    11: 800000000,
+    10: 700000000,   // 7억
+    9: 700000000,
+    8: 600000000,    // 6억
+    7: 600000000,
+    6: 500000000,    // 5억
+    5: 500000000,
+    4: 500000000,
+    3: 500000000     // 최소 5억
 };
 
 // 플레이어 초기 상태
@@ -107,7 +107,7 @@ class GameState {
         // 게임 설정
         this.settings = {
             easyStart: false,       // 같은 금액으로 시작
-            startingMoney: 300000000 // 쉬운 시작시 기본 금액 3억
+            startingMoney: 1000000000 // 쉬운 시작시 기본 금액 10억
         };
 
         // 이벤트 로그
@@ -275,6 +275,106 @@ class GameState {
             return true;
         }
         return false;
+    }
+
+    // PM 활동 (턴 패스하고 돈 벌기)
+    doPMActivity(playerIndex) {
+        const player = this.players[playerIndex];
+        // PM 활동 수익: 기본 5천만원 + 보유 건물 수 x 2천만원
+        const baseIncome = 50000000;
+        const buildingBonus = player.buildings.length * 20000000;
+        const totalIncome = baseIncome + buildingBonus;
+
+        player.money += totalIncome;
+        this.addLog(`${player.name}: PM 활동으로 ${this.formatMoney(totalIncome)} 수입`);
+
+        return {
+            success: true,
+            income: totalIncome,
+            message: `PM 활동 완료! ${this.formatMoney(totalIncome)} 수입`
+        };
+    }
+
+    // 대지 중간 매각 (현재 프로젝트의 대지 판매 - 설계 전에만 가능)
+    sellCurrentLand(playerIndex) {
+        const player = this.players[playerIndex];
+        const project = player.currentProject;
+
+        if (!project || !project.land) {
+            return { success: false, message: '판매할 대지가 없습니다.' };
+        }
+
+        if (project.building) {
+            return { success: false, message: '설계가 시작된 후에는 대지만 판매할 수 없습니다.' };
+        }
+
+        // 판매 가격: 구매가의 80%
+        const sellPrice = Math.floor((project.landPrice + project.developmentCost) * 0.8);
+        player.money += sellPrice;
+
+        // 프로젝트 초기화
+        const landName = project.land.name;
+        project.land = null;
+        project.landPrice = 0;
+        project.developmentCost = 0;
+
+        this.addLog(`${player.name}: ${landName} 대지 매각 (${this.formatMoney(sellPrice)})`);
+
+        return {
+            success: true,
+            sellPrice,
+            message: `${landName} 대지를 ${this.formatMoney(sellPrice)}에 매각했습니다.`
+        };
+    }
+
+    // 완성된 건물 매각
+    sellBuilding(playerIndex, buildingIndex) {
+        const player = this.players[playerIndex];
+
+        if (buildingIndex < 0 || buildingIndex >= player.buildings.length) {
+            return { success: false, message: '판매할 건물이 없습니다.' };
+        }
+
+        const building = player.buildings[buildingIndex];
+        // 판매 가격: 원래 매각가의 90% (재판매)
+        const sellPrice = Math.floor(building.salePrice * 0.9);
+        player.money += sellPrice;
+
+        const buildingName = `${building.building.name} @ ${building.land.name}`;
+        player.buildings.splice(buildingIndex, 1);
+
+        this.addLog(`${player.name}: ${buildingName} 건물 매각 (${this.formatMoney(sellPrice)})`);
+
+        return {
+            success: true,
+            sellPrice,
+            message: `${buildingName}을 ${this.formatMoney(sellPrice)}에 매각했습니다.`
+        };
+    }
+
+    // 대출 상환
+    repayLoan(playerIndex, amount) {
+        const player = this.players[playerIndex];
+
+        if (amount > player.money) {
+            return { success: false, message: '상환할 자금이 부족합니다.' };
+        }
+
+        if (amount > player.loan) {
+            amount = player.loan;
+        }
+
+        player.money -= amount;
+        player.loan -= amount;
+
+        this.addLog(`${player.name}: 대출 ${this.formatMoney(amount)} 상환`);
+
+        return {
+            success: true,
+            amount,
+            remainingLoan: player.loan,
+            message: `${this.formatMoney(amount)} 상환 완료 (남은 대출: ${this.formatMoney(player.loan)})`
+        };
     }
 
     // 로그 추가

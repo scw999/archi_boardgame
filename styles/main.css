@@ -808,8 +808,334 @@ body {
   .game-title {
     font-size: 2rem;
   }
-  
+
   .card-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===== 프로젝트 맵 (시각화) ===== */
+#project-map {
+  grid-column: 2;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.map-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.map-toggle-btn {
+  padding: 0.4rem 0.8rem;
+  background: var(--gradient-purple);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.map-toggle-btn:hover {
+  transform: scale(1.05);
+}
+
+.map-container {
+  perspective: 1000px;
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+}
+
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  transform-style: preserve-3d;
+  transition: transform var(--transition-slow);
+}
+
+.map-grid.view-3d {
+  transform: rotateX(30deg) rotateZ(-10deg);
+  padding: 2rem;
+}
+
+/* 개별 프로젝트 타일 */
+.project-tile {
+  position: relative;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  transform-style: preserve-3d;
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  min-height: 150px;
+  border: 2px solid transparent;
+}
+
+.project-tile:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent-gold);
+  box-shadow: var(--shadow-lg);
+}
+
+.project-tile.player-0 { border-left: 4px solid var(--accent-blue); }
+.project-tile.player-1 { border-left: 4px solid var(--accent-emerald); }
+.project-tile.player-2 { border-left: 4px solid var(--accent-purple); }
+.project-tile.player-3 { border-left: 4px solid var(--accent-orange); }
+
+/* 타일 헤더 */
+.tile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.tile-player {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+}
+
+.tile-phase {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.tile-phase.land { background: var(--accent-emerald); color: white; }
+.tile-phase.design { background: var(--accent-blue); color: white; }
+.tile-phase.construction { background: var(--accent-orange); color: white; }
+.tile-phase.complete { background: var(--accent-gold); color: #1a1a2e; }
+
+/* 대지 시각화 */
+.tile-land {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.land-visual {
+  width: 100%;
+  height: 60px;
+  background: linear-gradient(135deg, #2d5016 0%, #4a7c23 50%, #3d6b1a 100%);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.land-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 20px,
+    rgba(255, 255, 255, 0.05) 20px,
+    rgba(255, 255, 255, 0.05) 21px
+  );
+}
+
+.land-visual.has-building {
+  background: linear-gradient(135deg, #374151 0%, #4b5563 50%, #374151 100%);
+}
+
+/* 건물 3D 시각화 */
+.building-3d {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: buildingBounce 2s ease-in-out infinite;
+}
+
+@keyframes buildingBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.building-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+.building-shadow {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+/* 건물 높이 표현 */
+.building-3d.small .building-icon { font-size: 1.5rem; }
+.building-3d.medium .building-icon { font-size: 2rem; }
+.building-3d.large .building-icon { font-size: 2.5rem; }
+
+/* 시공 중 애니메이션 */
+.building-3d.constructing {
+  animation: constructing 1s ease-in-out infinite;
+}
+
+@keyframes constructing {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.95); }
+}
+
+/* 설계도 표시 */
+.blueprint {
+  position: absolute;
+  inset: 5px;
+  border: 2px dashed var(--accent-blue);
+  border-radius: var(--radius-sm);
+  opacity: 0.5;
+}
+
+/* 타일 정보 */
+.tile-info {
+  font-size: 0.8rem;
+}
+
+.tile-land-name {
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  color: var(--text-primary);
+}
+
+.tile-building-name {
+  color: var(--accent-gold);
+  font-size: 0.75rem;
+}
+
+.tile-architect {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}
+
+.tile-cost {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+/* 빈 슬롯 */
+.project-tile.empty {
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* 진행 바 */
+.progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width var(--transition-normal);
+}
+
+.progress-fill.land { background: var(--accent-emerald); width: 25%; }
+.progress-fill.design { background: var(--accent-blue); width: 50%; }
+.progress-fill.construction { background: var(--accent-orange); width: 75%; }
+.progress-fill.complete { background: var(--accent-gold); width: 100%; }
+
+/* ===== 매각 모달 ===== */
+.sell-modal {
+  padding: 1rem 0;
+}
+
+.sell-modal p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.sell-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.sell-building-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sell-building-item:hover {
+  border-color: var(--accent-gold);
+}
+
+.building-info {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.sell-price {
+  color: var(--accent-gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-sell-item {
+  padding: 0.5rem 1rem;
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #1a1a2e;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-sell-item:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ===== 액션 버튼 확장 ===== */
+.action-btn.pm {
+  background: var(--gradient-emerald);
+  color: white;
+}
+
+.action-btn.sell {
+  background: var(--accent-orange);
+  color: white;
 }
