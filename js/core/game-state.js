@@ -308,8 +308,10 @@ class GameState {
             return { success: false, message: '설계가 시작된 후에는 대지만 판매할 수 없습니다.' };
         }
 
-        // 판매 가격: 구매가의 80%
-        const sellPrice = Math.floor((project.landPrice + project.developmentCost) * 0.8);
+        // 판매 가격: 구매가의 110% (토지 가치 상승)
+        const purchasePrice = project.landPrice + project.developmentCost;
+        const sellPrice = Math.floor(purchasePrice * 1.1);
+        const profit = sellPrice - purchasePrice;
         player.money += sellPrice;
 
         // 프로젝트 초기화
@@ -318,16 +320,17 @@ class GameState {
         project.landPrice = 0;
         project.developmentCost = 0;
 
-        this.addLog(`${player.name}: ${landName} 대지 매각 (${this.formatMoney(sellPrice)})`);
+        this.addLog(`${player.name}: ${landName} 대지 매각 (${this.formatMoney(sellPrice)}, 수익 +${this.formatMoney(profit)})`);
 
         return {
             success: true,
             sellPrice,
-            message: `${landName} 대지를 ${this.formatMoney(sellPrice)}에 매각했습니다.`
+            profit,
+            message: `${landName} 대지를 ${this.formatMoney(sellPrice)}에 매각했습니다. (수익: +${this.formatMoney(profit)})`
         };
     }
 
-    // 완성된 건물 매각
+    // 완성된 건물 매각 (평가 반영, 시장 상황에 따라 변동)
     sellBuilding(playerIndex, buildingIndex) {
         const player = this.players[playerIndex];
 
@@ -336,19 +339,45 @@ class GameState {
         }
 
         const building = player.buildings[buildingIndex];
-        // 판매 가격: 원래 매각가의 90% (재판매)
-        const sellPrice = Math.floor(building.salePrice * 0.9);
+
+        // 기본 가치: 총 투자 비용 (토지 + 설계 + 시공)
+        const totalInvestment = building.landPrice + building.designFee + building.constructionCost;
+
+        // 평가 팩터 적용 (평가가 완료된 경우 evaluationFactor 사용)
+        const evalFactor = building.evaluationFactor || 1.0;
+
+        // 시장 상황 변동 (85% ~ 115% 랜덤)
+        const marketFactor = 0.85 + Math.random() * 0.3;
+
+        // 건축가 명성 보너스 (있는 경우)
+        const architectBonus = building.architect ? (building.architect.fame || 0) * 0.02 : 0;
+
+        // 최종 판매가 = 투자비용 * 평가팩터 * 시장변동 * (1 + 건축가보너스)
+        const finalMultiplier = evalFactor * marketFactor * (1 + architectBonus);
+        const sellPrice = Math.floor(totalInvestment * finalMultiplier);
+
+        // 손익 계산
+        const originalSalePrice = building.salePrice || totalInvestment;
+        const profitLoss = sellPrice - originalSalePrice;
+        const profitLossText = profitLoss >= 0
+            ? `+${this.formatMoney(profitLoss)}`
+            : `-${this.formatMoney(Math.abs(profitLoss))}`;
+
         player.money += sellPrice;
 
         const buildingName = `${building.building.name} @ ${building.land.name}`;
         player.buildings.splice(buildingIndex, 1);
 
-        this.addLog(`${player.name}: ${buildingName} 건물 매각 (${this.formatMoney(sellPrice)})`);
+        const marketStatus = marketFactor >= 1.0 ? '호황' : '불황';
+        this.addLog(`${player.name}: ${buildingName} 건물 매각 (${this.formatMoney(sellPrice)}, 시장: ${marketStatus}, ${profitLossText})`);
 
         return {
             success: true,
             sellPrice,
-            message: `${buildingName}을 ${this.formatMoney(sellPrice)}에 매각했습니다.`
+            profitLoss,
+            marketFactor,
+            evalFactor,
+            message: `${buildingName}을 ${this.formatMoney(sellPrice)}에 매각했습니다. (시장: ${marketStatus}, 손익: ${profitLossText})`
         };
     }
 
