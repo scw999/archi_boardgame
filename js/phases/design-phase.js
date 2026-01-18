@@ -166,9 +166,9 @@ export function getArchitectDisplayInfo(architect, building = null) {
     let bonus = architect.traitBonus;
     let feeText = `설계비 ${architect.feeMultiplier}배`;
     let costText = architect.constructionMultiplier > 1
-        ? `시공비 ${architect.constructionMultiplier}배`
+        ? `시공비 ${Math.round((architect.constructionMultiplier - 1) * 100)}% 추가`
         : architect.constructionMultiplier < 1
-            ? `시공비 ${(1 - architect.constructionMultiplier) * 100}% 절감`
+            ? `시공비 ${Math.round((1 - architect.constructionMultiplier) * 100)}% 절감`
             : '시공비 표준';
 
     // 건물이 선택된 경우 대표작 체크

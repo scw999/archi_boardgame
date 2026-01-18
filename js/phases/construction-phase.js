@@ -239,9 +239,9 @@ export function getConstructorDisplayInfo(constructor, building = null, architec
     };
 
     let costText = constructor.costMultiplier > 1
-        ? `시공비 ${((constructor.costMultiplier - 1) * 100).toFixed(0)}% 추가`
+        ? `시공비 ${Math.round((constructor.costMultiplier - 1) * 100)}% 추가`
         : constructor.costMultiplier < 1
-            ? `시공비 ${((1 - constructor.costMultiplier) * 100).toFixed(0)}% 절감`
+            ? `시공비 ${Math.round((1 - constructor.costMultiplier) * 100)}% 절감`
             : '시공비 표준';
 
     let estimatedCost = null;

@@ -139,7 +139,7 @@ class GameState {
         if (this.settings.easyStart) {
             this.players[playerIndex].money = this.settings.startingMoney;
         } else {
-            this.players[playerIndex].money = STARTING_MONEY[diceTotal] || 200000000;
+            this.players[playerIndex].money = STARTING_MONEY[diceTotal] || 500000000;
         }
         this.addLog(`${this.players[playerIndex].name}: 시작 자금 ${this.formatMoney(this.players[playerIndex].money)}`);
     }
