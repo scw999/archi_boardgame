@@ -1536,20 +1536,29 @@ class GameApp {
         let project;
 
         if (property.project) {
-            // cell data인 경우
+            // cell data인 경우 (도시 지도에서 클릭)
             project = property.project;
         } else if (property.land) {
-            // project 직접 전달된 경우
+            // project 직접 전달된 경우 (프로젝트 맵에서 클릭)
             project = property;
         } else {
             showNotification('상세 정보를 볼 수 없습니다.', 'warning');
             return;
         }
 
-        // building 체크 (project 또는 property에서)
+        // building이 없어도 land가 있으면 상세 정보 표시
         const building = project.building || property.building;
+        const land = project.land;
+
+        // 최소한 land는 있어야 함
+        if (!land && !building) {
+            showNotification('프로젝트 정보가 없습니다.', 'warning');
+            return;
+        }
+
+        // 건물이 없는 경우 (땅만 있는 경우)
         if (!building) {
-            showNotification('건물 정보가 없습니다.', 'warning');
+            this.showLandDetail(project);
             return;
         }
 
@@ -1687,6 +1696,129 @@ class GameApp {
         }
     }
 
+    // 대지 상세 정보 모달 (건물 없는 경우)
+    showLandDetail(project) {
+        const land = project.land;
+        const currentPhase = this.getProjectCurrentPhase(project);
+
+        const totalInvestment = (project.landPrice || 0) + (project.developmentCost || 0) + (project.designFee || 0);
+
+        showResultModal(`🗺️ ${land.name} 상세 정보`, `
+            <div class="land-detail">
+                <div class="land-header">
+                    <span class="land-emoji">${land.emoji || '🏞️'}</span>
+                    <div class="land-title">
+                        <h2>${land.name}</h2>
+                        <span class="land-region">📍 ${land.region || '알 수 없음'}</span>
+                    </div>
+                </div>
+
+                <div class="land-status">
+                    <span class="status-badge ${currentPhase.class}">${currentPhase.label}</span>
+                </div>
+
+                <div class="land-info-grid">
+                    <div class="info-section">
+                        <h4>🗺️ 대지 정보</h4>
+                        <div class="info-row">
+                            <span class="label">대지 유형</span>
+                            <span class="value">${land.type || '일반'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">구매가</span>
+                            <span class="value">${gameState.formatMoney(project.landPrice || 0)}</span>
+                        </div>
+                        ${project.developmentCost > 0 ? `
+                        <div class="info-row">
+                            <span class="label">개발비</span>
+                            <span class="value">${gameState.formatMoney(project.developmentCost)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    ${project.architect ? `
+                    <div class="info-section">
+                        <h4>📏 설계 정보</h4>
+                        <div class="info-row">
+                            <span class="label">건축가</span>
+                            <span class="value">${project.architect.portrait} ${project.architect.name}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">설계비</span>
+                            <span class="value">${gameState.formatMoney(project.designFee || 0)}</span>
+                        </div>
+                        ${project.building ? `
+                        <div class="info-row">
+                            <span class="label">설계 건물</span>
+                            <span class="value">${project.building.emoji} ${project.building.name}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+
+                    <div class="info-section">
+                        <h4>💰 총 투자액</h4>
+                        <div class="info-row large">
+                            <span class="label">현재까지 투자</span>
+                            <span class="value gold">${gameState.formatMoney(totalInvestment)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="land-actions">
+                    <button class="btn-sell-land" id="btn-sell-this-land">
+                        🏷️ 대지 매각 (${gameState.formatMoney(Math.floor(totalInvestment * 0.8))})
+                    </button>
+                </div>
+            </div>
+        `, null, true);
+
+        // 매각 버튼 이벤트
+        setTimeout(() => {
+            const sellBtn = document.getElementById('btn-sell-this-land');
+            if (sellBtn) {
+                sellBtn.onclick = () => {
+                    this.confirmLandSale(project);
+                };
+            }
+        }, 100);
+    }
+
+    // 프로젝트 현재 단계 반환
+    getProjectCurrentPhase(project) {
+        if (project.constructor) {
+            return { label: '🏗️ 시공 중', class: 'construction' };
+        } else if (project.architect && project.building) {
+            return { label: '📏 설계 완료', class: 'designed' };
+        } else if (project.architect) {
+            return { label: '🎨 건축가 선정', class: 'architect' };
+        } else if (project.land) {
+            return { label: '🗺️ 대지 확보', class: 'land' };
+        }
+        return { label: '⏳ 대기', class: 'waiting' };
+    }
+
+    // 대지 매각 확인
+    confirmLandSale(project) {
+        const totalInvestment = (project.landPrice || 0) + (project.developmentCost || 0) + (project.designFee || 0);
+        const salePrice = Math.floor(totalInvestment * 0.8);
+
+        if (confirm(`정말로 ${project.land.name}을(를) ${gameState.formatMoney(salePrice)}에 매각하시겠습니까?\n(투자 대비 20% 손실)`)) {
+            const player = gameState.getCurrentPlayer();
+
+            // 매각 처리
+            player.money += salePrice;
+            player.currentProject = null;
+
+            gameState.addLog(`${player.name}: ${project.land.name} 대지 매각 (${gameState.formatMoney(salePrice)})`);
+            showNotification(`${project.land.name}을(를) 매각했습니다!`, 'success');
+
+            // 모달 닫기 및 UI 업데이트
+            document.querySelector('.modal-overlay')?.remove();
+            this.updateUI();
+        }
+    }
+
     // 와일드카드 패널 업데이트
     updateWildcardPanel() {
         const player = gameState.getCurrentPlayer();
@@ -1723,6 +1855,16 @@ class GameApp {
 
         wildcardPanel.classList.remove('hidden');
 
+        // 와일드카드 아이템 클릭 시 상세보기
+        wildcardPanel.querySelectorAll('.wildcard-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // 버튼 클릭은 제외
+                if (e.target.classList.contains('btn-use-wildcard')) return;
+                const index = parseInt(item.dataset.index);
+                this.showWildcardDetail(player.wildcards[index]);
+            });
+        });
+
         // 와일드카드 사용 버튼 이벤트
         wildcardPanel.querySelectorAll('.btn-use-wildcard').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -1730,6 +1872,83 @@ class GameApp {
                 this.useWildcard(index);
             });
         });
+    }
+
+    // 와일드카드 상세 보기
+    showWildcardDetail(card) {
+        if (!card) return;
+
+        const effectDescription = this.getWildcardEffectDescription(card.effect);
+        const usagePhase = this.getWildcardUsagePhase(card.effect.type);
+
+        showResultModal(`🃏 ${card.name}`, `
+            <div class="wildcard-detail-modal">
+                <div class="wildcard-card-display">
+                    <div class="card-glow"></div>
+                    <div class="card-face">
+                        <div class="card-icon">🃏</div>
+                        <div class="card-title">${card.name}</div>
+                    </div>
+                </div>
+
+                <div class="wildcard-info">
+                    <div class="info-section">
+                        <h4>📝 카드 설명</h4>
+                        <p class="card-description">${card.description}</p>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>✨ 효과</h4>
+                        <p class="effect-description">${effectDescription}</p>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>⏰ 사용 가능 시점</h4>
+                        <p class="usage-phase">${usagePhase}</p>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+
+    // 와일드카드 효과 설명
+    getWildcardEffectDescription(effect) {
+        switch (effect.type) {
+            case 'land_discount':
+                return `대지 구매 시 ${effect.value * 100}% 할인이 적용됩니다.`;
+            case 'design_free':
+                return '설계비가 무료가 됩니다.';
+            case 'construction_discount':
+                return `시공비가 ${effect.value * 100}% 할인됩니다.`;
+            case 'risk_block':
+                return '리스크 카드 1장을 자동으로 방어합니다.';
+            case 'evaluation_boost':
+                return `평가 시 가치가 ${effect.value * 100}% 증가합니다.`;
+            case 'extra_dice':
+                return '주사위를 한 번 더 굴릴 수 있습니다.';
+            default:
+                return effect.description || '특수 효과가 적용됩니다.';
+        }
+    }
+
+    // 와일드카드 사용 가능 시점
+    getWildcardUsagePhase(effectType) {
+        switch (effectType) {
+            case 'land_discount':
+                return '🗺️ 대지 구매 단계';
+            case 'design_free':
+                return '📏 설계 단계';
+            case 'construction_discount':
+                return '🏗️ 시공 단계';
+            case 'risk_block':
+                return '🏗️ 시공 단계 (리스크 카드 공개 시 자동 적용)';
+            case 'evaluation_boost':
+                return '☑️ 평가 단계';
+            case 'extra_dice':
+                return '모든 주사위 굴리기 시점';
+            default:
+                return '상황에 따라 다름';
+        }
     }
 
     // 와일드카드 사용
