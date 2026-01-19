@@ -8,6 +8,11 @@ export function selectLand(playerIndex, landIndex, priceType) {
     const player = gameState.players[playerIndex];
     const land = gameState.availableLands[landIndex];
 
+    // 이미 토지를 보유한 경우 중복 구매 방지
+    if (player.currentProject && player.currentProject.land) {
+        return { success: false, message: '이미 이번 라운드에 토지를 구매했습니다.' };
+    }
+
     if (!land) {
         return { success: false, message: '해당 토지가 없습니다.' };
     }
@@ -90,6 +95,11 @@ export function attemptLandPurchase(playerIndex, landIndex, priceType, externalD
 // 토지 구매 시도 - 토지 객체 직접 전달 (인덱스 문제 우회)
 export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResult) {
     const player = gameState.players[playerIndex];
+
+    // 이미 토지를 보유한 경우 중복 구매 방지
+    if (player.currentProject && player.currentProject.land) {
+        return { success: false, message: '이미 이번 라운드에 토지를 구매했습니다.' };
+    }
 
     if (!land) {
         return { success: false, message: '토지 정보가 없습니다.' };

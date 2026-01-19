@@ -14,7 +14,9 @@ export const REGIONS = {
   GYEONGGI_OUTER: { id: 'gyeonggi_outer', name: '경기 외곽', emoji: '🏘️', tier: 2, color: '#5a7a5a' },
   GYEONGGI_MAIN: { id: 'gyeonggi_main', name: '경기 주요', emoji: '🏙️', tier: 3, color: '#5a7a9a' },
   SEOUL: { id: 'seoul', name: '서울', emoji: '🌆', tier: 4, color: '#7a5a8a' },
-  SEOUL_CORE: { id: 'seoul_core', name: '서울 핵심', emoji: '✨', tier: 5, color: '#b8962b' }
+  SEOUL_CORE: { id: 'seoul_core', name: '서울 핵심', emoji: '✨', tier: 5, color: '#b8962b' },
+  LANDMARK: { id: 'landmark', name: '명소/특구', emoji: '🌟', tier: 4, color: '#2a8a8a' },
+  TECH_HUB: { id: 'tech_hub', name: '테크밸리', emoji: '💼', tier: 4, color: '#4a6a9a' }
 };
 
 // 시세 기준 지역 결정 함수
@@ -591,7 +593,7 @@ export const premiumLands = [
     },
     bonuses: ['🏞️ 경관보너스', '🏞️ 오션뷰보너스', '💎 프리미엄'],
     tier: 'premium',
-    region: REGIONS.SEOUL
+    region: REGIONS.LANDMARK
   },
   // 판교 테크밸리
   {
@@ -619,7 +621,7 @@ export const premiumLands = [
     },
     bonuses: ['🚉 직장보너스', '🚉 역세권보너스', '💎 프리미엄'],
     tier: 'premium',
-    region: REGIONS.SEOUL
+    region: REGIONS.TECH_HUB
   },
   // 고급 전원주택 필지
   {
@@ -685,17 +687,66 @@ export function createPremiumLandDeck() {
   return [...premiumLands].sort(() => Math.random() - 0.5);
 }
 
-// 라운드별 대지 덱 생성 (기본 + 프리미엄)
+// 라운드별 대지 덱 생성 (라운드가 높을수록 비싼 땅 비율 증가)
 export function createRoundLandDeck(round) {
   let deck = [...lands];
 
-  // 라운드 2부터 프리미엄 대지 추가
+  // 라운드별 저가 토지 필터링 (라운드가 높을수록 저가 토지 감소)
   if (round >= 2) {
+    // 라운드 2: 2억 미만 토지 50% 제거
+    deck = deck.filter(land => {
+      if (land.prices.market < 200000000) {
+        return Math.random() > 0.5;
+      }
+      return true;
+    });
+  }
+
+  if (round >= 3) {
+    // 라운드 3: 3억 미만 토지 40% 추가 제거
+    deck = deck.filter(land => {
+      if (land.prices.market < 300000000) {
+        return Math.random() > 0.4;
+      }
+      return true;
+    });
+  }
+
+  if (round >= 4) {
+    // 라운드 4: 4억 미만 토지 30% 추가 제거
+    deck = deck.filter(land => {
+      if (land.prices.market < 400000000) {
+        return Math.random() > 0.3;
+      }
+      return true;
+    });
+  }
+
+  // 라운드 2부터 프리미엄 대지 추가 (점점 많이)
+  if (round >= 2) {
+    // 라운드 2: 프리미엄 1배
+    deck = [...deck, ...premiumLands];
+  }
+  if (round >= 3) {
+    // 라운드 3: 프리미엄 추가
+    deck = [...deck, ...premiumLands];
+  }
+  if (round >= 4) {
+    // 라운드 4: 프리미엄 더 추가
     deck = [...deck, ...premiumLands];
   }
 
   // 가격 배율 적용
   deck = deck.map(land => applyRoundPricing(land, round));
+
+  // 최소 카드 수 보장
+  if (deck.length < 12) {
+    const additionalLands = [...lands]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 12 - deck.length)
+      .map(land => applyRoundPricing(land, round));
+    deck = [...deck, ...additionalLands];
+  }
 
   return deck.sort(() => Math.random() - 0.5);
 }
