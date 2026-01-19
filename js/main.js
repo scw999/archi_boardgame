@@ -209,13 +209,24 @@ class GameApp {
         });
 
         document.getElementById('common-sell-land')?.addEventListener('click', () => {
-            if (confirm('정말로 현재 대지를 매각하시겠습니까? 진행 중인 프로젝트가 취소됩니다.')) {
-                const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
-                if (result.success) {
-                    showNotification(result.message, 'success');
-                    this.updateUI();
-                    this.nextPlayerOrPhase(this.getCurrentCheckField());
+            // 설계/시공 단계에서 대지 매각 시 경고
+            if (gameState.phase === GAME_PHASES.DESIGN || gameState.phase === GAME_PHASES.CONSTRUCTION) {
+                const confirmMsg = '⚠️ 주의: 설계/시공 단계에서 대지를 매각하면 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?';
+                if (!confirm(confirmMsg)) {
+                    return;
                 }
+            } else {
+                if (!confirm('정말로 현재 대지를 매각하시겠습니까? 진행 중인 프로젝트가 취소됩니다.')) {
+                    return;
+                }
+            }
+
+            const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
+            if (result.success) {
+                showNotification(result.message, 'success');
+                this.updateUI();
+                this.showCommonActionPanel(); // 공통 패널 다시 표시
+                this.nextPlayerOrPhase(this.getCurrentCheckField());
             }
         });
 
@@ -655,9 +666,9 @@ class GameApp {
 
         const player = gameState.getCurrentPlayer();
 
-        // 토지가 없으면 설계 불가
+        // 토지가 없으면 설계 불가 - 평가 단계까지 쉼
         if (!player.currentProject || !player.currentProject.land) {
-            showNotification('먼저 토지를 구매해야 합니다.', 'error');
+            showNotification(`${player.name}님은 토지가 없어 평가 단계까지 쉽니다.`, 'info');
             this.nextPlayerOrPhase('architect');
             return;
         }
@@ -1040,9 +1051,16 @@ class GameApp {
 
         const player = gameState.getCurrentPlayer();
 
-        // 설계가 완료되지 않은 경우
-        if (!player.currentProject || !player.currentProject.building) {
-            showNotification('먼저 설계를 완료해야 합니다.', 'error');
+        // 토지가 없는 경우 - 평가 단계까지 쉼
+        if (!player.currentProject || !player.currentProject.land) {
+            showNotification(`${player.name}님은 토지가 없어 평가 단계까지 쉽니다.`, 'info');
+            this.nextPlayerOrPhase('constructor');
+            return;
+        }
+
+        // 설계가 완료되지 않은 경우 - 평가 단계까지 쉼
+        if (!player.currentProject.building) {
+            showNotification(`${player.name}님은 설계가 완료되지 않아 평가 단계까지 쉽니다.`, 'info');
             this.nextPlayerOrPhase('constructor');
             return;
         }
