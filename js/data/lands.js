@@ -8,6 +8,24 @@ export const LAND_TYPES = {
   COMMERCIAL: 'commercial'
 };
 
+// 지역 구분 (가격 티어 기반)
+export const REGIONS = {
+  RURAL: { id: 'rural', name: '지방/시골', emoji: '🌾', tier: 1, color: '#3d5c3d' },
+  GYEONGGI_OUTER: { id: 'gyeonggi_outer', name: '경기 외곽', emoji: '🏘️', tier: 2, color: '#5a7a5a' },
+  GYEONGGI_MAIN: { id: 'gyeonggi_main', name: '경기 주요', emoji: '🏙️', tier: 3, color: '#5a7a9a' },
+  SEOUL: { id: 'seoul', name: '서울', emoji: '🌆', tier: 4, color: '#7a5a8a' },
+  SEOUL_CORE: { id: 'seoul_core', name: '서울 핵심', emoji: '✨', tier: 5, color: '#b8962b' }
+};
+
+// 시세 기준 지역 결정 함수
+export function getRegionByPrice(marketPrice) {
+  if (marketPrice < 200000000) return REGIONS.RURAL;           // 2억 미만 - 지방
+  if (marketPrice < 400000000) return REGIONS.GYEONGGI_OUTER;  // 2~4억 - 경기 외곽
+  if (marketPrice < 800000000) return REGIONS.GYEONGGI_MAIN;   // 4~8억 - 경기 주요
+  if (marketPrice < 1200000000) return REGIONS.SEOUL;          // 8~12억 - 서울
+  return REGIONS.SEOUL_CORE;                                    // 12억 이상 - 서울 핵심
+}
+
 export const lands = [
   // 단독주택 택지 (4장)
   {
@@ -33,7 +51,8 @@ export const lands = [
       infrastructure: true,   // 기반시설 있음
       roadAccess: true        // 도로 접함
     },
-    bonuses: []
+    bonuses: [],
+    region: REGIONS.GYEONGGI_OUTER
   },
   {
     id: 'land_residential_2',
@@ -58,7 +77,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🚉 학군보너스']
+    bonuses: ['🚉 학군보너스'],
+    region: REGIONS.GYEONGGI_OUTER
   },
   {
     id: 'land_residential_3',
@@ -83,7 +103,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: []
+    bonuses: [],
+    region: REGIONS.RURAL
   },
   {
     id: 'land_residential_4',
@@ -108,7 +129,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🏞️ 경관보너스']
+    bonuses: ['🏞️ 경관보너스'],
+    region: REGIONS.GYEONGGI_OUTER
   },
 
   // 상가주택 택지 (3장)
@@ -135,7 +157,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🚉 역세권보너스']
+    bonuses: ['🚉 역세권보너스'],
+    region: REGIONS.GYEONGGI_MAIN
   },
   {
     id: 'land_commercial_res_2',
@@ -160,7 +183,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: []
+    bonuses: [],
+    region: REGIONS.GYEONGGI_OUTER
   },
   {
     id: 'land_commercial_res_3',
@@ -185,7 +209,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🚉 마트보너스']
+    bonuses: ['🚉 마트보너스'],
+    region: REGIONS.GYEONGGI_OUTER
   },
 
   // 바닷가 부지 (3장)
@@ -212,7 +237,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🏞️ 오션뷰보너스']
+    bonuses: ['🏞️ 오션뷰보너스'],
+    region: REGIONS.GYEONGGI_OUTER
   },
   {
     id: 'land_seaside_2',
@@ -237,7 +263,8 @@ export const lands = [
       infrastructure: false,  // 인입비용 추가
       roadAccess: true
     },
-    bonuses: ['🏞️ 경관보너스']
+    bonuses: ['🏞️ 경관보너스'],
+    region: REGIONS.GYEONGGI_OUTER
   },
   {
     id: 'land_seaside_3',
@@ -262,7 +289,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🚉 입지보너스', '🏞️ 경관보너스']
+    bonuses: ['🚉 입지보너스', '🏞️ 경관보너스'],
+    region: REGIONS.GYEONGGI_MAIN
   },
 
   // 미개발 임야 (2장)
@@ -289,7 +317,8 @@ export const lands = [
       infrastructure: false,
       roadAccess: false       // 맹지 - 도로 연결 비용
     },
-    bonuses: []
+    bonuses: [],
+    region: REGIONS.RURAL
   },
   {
     id: 'land_undeveloped_2',
@@ -314,7 +343,8 @@ export const lands = [
       infrastructure: false,
       roadAccess: true
     },
-    bonuses: ['🏞️ 경관보너스']
+    bonuses: ['🏞️ 경관보너스'],
+    region: REGIONS.RURAL
   },
 
   // 전원주택 단지 필지 (2장)
@@ -341,7 +371,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: []
+    bonuses: [],
+    region: REGIONS.GYEONGGI_OUTER
   },
   {
     id: 'land_rural_2',
@@ -366,7 +397,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🏞️ 경관보너스']
+    bonuses: ['🏞️ 경관보너스'],
+    region: REGIONS.GYEONGGI_OUTER
   },
 
   // 준주거 및 상업 필지 (2장)
@@ -393,7 +425,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🚉 역세권보너스', '🚉 입지보너스']
+    bonuses: ['🚉 역세권보너스', '🚉 입지보너스'],
+    region: REGIONS.GYEONGGI_MAIN
   },
   {
     id: 'land_commercial_2',
@@ -418,7 +451,8 @@ export const lands = [
       infrastructure: true,
       roadAccess: true
     },
-    bonuses: ['🚉 역세권보너스', '🚉 직장보너스']
+    bonuses: ['🚉 역세권보너스', '🚉 직장보너스'],
+    region: REGIONS.SEOUL
   }
 ];
 
@@ -473,7 +507,8 @@ export const premiumLands = [
       roadAccess: true
     },
     bonuses: ['🚉 역세권보너스', '🚉 입지보너스', '💎 프리미엄'],
-    tier: 'premium'
+    tier: 'premium',
+    region: REGIONS.SEOUL_CORE
   },
   {
     id: 'land_premium_gangnam_2',
@@ -499,7 +534,8 @@ export const premiumLands = [
       roadAccess: true
     },
     bonuses: ['💎 럭셔리', '🚉 입지보너스'],
-    tier: 'ultra_premium'
+    tier: 'ultra_premium',
+    region: REGIONS.SEOUL_CORE
   },
   // 해운대 고급 필지
   {
@@ -526,7 +562,8 @@ export const premiumLands = [
       roadAccess: true
     },
     bonuses: ['🏞️ 오션뷰보너스', '💎 프리미엄', '🚉 입지보너스'],
-    tier: 'premium'
+    tier: 'premium',
+    region: REGIONS.SEOUL_CORE
   },
   // 제주 프리미엄
   {
@@ -553,7 +590,8 @@ export const premiumLands = [
       roadAccess: true
     },
     bonuses: ['🏞️ 경관보너스', '🏞️ 오션뷰보너스', '💎 프리미엄'],
-    tier: 'premium'
+    tier: 'premium',
+    region: REGIONS.SEOUL
   },
   // 판교 테크밸리
   {
@@ -580,7 +618,8 @@ export const premiumLands = [
       roadAccess: true
     },
     bonuses: ['🚉 직장보너스', '🚉 역세권보너스', '💎 프리미엄'],
-    tier: 'premium'
+    tier: 'premium',
+    region: REGIONS.SEOUL
   },
   // 고급 전원주택 필지
   {
@@ -607,7 +646,8 @@ export const premiumLands = [
       roadAccess: true
     },
     bonuses: ['🏞️ 경관보너스', '💎 프리미엄'],
-    tier: 'premium'
+    tier: 'premium',
+    region: REGIONS.GYEONGGI_MAIN
   }
 ];
 

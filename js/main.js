@@ -2014,8 +2014,24 @@ class GameApp {
         let project;
 
         if (property.project) {
-            // cell data인 경우 (도시 지도에서 클릭)
+            // cell data에 프로젝트가 있는 경우 (진행 중인 프로젝트)
             project = property.project;
+            if (ownerIndex === null) ownerIndex = property.owner;
+        } else if (property.building && property.owner !== undefined) {
+            // cell data에 완성된 건물만 있는 경우 (project는 null)
+            // player.buildings에서 해당 건물 찾기
+            const player = gameState.players[property.owner];
+            if (player && player.buildings) {
+                project = player.buildings.find(b => b.building === property.building);
+            }
+            if (!project) {
+                // buildings에서 못 찾으면 cell 정보로 임시 프로젝트 생성
+                project = {
+                    building: property.building,
+                    land: { name: property.district || '알 수 없음' },
+                    salePrice: 0
+                };
+            }
             if (ownerIndex === null) ownerIndex = property.owner;
         } else if (property.land) {
             // project 직접 전달된 경우 (프로젝트 맵에서 클릭)

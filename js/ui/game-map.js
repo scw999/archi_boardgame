@@ -1,5 +1,6 @@
 // 프로젝트 맵 시각화 UI
 import { gameState } from '../core/game-state.js';
+import { REGIONS } from '../data/lands.js';
 
 let is3DView = false;
 
@@ -60,17 +61,81 @@ export function renderProjectMap() {
     }
 }
 
-// 도시 지도 그리드 렌더링 (5x5)
+// 지역별 프로젝트/건물 수집
+function collectProjectsByRegion() {
+    const regionData = {};
+
+    // 모든 지역 초기화
+    Object.values(REGIONS).forEach(region => {
+        regionData[region.id] = {
+            region,
+            items: []  // { type: 'project'|'building'|'sold', data, ownerIndex }
+        };
+    });
+
+    // 플레이어별 프로젝트 및 건물 수집
+    gameState.players.forEach((player, playerIndex) => {
+        // 현재 진행 중인 프로젝트
+        if (player.currentProject && player.currentProject.land) {
+            const land = player.currentProject.land;
+            const regionId = land.region?.id || 'rural';
+            if (regionData[regionId]) {
+                regionData[regionId].items.push({
+                    type: 'project',
+                    data: player.currentProject,
+                    ownerIndex: playerIndex
+                });
+            }
+        }
+
+        // 완성된 건물
+        if (player.buildings) {
+            player.buildings.forEach(building => {
+                const land = building.land;
+                const regionId = land.region?.id || 'rural';
+                if (regionData[regionId]) {
+                    regionData[regionId].items.push({
+                        type: 'building',
+                        data: building,
+                        ownerIndex: playerIndex
+                    });
+                }
+            });
+        }
+
+        // 매각 이력
+        if (player.soldHistory) {
+            player.soldHistory.forEach(sold => {
+                const land = sold.land;
+                const regionId = land.region?.id || 'rural';
+                if (regionData[regionId]) {
+                    regionData[regionId].items.push({
+                        type: 'sold',
+                        data: sold,
+                        ownerIndex: playerIndex
+                    });
+                }
+            });
+        }
+    });
+
+    return regionData;
+}
+
+// 도시 지도 그리드 렌더링 (지역 기반)
 // 지방 → 경기 외곽 → 경기 주요 → 서울 → 서울 핵심 순서
 export function renderCityGrid() {
     const cityGridSection = document.getElementById('city-grid');
     if (!cityGridSection) return;
 
-    const cityMap = gameState.cityMap;
-    if (!cityMap) return;
+    // 지역별 프로젝트 수집
+    const regionData = collectProjectsByRegion();
+
+    // 지역 순서 (티어 순)
+    const regionOrder = ['rural', 'gyeonggi_outer', 'gyeonggi_main', 'seoul', 'seoul_core'];
 
     let gridHtml = `
-        <div class="city-map-wrapper">
+        <div class="city-map-wrapper isometric">
             <div class="city-map-title">🗺️ 개발 지도</div>
             <div class="city-map-legend">
                 <span class="legend-item tier-1">🌾 지방</span>
@@ -83,71 +148,120 @@ export function renderCityGrid() {
                 <span class="legend-arrow">→</span>
                 <span class="legend-item tier-5">✨ 서울 핵심</span>
             </div>
-            <div class="city-grid-container">
+            <div class="city-grid-container isometric-grid">
     `;
 
-    for (let y = 0; y < 5; y++) {
-        const regionInfo = cityMap[y][0]; // 같은 행은 같은 지역
-        const tierClass = `tier-${regionInfo.tier}`;
+    regionOrder.forEach((regionId, rowIndex) => {
+        const data = regionData[regionId];
+        if (!data) return;
+
+        const region = data.region;
+        const tierClass = `tier-${region.tier}`;
+        const items = data.items;
+
+        // 최소 1칸은 표시 (빈 슬롯)
+        const cellCount = Math.max(1, items.length);
 
         gridHtml += `
-            <div class="city-row ${tierClass}" data-district="${regionInfo.district}" style="--region-color: ${regionInfo.color}">
-                <div class="district-label">
-                    <span class="district-emoji">${regionInfo.emoji}</span>
-                    <span class="district-name">${regionInfo.district}</span>
+            <div class="city-row ${tierClass}" data-region="${regionId}" style="--region-color: ${region.color}">
+                <div class="district-label isometric-label">
+                    <span class="district-emoji">${region.emoji}</span>
+                    <span class="district-name">${region.name}</span>
                 </div>
+                <div class="region-cells">
         `;
 
-        for (let x = 0; x < 5; x++) {
-            const cell = cityMap[y][x];
-            const hasProject = cell.project !== null;
-            const hasBuilding = cell.building !== null;
-            const ownerClass = cell.owner !== null ? `owner-${cell.owner}` : '';
-
-            // 지역별 배경 테마
-            const bgPattern = getTierBackgroundPattern(regionInfo.tier);
-
-            // 프로젝트 상태에 따른 아이콘 결정
-            let projectIcon = '🏗️';
-            let projectClass = 'constructing';
-            if (hasProject && cell.project) {
-                if (!cell.project.building) {
-                    projectIcon = '🏞️'; // 토지만 구매
-                    projectClass = 'land-only';
-                } else if (!cell.project.constructor) {
-                    projectIcon = '📐'; // 설계 중
-                    projectClass = 'designing';
-                }
-            }
-
+        if (items.length === 0) {
+            // 빈 지역 - 빈 슬롯 하나 표시
             gridHtml += `
-                <div class="city-cell ${ownerClass} ${tierClass} ${hasBuilding ? 'has-building' : ''} ${hasProject ? projectClass : ''}"
-                     data-x="${x}" data-y="${y}" data-lot="${String.fromCharCode(65 + y)}${x + 1}"
-                     style="--cell-bg: ${bgPattern}">
-                    <div class="cell-terrain"></div>
-                    ${hasBuilding ? `
-                        <div class="cell-building">
-                            <span class="building-emoji">${cell.building.emoji}</span>
-                            <div class="building-glow"></div>
-                        </div>
-                    ` : hasProject ? `
-                        <div class="cell-project">
-                            <span class="project-icon">${projectIcon}</span>
-                        </div>
-                    ` : `
-                        <div class="cell-empty">
-                            <span class="empty-icon">${getEmptySlotIcon(regionInfo.tier)}</span>
-                        </div>
-                    `}
+                <div class="city-cell ${tierClass} isometric-cell empty-region"
+                     data-region="${regionId}">
+                    <div class="cell-terrain isometric-terrain"></div>
+                    <div class="cell-empty">
+                        <span class="empty-icon">${getEmptySlotIcon(region.tier)}</span>
+                    </div>
                 </div>
             `;
+        } else {
+            // 아이템들 표시
+            items.forEach((item, cellIndex) => {
+                const ownerClass = `owner-${item.ownerIndex}`;
+                const playerName = gameState.players[item.ownerIndex]?.name || '';
+
+                if (item.type === 'project') {
+                    const project = item.data;
+                    const hasBuilding = project.building !== null;
+
+                    // 프로젝트 상태에 따른 아이콘 결정
+                    let projectIcon = '🏗️';
+                    let projectClass = 'constructing';
+                    if (!project.building) {
+                        projectIcon = '🏞️'; // 토지만 구매
+                        projectClass = 'land-only';
+                    } else if (!project.constructor) {
+                        projectIcon = '📐'; // 설계 중
+                        projectClass = 'designing';
+                    }
+
+                    gridHtml += `
+                        <div class="city-cell ${ownerClass} ${tierClass} ${projectClass} isometric-cell"
+                             data-region="${regionId}" data-owner="${item.ownerIndex}" data-type="project">
+                            <div class="cell-terrain isometric-terrain"></div>
+                            <div class="cell-owner-tag">${playerName}</div>
+                            ${hasBuilding ? `
+                                <div class="cell-building isometric-building">
+                                    <span class="building-emoji">${project.building.emoji}</span>
+                                    <div class="building-glow"></div>
+                                </div>
+                            ` : `
+                                <div class="cell-project">
+                                    <span class="project-icon">${projectIcon}</span>
+                                </div>
+                            `}
+                            <div class="cell-land-name">${project.land.name}</div>
+                        </div>
+                    `;
+                } else if (item.type === 'building') {
+                    const building = item.data;
+                    gridHtml += `
+                        <div class="city-cell ${ownerClass} ${tierClass} has-building isometric-cell"
+                             data-region="${regionId}" data-owner="${item.ownerIndex}" data-type="building">
+                            <div class="cell-terrain isometric-terrain"></div>
+                            <div class="cell-owner-tag">${playerName}</div>
+                            <div class="cell-building isometric-building">
+                                <span class="building-emoji">${building.building.emoji}</span>
+                                <div class="building-glow"></div>
+                            </div>
+                            <div class="cell-land-name">${building.land.name}</div>
+                        </div>
+                    `;
+                } else if (item.type === 'sold') {
+                    const sold = item.data;
+                    gridHtml += `
+                        <div class="city-cell ${ownerClass} ${tierClass} sold isometric-cell"
+                             data-region="${regionId}" data-owner="${item.ownerIndex}" data-type="sold">
+                            <div class="cell-terrain isometric-terrain"></div>
+                            <div class="cell-owner-tag">${playerName}</div>
+                            <div class="cell-sold">
+                                <span class="sold-icon">${sold.building ? sold.building.emoji : '🏞️'}💰</span>
+                            </div>
+                            <div class="cell-land-name">${sold.land.name}</div>
+                        </div>
+                    `;
+                }
+            });
         }
-        gridHtml += '</div>';
-    }
+
+        gridHtml += `
+                </div>
+            </div>
+        `;
+    });
+
     gridHtml += `
             </div>
             <div class="city-map-footer">
-                <span>📍 건물을 지으면 지도에 표시됩니다</span>
+                <span>📍 토지를 구매하면 해당 지역에 표시됩니다</span>
             </div>
         </div>
     `;
