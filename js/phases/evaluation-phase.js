@@ -286,10 +286,18 @@ export function completeEvaluation(playerIndex) {
 
 // 페이즈 완료 체크
 export function checkEvaluationPhaseComplete() {
-    return gameState.players.every(player =>
-        player.currentProject &&
-        player.currentProject.salePrice > 0
-    );
+    return gameState.players.every(player => {
+        // 토지나 건물이 없는 플레이어는 평가 완료로 처리 (스킵)
+        if (!player.currentProject || !player.currentProject.land || !player.currentProject.building) {
+            return true;
+        }
+        // 시공사가 없는 플레이어도 평가 완료로 처리 (스킵)
+        if (!player.currentProject.constructor) {
+            return true;
+        }
+        // 토지, 건물, 시공사가 있으면 매각가가 설정되어야 함
+        return player.currentProject.salePrice > 0;
+    });
 }
 
 // 라운드 결과 요약

@@ -1760,6 +1760,21 @@ class GameApp {
     // 평가 페이즈
     runEvaluationPhase() {
         const player = gameState.getCurrentPlayer();
+        const project = player.currentProject;
+
+        // 평가할 프로젝트가 없는 경우 스킵 (토지, 건물, 시공사 모두 필요)
+        if (!project || !project.land || !project.building) {
+            showNotification(`${player.name}님은 평가할 건물이 없어 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('salePrice');
+            return;
+        }
+
+        if (!project.constructor) {
+            showNotification(`${player.name}님은 시공이 완료되지 않아 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('salePrice');
+            return;
+        }
+
         const result = calculateSalePrice(gameState.currentPlayerIndex);
 
         if (!result.success) {
