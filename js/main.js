@@ -2220,10 +2220,15 @@ class GameApp {
                 gameState.addLog(`${player.name}: 대출 ${gameState.formatMoney(repayment)} 상환`);
             }
 
-            // 건물 제거
+            // 건물 제거 (완성된 건물 목록에서)
             const buildingIndex = player.buildings.findIndex(b => b === project);
             if (buildingIndex !== -1) {
                 player.buildings.splice(buildingIndex, 1);
+            }
+
+            // 현재 프로젝트인 경우 null로 설정
+            if (player.currentProject === project) {
+                player.currentProject = null;
             }
 
             // 지도에서 제거
@@ -2243,6 +2248,11 @@ class GameApp {
             // 모달 닫기 및 UI 업데이트
             document.querySelector('.modal-overlay')?.remove();
             this.updateUI();
+
+            // 시공 단계에서 매각한 경우 턴 넘기기
+            if (gameState.phase === GAME_PHASES.CONSTRUCTION && !player.currentProject) {
+                this.nextPlayerOrPhase('constructor');
+            }
         }
     }
 
