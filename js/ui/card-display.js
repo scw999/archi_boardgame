@@ -43,11 +43,13 @@ function renderCard(card, type, index) {
 // 토지 카드
 function renderLandCard(land, index) {
     const info = getLandDisplayInfo(land);
+    const region = land.region;
 
     return `
     <div class="game-card land-card" data-index="${index}">
       <div class="card-header land">
         <span class="card-type">🗺️ 토지</span>
+        ${region ? `<span class="card-region" style="background-color: ${region.color};">${region.emoji} ${region.name}</span>` : ''}
       </div>
       <div class="card-body">
         <div class="card-title">${land.name}</div>
