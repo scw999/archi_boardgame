@@ -325,17 +325,36 @@ export function getRoundSummary() {
 // 최종 게임 결과
 export function getFinalResults() {
     const finalRankings = gameState.players
-        .map(player => ({
-            name: player.name,
-            totalMoney: player.money,
-            buildingsCount: player.buildings.length,
-            buildings: player.buildings.map(p => ({
-                name: p.building.name,
-                land: p.land.name,
-                salePrice: p.salePrice
-            }))
-        }))
-        .sort((a, b) => b.totalMoney - a.totalMoney);
+        .map(player => {
+            // 건물 가치 계산
+            const buildingValue = player.buildings.reduce((total, b) => total + (b.salePrice || 0), 0);
+            // 총 자산 = 보유 현금 + 건물 가치 - 대출
+            const totalAssets = player.money + buildingValue - player.loan;
+            // 수상 내역
+            const awards = player.buildings.reduce((acc, b) => {
+                if (b.awards && b.awards.length > 0) {
+                    acc.push(...b.awards.map(a => a.name));
+                }
+                return acc;
+            }, []);
+
+            return {
+                name: player.name,
+                money: player.money,
+                buildingValue: buildingValue,
+                loan: player.loan,
+                totalAssets: totalAssets,
+                buildingsCount: player.buildings.length,
+                awards: awards,
+                buildings: player.buildings.map(p => ({
+                    name: p.building?.name || '건물',
+                    emoji: p.building?.emoji || '🏠',
+                    land: p.land?.name || '토지',
+                    salePrice: p.salePrice || 0
+                }))
+            };
+        })
+        .sort((a, b) => b.totalAssets - a.totalAssets);
 
     return {
         winner: finalRankings[0],

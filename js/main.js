@@ -2004,21 +2004,77 @@ class GameApp {
     // 최종 결과
     showFinalResults() {
         const results = getFinalResults();
+        const medalEmojis = ['🥇', '🥈', '🥉', '4️⃣'];
 
         showResultModal('🏆 게임 종료!', `
-      <div class="final-results">
-        <h2>우승: ${results.winner.name}!</h2>
-        <p>최종 자산: ${gameState.formatMoney(results.winner.totalMoney)}</p>
-        
-        <h3>최종 순위</h3>
-        <ol>
-          ${results.rankings.map(r => `
-            <li>
-              <strong>${r.name}</strong>: ${gameState.formatMoney(r.totalMoney)}
-              <br>건물 ${r.buildingsCount}개
-            </li>
-          `).join('')}
-        </ol>
+      <div class="final-results-fancy">
+        <div class="winner-celebration">
+          <div class="confetti-container">
+            <span class="confetti">🎊</span>
+            <span class="confetti">🎉</span>
+            <span class="confetti">✨</span>
+            <span class="confetti">🌟</span>
+            <span class="confetti">🎊</span>
+          </div>
+          <div class="winner-trophy animate-bounce">🏆</div>
+          <h1 class="winner-name animate-glow">${results.winner.name}</h1>
+          <p class="winner-subtitle">최고의 건축왕!</p>
+          <div class="winner-stats">
+            <div class="winner-stat">
+              <span class="stat-value">${gameState.formatMoney(results.winner.totalAssets)}</span>
+              <span class="stat-label">총 자산</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="final-rankings">
+          <h2>🏅 최종 순위</h2>
+          <div class="ranking-cards">
+            ${results.rankings.map((r, i) => `
+              <div class="final-rank-card ${i === 0 ? 'winner' : ''}" style="--delay: ${i * 0.15}s">
+                <div class="rank-badge">${medalEmojis[i] || (i + 1) + '위'}</div>
+                <div class="rank-info">
+                  <div class="rank-name">${r.name}</div>
+                  <div class="rank-buildings">
+                    ${r.buildings.map(b => `<span class="building-emoji">${b.emoji}</span>`).join('')}
+                    ${r.buildingsCount === 0 ? '<span class="no-buildings">건물 없음</span>' : ''}
+                  </div>
+                </div>
+                <div class="rank-assets">
+                  <div class="asset-breakdown">
+                    <div class="asset-row">
+                      <span class="asset-label">💵 보유 현금</span>
+                      <span class="asset-value">${gameState.formatMoney(r.money)}</span>
+                    </div>
+                    <div class="asset-row">
+                      <span class="asset-label">🏢 건물 가치</span>
+                      <span class="asset-value">${gameState.formatMoney(r.buildingValue)}</span>
+                    </div>
+                    ${r.loan > 0 ? `
+                    <div class="asset-row negative">
+                      <span class="asset-label">🏦 대출</span>
+                      <span class="asset-value">-${gameState.formatMoney(r.loan)}</span>
+                    </div>
+                    ` : ''}
+                    <div class="asset-row total">
+                      <span class="asset-label">📊 총 자산</span>
+                      <span class="asset-value highlight">${gameState.formatMoney(r.totalAssets)}</span>
+                    </div>
+                  </div>
+                  ${r.awards.length > 0 ? `
+                  <div class="rank-awards">
+                    ${r.awards.map(a => `<span class="award-badge">${a}</span>`).join('')}
+                  </div>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="game-summary">
+          <p>📅 ${results.totalRounds}라운드 게임 완료</p>
+        </div>
       </div>
     `, () => {
             this.showMainMenu();

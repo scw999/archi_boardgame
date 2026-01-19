@@ -80,7 +80,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '펜션'],
+        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '펜션', '상가', '대형카페'],
         description: '중형 건물까지 안정적 시공'
     },
     {
@@ -92,7 +92,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '상가', '펜션'],
+        canBuild: ['단독주택', '상가주택', '카페', '상가', '펜션', '복합몰'],
         description: '상가 건물 시공 경험 풍부'
     },
     {
@@ -104,7 +104,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '풀빌라', '펜션'],
+        canBuild: ['단독주택', '상가주택', '풀빌라', '펜션', '호텔'],
         description: '주거시설 전문 중견 건설사'
     },
     {
@@ -116,7 +116,7 @@ export const constructors = [
         riskBlocks: 2,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '대형카페', '펜션'],
+        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '대형카페', '펜션', '호텔', '상가'],
         description: '성장하는 중견 건설사'
     },
     {
@@ -128,7 +128,7 @@ export const constructors = [
         riskBlocks: 2,
         paymentStages: 3,
         artistryBonus: 1.15,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '대형카페', '펜션', '호텔'],
+        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '대형카페', '펜션', '호텔', '복합몰'],
         description: '건축 전문 설계시공사, 디자인과 품질의 완벽 조화'
     },
     {
@@ -140,7 +140,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '펜션'],
+        canBuild: ['단독주택', '상가주택', '카페', '펜션', '상가', '대형카페'],
         description: '40년 전통의 중견 건설사'
     },
     {
@@ -152,7 +152,7 @@ export const constructors = [
         riskBlocks: 2,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '상가', '펜션'],
+        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '상가', '펜션', '복합몰', '호텔'],
         description: '데시앙 브랜드, 품질과 가격의 균형'
     },
 
