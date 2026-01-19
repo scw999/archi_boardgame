@@ -4388,10 +4388,11 @@ body {
 
 /* ===== 공통 액션 패널 ===== */
 #common-action-panel {
+  grid-column: 2;
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
