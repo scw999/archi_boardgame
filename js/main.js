@@ -224,8 +224,7 @@ class GameApp {
             const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
             if (result.success) {
                 showNotification(result.message, 'success');
-                this.updateUI();
-                this.showCommonActionPanel(); // 공통 패널 다시 표시
+                // 설계/시공 단계에서 토지 매각 시 자동으로 턴 넘기기
                 this.nextPlayerOrPhase(this.getCurrentCheckField());
             }
         });
@@ -237,6 +236,7 @@ class GameApp {
         document.getElementById('common-skip')?.addEventListener('click', () => {
             if (confirm('이번 턴을 넘기시겠습니까?')) {
                 gameState.addLog(`${player.name}: 턴 패스`);
+                showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
                 this.nextPlayerOrPhase(this.getCurrentCheckField());
             }
         });
@@ -279,10 +279,10 @@ class GameApp {
             actions.splice(2, 0, { id: 'sell-building', label: '건물 매각', icon: '🏢' });
         }
 
-        // 토지 가로채기 가능한 경우 버튼 추가
+        // 토지 가로채기 가능한 경우 버튼 추가 (게임당 1회, 1.5배 비용)
         const canStealLand = this.getStealableLands(player);
         if (canStealLand.length > 0 && !player.wildcardUsed) {
-            actions.push({ id: 'steal-land', label: '토지 가로채기 🃏', icon: '🃏' });
+            actions.push({ id: 'steal-land', label: '토지 가로채기 (1회) 🃏', icon: '🃏' });
         }
 
         renderActionArea(actions);
@@ -363,12 +363,12 @@ class GameApp {
         }
 
         if (player.wildcardUsed) {
-            showNotification('이번 라운드에 이미 가로채기를 사용했습니다.', 'error');
+            showNotification('이미 가로채기를 사용했습니다. (게임당 1회)', 'error');
             return;
         }
 
         const stealableList = stealable.map(item => {
-            const stealCost = Math.floor(item.price * 1.1);
+            const stealCost = Math.floor(item.price * 1.5);
             const canAfford = player.money + gameState.getMaxLoan(player) - player.loan >= stealCost + (item.land.attributes?.slope === 'high' ? 50000000 : 0);
 
             return `
@@ -379,7 +379,7 @@ class GameApp {
                     </div>
                     <div class="steal-cost">
                         <span class="original-price">원가: ${gameState.formatMoney(item.price)}</span>
-                        <span class="steal-price">가로채기 비용: ${gameState.formatMoney(stealCost)} (+10%)</span>
+                        <span class="steal-price">가로채기 비용: ${gameState.formatMoney(stealCost)} (1.5배)</span>
                     </div>
                     <button class="btn-steal ${canAfford ? '' : 'disabled'}" data-player="${item.playerIndex}"
                         ${canAfford ? '' : 'disabled'}>
@@ -392,8 +392,8 @@ class GameApp {
         showResultModal('🃏 토지 가로채기', `
             <div class="steal-land-modal">
                 <p class="steal-description">
-                    다른 플레이어가 구매한 토지를 10% 추가 비용으로 가로챌 수 있습니다.
-                    <br><strong>⚠️ 라운드당 1회만 사용 가능!</strong>
+                    다른 플레이어가 구매한 토지를 1.5배 비용으로 가로챌 수 있습니다.
+                    <br><strong>⚠️ 게임 전체에서 단 1회만 사용 가능!</strong>
                     <br><span style="color: #f59e0b;">📐 설계가 시작된 토지는 가로챌 수 없습니다.</span>
                 </p>
                 <div class="steal-land-list">
@@ -692,6 +692,7 @@ class GameApp {
         const player = gameState.getCurrentPlayer();
         const land = player.currentProject.land;
         const buildings = getAvailableBuildings(land);
+        const pmIncome = 50000000 + (player.buildings.length * 20000000);
 
         const designPanel = document.getElementById('design-panel') || document.createElement('div');
         designPanel.id = 'design-panel';
@@ -705,7 +706,7 @@ class GameApp {
                     <span class="name">${architect.name}</span>
                     <span class="trait">${architect.trait}</span>
                 </div>
-                
+
                 <h4>건물 선택</h4>
                 <div class="building-grid">
                     ${buildings.map((building, index) => {
@@ -714,8 +715,8 @@ class GameApp {
             const isMasterpiece = architect.masterpieces.includes(building.name);
 
             return `
-                            <div class="building-option ${building.isSuitable ? 'suitable' : ''}" 
-                                 data-index="${index}" 
+                            <div class="building-option ${building.isSuitable ? 'suitable' : ''}"
+                                 data-index="${index}"
                                  data-building="${building.name}">
                                 <div class="building-emoji">${building.emoji}</div>
                                 <div class="building-name">${building.name}</div>
@@ -735,11 +736,18 @@ class GameApp {
                         `;
         }).join('')}
                 </div>
-                
+
                 <div class="selected-building-info" id="selected-building-info" style="display: none;">
                     <h4>선택한 건물</h4>
                     <div id="building-summary"></div>
                     <button class="btn-confirm-design" id="btn-confirm-design">📐 설계 진행하기</button>
+                </div>
+
+                <div class="design-action-buttons">
+                    <button class="action-btn" id="design-pm">👷 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})</button>
+                    <button class="action-btn" id="design-sell-land">🏞️ 대지 매각</button>
+                    ${player.buildings.length > 0 ? '<button class="action-btn" id="design-sell-building">🏢 건물 매각</button>' : ''}
+                    <button class="action-btn" id="design-skip">⏭️ 턴 넘기기</button>
                 </div>
             </div>
         `;
@@ -751,8 +759,41 @@ class GameApp {
             actionArea.appendChild(designPanel);
         }
 
-        // 공통 액션 패널 다시 표시 (설계 패널 위에)
-        this.showCommonActionPanel();
+        // 기존 공통 액션 패널 제거 (중복 방지)
+        document.getElementById('common-action-panel')?.remove();
+
+        // 액션 버튼 이벤트 바인딩
+        document.getElementById('design-pm')?.addEventListener('click', () => {
+            const result = gameState.doPMActivity(gameState.currentPlayerIndex);
+            if (result.success) {
+                showNotification(result.message, 'success');
+                this.updateUI();
+                this.nextPlayerOrPhase('architect');
+            }
+        });
+
+        document.getElementById('design-sell-land')?.addEventListener('click', () => {
+            const confirmMsg = '⚠️ 주의: 설계 단계에서 대지를 매각하면 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?';
+            if (!confirm(confirmMsg)) return;
+
+            const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
+            if (result.success) {
+                showNotification(result.message, 'success');
+                this.nextPlayerOrPhase('architect');
+            }
+        });
+
+        document.getElementById('design-sell-building')?.addEventListener('click', () => {
+            this.showBuildingSellModal(() => this.updateUI());
+        });
+
+        document.getElementById('design-skip')?.addEventListener('click', () => {
+            if (confirm('이번 턴을 넘기시겠습니까?')) {
+                gameState.addLog(`${player.name}: 턴 패스`);
+                showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
+                this.nextPlayerOrPhase('architect');
+            }
+        });
 
         // 건물 선택 이벤트
         designPanel.querySelectorAll('.building-option').forEach(option => {

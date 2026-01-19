@@ -504,8 +504,7 @@ class GameState {
                 }
             }
             player.currentProject = null;
-            // 와일드카드 가로채기 사용 여부 리셋
-            player.wildcardUsed = false;
+            // wildcardUsed는 게임 전체에서 1회만 사용 가능하므로 리셋하지 않음
         });
 
         this.currentRound++;
