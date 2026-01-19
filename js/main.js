@@ -224,8 +224,7 @@ class GameApp {
             const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
             if (result.success) {
                 showNotification(result.message, 'success');
-                this.updateUI();
-                this.showCommonActionPanel(); // 공통 패널 다시 표시
+                // 설계/시공 단계에서 토지 매각 시 자동으로 턴 넘기기
                 this.nextPlayerOrPhase(this.getCurrentCheckField());
             }
         });
@@ -237,6 +236,7 @@ class GameApp {
         document.getElementById('common-skip')?.addEventListener('click', () => {
             if (confirm('이번 턴을 넘기시겠습니까?')) {
                 gameState.addLog(`${player.name}: 턴 패스`);
+                showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
                 this.nextPlayerOrPhase(this.getCurrentCheckField());
             }
         });
