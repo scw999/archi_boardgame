@@ -234,10 +234,18 @@ export function processRisks(playerIndex) {
 
 // 페이즈 완료 체크
 export function checkConstructionPhaseComplete() {
-    return gameState.players.every(player =>
-        player.currentProject &&
-        player.currentProject.constructor !== null
-    );
+    return gameState.players.every(player => {
+        // 토지가 없는 플레이어는 시공 완료로 처리 (스킵)
+        if (!player.currentProject || !player.currentProject.land) {
+            return true;
+        }
+        // 설계가 완료되지 않은 플레이어도 시공 완료로 처리 (스킵)
+        if (!player.currentProject.building) {
+            return true;
+        }
+        // 토지와 설계가 있으면 시공사가 선택되어야 함
+        return player.currentProject.constructor !== null;
+    });
 }
 
 // 시공사 정보 표시용 데이터
