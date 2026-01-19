@@ -124,8 +124,8 @@ class GameApp {
 
     // 현재 페이즈 실행
     runPhase() {
-        // 공통 액션 패널 항상 표시
-        this.showCommonActionPanel();
+        // 공통 액션 패널 제거 (하단 액션 영역에 통합)
+        document.getElementById('common-action-panel')?.remove();
 
         switch (gameState.phase) {
             case GAME_PHASES.LAND_PURCHASE:
@@ -258,7 +258,7 @@ class GameApp {
 
         // 액션 버튼 - PM활동, 매각 옵션 추가
         const actions = [
-            { id: 'pm-activity', label: 'PM 활동 (+5천만)', icon: '👷' },
+            { id: 'pm-activity', label: 'PM 컨설팅 (+1억)', icon: '👷' },
             { id: 'sell-land', label: '대지 매각', icon: '💰' },
             { id: 'skip-land', label: '이번 턴 패스', icon: '⏭️' }
         ];
@@ -337,6 +337,12 @@ class GameApp {
 
     // 토지 가로채기 모달 표시
     showStealLandModal() {
+        // 토지 구매 단계에서만 가로채기 가능
+        if (gameState.phase !== GAME_PHASES.LAND_PURCHASE) {
+            showNotification('토지 구매 단계에서만 가로채기가 가능합니다.', 'error');
+            return;
+        }
+
         const player = gameState.getCurrentPlayer();
         const stealable = this.getStealableLands(player);
 
@@ -1100,7 +1106,7 @@ class GameApp {
         // 기존 돈벌기 옵션 패널이 있으면 제거
         document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
 
-        const pmIncome = 50000000 + (player.buildings.length * 20000000);
+        const pmIncome = 100000000; // 고정 1억
 
         const moneyOptionsHtml = `
             <div class="money-options-panel">
@@ -1108,7 +1114,7 @@ class GameApp {
                 <p>필요 시공비: 약 ${gameState.formatMoney(neededCost)} / 보유: ${gameState.formatMoney(player.money)}</p>
                 <div class="money-action-buttons">
                     <button class="action-btn pm" id="btn-pm-construction">
-                        💼 PM 활동 (+${gameState.formatMoney(pmIncome)})
+                        💼 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})
                     </button>
                     ${player.currentProject?.land ? `
                         <button class="action-btn sell" id="btn-sell-land-construction">
@@ -1955,19 +1961,55 @@ class GameApp {
 
         // 와일드카드 패널 업데이트
         this.updateWildcardPanel();
+
+        // 플레이어 패널의 와일드카드 슬롯 클릭 이벤트
+        document.querySelectorAll('.clickable-wildcard').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const panel = document.getElementById('wildcard-panel');
+                if (panel) {
+                    panel.classList.toggle('hidden');
+                }
+            });
+        });
     }
 
     // 자산 클릭 이벤트 바인딩
     bindPropertyClickEvents() {
-        // 도시 지도의 셀 클릭 이벤트 (모든 건물 클릭 가능)
-        document.querySelectorAll('.city-cell.has-building').forEach(cell => {
+        // 개발 지도의 지역 기반 셀 클릭 이벤트
+        document.querySelectorAll('.city-cell.region-cell').forEach(cell => {
             cell.addEventListener('click', (e) => {
-                const x = parseInt(cell.dataset.x);
-                const y = parseInt(cell.dataset.y);
-                const cellData = gameState.cityMap[y][x];
+                const ownerIndex = cell.dataset.owner !== undefined ? parseInt(cell.dataset.owner) : null;
+                const cellType = cell.dataset.type;
 
-                // 누구의 건물이든 상세 정보 표시 (소유자 정보 전달)
-                this.showPropertyDetail(cellData, cellData.owner);
+                if (ownerIndex === null || isNaN(ownerIndex)) return;
+
+                const player = gameState.players[ownerIndex];
+                if (!player) return;
+
+                if (cellType === 'building') {
+                    // 완성된 건물 - 토지명으로 찾기
+                    const landName = cell.querySelector('.cell-land-name')?.textContent;
+                    const building = player.buildings.find(b => b.land?.name === landName);
+                    if (building) {
+                        this.showPropertyDetail(building, ownerIndex);
+                    }
+                } else if (cellType === 'project') {
+                    // 진행 중인 프로젝트
+                    if (player.currentProject && player.currentProject.land) {
+                        this.showPropertyDetail(player.currentProject, ownerIndex);
+                    }
+                } else if (cellType === 'sold') {
+                    // 매각된 건물/토지
+                    const landName = cell.querySelector('.cell-land-name')?.textContent;
+                    const soldItem = player.soldHistory?.find(s => s.land?.name === landName);
+                    if (soldItem) {
+                        if (soldItem.building) {
+                            this.showSoldDetail(soldItem, ownerIndex);
+                        } else {
+                            this.showSoldLandDetail(soldItem, ownerIndex);
+                        }
+                    }
+                }
             });
         });
 
@@ -2602,7 +2644,8 @@ class GameApp {
             case 'evaluation_boost':
                 return '☑️ 평가 단계';
             case 'extra_dice':
-                return '모든 주사위 굴리기 시점';
+            case 'bonus_dice':
+                return '🗺️ 토지 구매 단계 (주사위 굴리기 시)';
             default:
                 return '상황에 따라 다름';
         }
@@ -2653,10 +2696,15 @@ class GameApp {
                 break;
 
             case 'bonus_dice':
-                // 언제든 사용 가능 (저장해두고 필요할 때 사용)
-                player.bonusDiceActive = true;
-                canUse = true;
-                message = '주사위 재굴림 기회가 생겼습니다!';
+            case 'extra_dice':
+                // 토지 구매 단계에서만 사용 가능
+                if (gameState.phase === GAME_PHASES.LAND_PURCHASE) {
+                    player.bonusDiceActive = true;
+                    canUse = true;
+                    message = '주사위 재굴림 기회가 생겼습니다!';
+                } else {
+                    message = '토지 구매 단계에서만 사용할 수 있습니다.';
+                }
                 break;
 
             case 'loan_rate_cut':

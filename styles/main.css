@@ -3159,6 +3159,35 @@ body {
   color: var(--accent-purple);
 }
 
+/* 클릭 가능한 와일드카드 슬롯 */
+.stat-item.wildcard.clickable-wildcard {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stat-item.wildcard.clickable-wildcard:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(139, 92, 246, 0.2));
+  border-color: var(--accent-purple);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.stat-item.wildcard.clickable-wildcard::after {
+  content: '클릭';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.5rem;
+  color: var(--accent-purple);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.stat-item.wildcard.clickable-wildcard:hover::after {
+  opacity: 1;
+}
+
 .turn-indicator {
   background: var(--gradient-gold);
   color: #1a1a2e;
@@ -4582,46 +4611,53 @@ body {
   color: var(--text-primary);
 }
 
-/* 와일드카드 토글 버튼 */
+/* 와일드카드 토글 버튼 - 우측 하단 크게 */
 .wildcard-toggle-btn {
   position: fixed;
-  bottom: 1rem;
-  left: 1rem;
-  background: linear-gradient(135deg, var(--accent-gold), #d4a500);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.75rem 1.25rem;
-  color: #000;
-  font-size: 0.9rem;
-  font-weight: 600;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
   z-index: 400;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+  gap: 0.75rem;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
   transition: all var(--transition-fast);
 }
 
 .wildcard-toggle-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .wildcard-toggle-btn .badge {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.15rem 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.2rem 0.6rem;
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 .wildcard-toggle-btn.hidden {
   display: none;
 }
 
-/* 와일드카드 패널 위치 조정 (버튼 위에) */
+/* 와일드카드 패널 위치 조정 - 우측 하단 */
 #wildcard-panel {
-  bottom: 4.5rem;
+  bottom: auto;
+  top: 50%;
+  right: 1.5rem;
+  left: auto;
+  transform: translateY(-50%);
+  max-height: 70vh;
+  width: 320px;
 }
 
 /* ===== 토지 가로채기 모달 ===== */
@@ -4721,94 +4757,93 @@ body {
   cursor: not-allowed;
 }
 
-/* ===== 아이소메트릭 개발지도 스타일 ===== */
+/* ===== 지역 기반 개발지도 스타일 (2D) ===== */
 
-/* 1.5배 크기 및 아이소메트릭 래퍼 */
-.city-map-wrapper.isometric {
+/* 지역 기반 래퍼 */
+.city-map-wrapper.region-based {
   max-width: 900px;
-  transform: scale(1);
 }
 
-.city-grid-container.isometric-grid {
-  padding: 2rem;
-  gap: 4px;
-  transform: rotateX(25deg) rotateZ(-3deg) scale(1);
-  perspective: 1500px;
+.city-grid-container.region-grid {
+  padding: 1.5rem;
+  gap: 8px;
   background: linear-gradient(180deg, #1a2634 0%, #0f1a24 100%);
-}
-
-.city-grid-container.isometric-grid:hover {
-  transform: rotateX(20deg) rotateZ(-2deg) scale(1.02);
 }
 
 /* 지역 행 - 가로 확장 가능 */
 .city-row {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: stretch;
-  padding: 4px 0;
-  min-height: 100px;
+  padding: 6px 0;
+  min-height: 80px;
 }
 
 .city-row .region-cells {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   flex: 1;
+  align-items: center;
 }
 
-/* 아이소메트릭 라벨 */
-.district-label.isometric-label {
-  width: 100px;
+/* 지역 라벨 */
+.district-label.region-label {
+  width: 80px;
+  min-width: 80px;
   flex-direction: column;
   justify-content: center;
   text-align: center;
   gap: 0.3rem;
   padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   border-radius: var(--radius-md);
   margin-right: 8px;
 }
 
-.district-label.isometric-label .district-emoji {
-  font-size: 1.5rem;
+.district-label.region-label .district-emoji {
+  font-size: 1.3rem;
 }
 
-.district-label.isometric-label .district-name {
-  font-size: 0.8rem;
+.district-label.region-label .district-name {
+  font-size: 0.7rem;
   font-weight: 700;
 }
 
-/* 아이소메트릭 셀 - 1.5배 크기 */
-.city-cell.isometric-cell {
-  width: 90px;
-  height: 90px;
+/* 지역 셀 - 확대 크기 */
+.city-cell.region-cell {
+  width: 75px;
+  height: 75px;
   position: relative;
-  transform-style: preserve-3d;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 6px;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.25s ease;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 아이소메트릭 셀 호버 효과 */
-.city-cell.isometric-cell:hover {
-  transform: translateY(-8px) translateZ(20px) scale(1.08);
-  box-shadow:
-    0 15px 30px rgba(0, 0, 0, 0.6),
-    0 5px 15px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  z-index: 100;
+/* 셀 호버 효과 */
+.city-cell.region-cell:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  border-color: var(--accent-gold);
 }
 
-/* 아이소메트릭 지형 */
-.cell-terrain.isometric-terrain {
+/* 지형 패턴 */
+.city-cell.region-cell .cell-terrain {
+  position: absolute;
+  inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-  background-size: 15px 15px;
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 10px 10px;
+  border-radius: 6px;
+  pointer-events: none;
 }
 
 /* 소유자 태그 */
@@ -4845,21 +4880,10 @@ body {
   z-index: 5;
 }
 
-/* 아이소메트릭 건물 */
-.cell-building.isometric-building {
-  position: relative;
-  transform-style: preserve-3d;
-}
-
-.cell-building.isometric-building .building-emoji {
-  font-size: 2.5rem;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-  animation: isoBounce 3s ease-in-out infinite;
-}
-
-@keyframes isoBounce {
-  0%, 100% { transform: translateY(0) rotateY(0deg); }
-  50% { transform: translateY(-3px) rotateY(5deg); }
+/* 지역 셀 건물 */
+.city-cell.region-cell .cell-building .building-emoji {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
 /* 빈 지역 스타일 */
@@ -4872,57 +4896,45 @@ body {
   opacity: 0.8;
 }
 
-/* 아이소메트릭 셀 - 소유자별 색상 */
-.city-cell.isometric-cell.owner-0 {
+/* 지역 셀 - 소유자별 색상 */
+.city-cell.region-cell.owner-0 {
   border-color: #ef4444;
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(239, 68, 68, 0.3),
-    inset 0 0 15px rgba(239, 68, 68, 0.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), 0 0 15px rgba(239, 68, 68, 0.3);
 }
-.city-cell.isometric-cell.owner-0 .cell-owner-tag {
+.city-cell.region-cell.owner-0 .cell-owner-tag {
   background: rgba(239, 68, 68, 0.9);
 }
 
-.city-cell.isometric-cell.owner-1 {
+.city-cell.region-cell.owner-1 {
   border-color: #3b82f6;
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(59, 130, 246, 0.3),
-    inset 0 0 15px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), 0 0 15px rgba(59, 130, 246, 0.3);
 }
-.city-cell.isometric-cell.owner-1 .cell-owner-tag {
+.city-cell.region-cell.owner-1 .cell-owner-tag {
   background: rgba(59, 130, 246, 0.9);
 }
 
-.city-cell.isometric-cell.owner-2 {
+.city-cell.region-cell.owner-2 {
   border-color: #10b981;
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(16, 185, 129, 0.3),
-    inset 0 0 15px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), 0 0 15px rgba(16, 185, 129, 0.3);
 }
-.city-cell.isometric-cell.owner-2 .cell-owner-tag {
+.city-cell.region-cell.owner-2 .cell-owner-tag {
   background: rgba(16, 185, 129, 0.9);
 }
 
-.city-cell.isometric-cell.owner-3 {
+.city-cell.region-cell.owner-3 {
   border-color: #f59e0b;
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(245, 158, 11, 0.3),
-    inset 0 0 15px rgba(245, 158, 11, 0.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), 0 0 15px rgba(245, 158, 11, 0.3);
 }
-.city-cell.isometric-cell.owner-3 .cell-owner-tag {
+.city-cell.region-cell.owner-3 .cell-owner-tag {
   background: rgba(245, 158, 11, 0.9);
 }
 
-/* 아이소메트릭 셀 - 상태별 스타일 */
-.city-cell.isometric-cell.land-only {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.1));
+/* 지역 셀 - 상태별 스타일 */
+.city-cell.region-cell.land-only {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(16, 185, 129, 0.15));
 }
 
-.city-cell.isometric-cell.land-only .cell-project {
+.city-cell.region-cell .cell-project {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4930,40 +4942,31 @@ body {
   height: 100%;
 }
 
-.city-cell.isometric-cell.land-only .project-icon {
-  font-size: 2.2rem;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+.city-cell.region-cell .project-icon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-.city-cell.isometric-cell.designing {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.1));
+.city-cell.region-cell.designing {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.15));
 }
 
-.city-cell.isometric-cell.designing .project-icon {
-  animation: designSpin 2s ease-in-out infinite;
+.city-cell.region-cell.constructing {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(234, 88, 12, 0.15));
 }
 
-@keyframes designSpin {
-  0%, 100% { transform: rotate(-10deg) scale(1); }
-  50% { transform: rotate(10deg) scale(1.1); }
-}
-
-.city-cell.isometric-cell.constructing {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(234, 88, 12, 0.1));
-}
-
-.city-cell.isometric-cell.has-building {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.15));
+.city-cell.region-cell.has-building {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(99, 102, 241, 0.2));
 }
 
 /* 매각 완료 셀 */
-.city-cell.isometric-cell.sold {
+.city-cell.region-cell.sold {
   opacity: 0.7;
   filter: grayscale(0.3);
   background: linear-gradient(135deg, rgba(100, 100, 100, 0.3), rgba(80, 80, 80, 0.2));
 }
 
-.city-cell.isometric-cell.sold .cell-sold {
+.city-cell.region-cell.sold .cell-sold {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4971,13 +4974,13 @@ body {
   height: 100%;
 }
 
-.city-cell.isometric-cell.sold .sold-icon {
-  font-size: 2rem;
+.city-cell.region-cell.sold .sold-icon {
+  font-size: 1.6rem;
   opacity: 0.8;
 }
 
-/* 아이소메트릭 셀 - 빈 상태 */
-.city-cell.isometric-cell .cell-empty {
+/* 지역 셀 - 빈 상태 */
+.city-cell.region-cell .cell-empty {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4985,38 +4988,37 @@ body {
   height: 100%;
 }
 
-.city-cell.isometric-cell .cell-empty .empty-icon {
-  font-size: 1.8rem;
+.city-cell.region-cell .cell-empty .empty-icon {
+  font-size: 1.5rem;
   opacity: 0.4;
   transition: all 0.3s ease;
 }
 
-.city-cell.isometric-cell:hover .cell-empty .empty-icon {
+.city-cell.region-cell:hover .cell-empty .empty-icon {
   opacity: 0.7;
-  transform: scale(1.2);
+  transform: scale(1.1);
 }
 
-/* 지역별 빈 셀 배경 */
-.city-cell.isometric-cell.tier-1 { background: linear-gradient(135deg, rgba(74, 124, 78, 0.35), rgba(74, 124, 78, 0.15)); }
-.city-cell.isometric-cell.tier-2 { background: linear-gradient(135deg, rgba(107, 142, 107, 0.35), rgba(107, 142, 107, 0.15)); }
-.city-cell.isometric-cell.tier-3 { background: linear-gradient(135deg, rgba(122, 158, 194, 0.35), rgba(122, 158, 194, 0.15)); }
-.city-cell.isometric-cell.tier-4 { background: linear-gradient(135deg, rgba(155, 124, 184, 0.35), rgba(155, 124, 184, 0.15)); }
-.city-cell.isometric-cell.tier-5 {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.4), rgba(212, 175, 55, 0.2));
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    0 0 15px rgba(212, 175, 55, 0.3);
+/* 지역별 셀 배경 */
+.city-cell.region-cell.tier-1 { background: linear-gradient(135deg, rgba(74, 124, 78, 0.35), rgba(74, 124, 78, 0.2)); }
+.city-cell.region-cell.tier-2 { background: linear-gradient(135deg, rgba(107, 142, 107, 0.35), rgba(107, 142, 107, 0.2)); }
+.city-cell.region-cell.tier-3 { background: linear-gradient(135deg, rgba(122, 158, 194, 0.35), rgba(122, 158, 194, 0.2)); }
+.city-cell.region-cell.tier-4 { background: linear-gradient(135deg, rgba(155, 124, 184, 0.35), rgba(155, 124, 184, 0.2)); }
+.city-cell.region-cell.tier-5 {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.4), rgba(212, 175, 55, 0.25));
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
-/* 플레이어 건물 하이라이트 */
-.city-cell.isometric-cell.has-building .building-glow {
+/* 건물 글로우 효과 */
+.city-cell.region-cell.has-building .building-glow {
   position: absolute;
-  inset: -5px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  inset: -3px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
   animation: buildingGlow 2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @keyframes buildingGlow {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
