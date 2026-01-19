@@ -199,13 +199,13 @@ function completeLandPurchase(playerIndex, landIndex, priceType, selection) {
     gameState.placeProjectOnMap(playerIndex, project);
 }
 
-// 와일드카드 사용 (다른 사람이 낙찰받은 토지 10% 추가 지불로 가로채기)
+// 와일드카드 사용 (다른 사람이 낙찰받은 토지 50% 추가 지불로 가로채기 - 게임당 1회)
 export function useWildcard(playerIndex, targetPlayerIndex) {
     const player = gameState.players[playerIndex];
     const target = gameState.players[targetPlayerIndex];
 
     if (player.wildcardUsed) {
-        return { success: false, message: '이미 와일드카드를 사용했습니다.' };
+        return { success: false, message: '이미 가로채기를 사용했습니다. (게임당 1회)' };
     }
 
     if (!target.currentProject || !target.currentProject.land) {
@@ -213,7 +213,7 @@ export function useWildcard(playerIndex, targetPlayerIndex) {
     }
 
     const originalPrice = target.currentProject.landPrice;
-    const wildcardPrice = Math.floor(originalPrice * 1.1); // 10% 추가
+    const wildcardPrice = Math.floor(originalPrice * 1.5); // 50% 추가
     const developmentCost = target.currentProject.developmentCost;
     const totalCost = wildcardPrice + developmentCost;
 

@@ -279,10 +279,10 @@ class GameApp {
             actions.splice(2, 0, { id: 'sell-building', label: '건물 매각', icon: '🏢' });
         }
 
-        // 토지 가로채기 가능한 경우 버튼 추가
+        // 토지 가로채기 가능한 경우 버튼 추가 (게임당 1회, 1.5배 비용)
         const canStealLand = this.getStealableLands(player);
         if (canStealLand.length > 0 && !player.wildcardUsed) {
-            actions.push({ id: 'steal-land', label: '토지 가로채기 🃏', icon: '🃏' });
+            actions.push({ id: 'steal-land', label: '토지 가로채기 (1회) 🃏', icon: '🃏' });
         }
 
         renderActionArea(actions);
@@ -357,12 +357,12 @@ class GameApp {
         }
 
         if (player.wildcardUsed) {
-            showNotification('이번 라운드에 이미 가로채기를 사용했습니다.', 'error');
+            showNotification('이미 가로채기를 사용했습니다. (게임당 1회)', 'error');
             return;
         }
 
         const stealableList = stealable.map(item => {
-            const stealCost = Math.floor(item.price * 1.1);
+            const stealCost = Math.floor(item.price * 1.5);
             const canAfford = player.money + gameState.getMaxLoan(player) - player.loan >= stealCost + (item.land.attributes?.slope === 'high' ? 50000000 : 0);
 
             return `
@@ -373,7 +373,7 @@ class GameApp {
                     </div>
                     <div class="steal-cost">
                         <span class="original-price">원가: ${gameState.formatMoney(item.price)}</span>
-                        <span class="steal-price">가로채기 비용: ${gameState.formatMoney(stealCost)} (+10%)</span>
+                        <span class="steal-price">가로채기 비용: ${gameState.formatMoney(stealCost)} (1.5배)</span>
                     </div>
                     <button class="btn-steal ${canAfford ? '' : 'disabled'}" data-player="${item.playerIndex}"
                         ${canAfford ? '' : 'disabled'}>
@@ -386,8 +386,8 @@ class GameApp {
         showResultModal('🃏 토지 가로채기', `
             <div class="steal-land-modal">
                 <p class="steal-description">
-                    다른 플레이어가 구매한 토지를 10% 추가 비용으로 가로챌 수 있습니다.
-                    <br><strong>⚠️ 라운드당 1회만 사용 가능!</strong>
+                    다른 플레이어가 구매한 토지를 1.5배 비용으로 가로챌 수 있습니다.
+                    <br><strong>⚠️ 게임 전체에서 단 1회만 사용 가능!</strong>
                     <br><span style="color: #f59e0b;">📐 설계가 시작된 토지는 가로챌 수 없습니다.</span>
                 </p>
                 <div class="steal-land-list">
