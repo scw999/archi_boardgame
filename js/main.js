@@ -745,6 +745,9 @@ class GameApp {
             actionArea.appendChild(designPanel);
         }
 
+        // 공통 액션 패널 다시 표시 (설계 패널 위에)
+        this.showCommonActionPanel();
+
         // 건물 선택 이벤트
         designPanel.querySelectorAll('.building-option').forEach(option => {
             option.addEventListener('click', () => {
@@ -1145,6 +1148,9 @@ class GameApp {
         // 기존 액션 영역 내용 교체 (중복 방지)
         actionArea.innerHTML = moneyOptionsHtml;
 
+        // 공통 액션 패널 다시 표시
+        this.showCommonActionPanel();
+
         // PM 활동 버튼
         const pmBtn = document.getElementById('btn-pm-construction');
         if (pmBtn) {
@@ -1288,6 +1294,9 @@ class GameApp {
             actionArea.innerHTML = '';
             actionArea.appendChild(constructionPanel);
         }
+
+        // 공통 액션 패널 다시 표시 (시공 패널 위에)
+        this.showCommonActionPanel();
 
         // 시공 계약 버튼 이벤트
         const confirmBtn = document.getElementById('btn-confirm-construction');
