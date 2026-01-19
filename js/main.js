@@ -686,6 +686,7 @@ class GameApp {
         const player = gameState.getCurrentPlayer();
         const land = player.currentProject.land;
         const buildings = getAvailableBuildings(land);
+        const pmIncome = 50000000 + (player.buildings.length * 20000000);
 
         const designPanel = document.getElementById('design-panel') || document.createElement('div');
         designPanel.id = 'design-panel';
@@ -699,7 +700,7 @@ class GameApp {
                     <span class="name">${architect.name}</span>
                     <span class="trait">${architect.trait}</span>
                 </div>
-                
+
                 <h4>건물 선택</h4>
                 <div class="building-grid">
                     ${buildings.map((building, index) => {
@@ -708,8 +709,8 @@ class GameApp {
             const isMasterpiece = architect.masterpieces.includes(building.name);
 
             return `
-                            <div class="building-option ${building.isSuitable ? 'suitable' : ''}" 
-                                 data-index="${index}" 
+                            <div class="building-option ${building.isSuitable ? 'suitable' : ''}"
+                                 data-index="${index}"
                                  data-building="${building.name}">
                                 <div class="building-emoji">${building.emoji}</div>
                                 <div class="building-name">${building.name}</div>
@@ -729,11 +730,18 @@ class GameApp {
                         `;
         }).join('')}
                 </div>
-                
+
                 <div class="selected-building-info" id="selected-building-info" style="display: none;">
                     <h4>선택한 건물</h4>
                     <div id="building-summary"></div>
                     <button class="btn-confirm-design" id="btn-confirm-design">📐 설계 진행하기</button>
+                </div>
+
+                <div class="design-action-buttons">
+                    <button class="action-btn" id="design-pm">👷 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})</button>
+                    <button class="action-btn" id="design-sell-land">🏞️ 대지 매각</button>
+                    ${player.buildings.length > 0 ? '<button class="action-btn" id="design-sell-building">🏢 건물 매각</button>' : ''}
+                    <button class="action-btn" id="design-skip">⏭️ 턴 넘기기</button>
                 </div>
             </div>
         `;
@@ -745,8 +753,41 @@ class GameApp {
             actionArea.appendChild(designPanel);
         }
 
-        // 공통 액션 패널 다시 표시 (설계 패널 위에)
-        this.showCommonActionPanel();
+        // 기존 공통 액션 패널 제거 (중복 방지)
+        document.getElementById('common-action-panel')?.remove();
+
+        // 액션 버튼 이벤트 바인딩
+        document.getElementById('design-pm')?.addEventListener('click', () => {
+            const result = gameState.doPMActivity(gameState.currentPlayerIndex);
+            if (result.success) {
+                showNotification(result.message, 'success');
+                this.updateUI();
+                this.nextPlayerOrPhase('architect');
+            }
+        });
+
+        document.getElementById('design-sell-land')?.addEventListener('click', () => {
+            const confirmMsg = '⚠️ 주의: 설계 단계에서 대지를 매각하면 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?';
+            if (!confirm(confirmMsg)) return;
+
+            const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
+            if (result.success) {
+                showNotification(result.message, 'success');
+                this.nextPlayerOrPhase('architect');
+            }
+        });
+
+        document.getElementById('design-sell-building')?.addEventListener('click', () => {
+            this.showBuildingSellModal(() => this.updateUI());
+        });
+
+        document.getElementById('design-skip')?.addEventListener('click', () => {
+            if (confirm('이번 턴을 넘기시겠습니까?')) {
+                gameState.addLog(`${player.name}: 턴 패스`);
+                showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
+                this.nextPlayerOrPhase('architect');
+            }
+        });
 
         // 건물 선택 이벤트
         designPanel.querySelectorAll('.building-option').forEach(option => {

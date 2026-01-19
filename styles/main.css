@@ -1078,6 +1078,33 @@ body {
   box-shadow: var(--shadow-glow);
 }
 
+.design-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.design-action-buttons .action-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.6rem 0.8rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.design-action-buttons .action-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent-blue);
+}
+
 /* ===== 설계도 모달 ===== */
 .blueprint-modal {
   text-align: center;
