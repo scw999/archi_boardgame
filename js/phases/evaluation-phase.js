@@ -303,10 +303,14 @@ export function getRoundSummary() {
         }))
         .sort((a, b) => b.salePrice - a.salePrice);
 
+    // 다음 라운드 선 플레이어 계산 (현재 선 플레이어의 다음 사람)
+    const nextStartingPlayer = (gameState.roundStartingPlayer + 1) % gameState.players.length;
+    const nextFirstName = gameState.players[nextStartingPlayer]?.name || '알 수 없음';
+
     return {
         round: gameState.currentRound,
         rankings,
-        nextRoundFirst: rankings[rankings.length - 1].name // 최저점 플레이어가 다음 선
+        nextRoundFirst: nextFirstName // 다음 플레이어가 선
     };
 }
 
