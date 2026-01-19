@@ -135,7 +135,7 @@ export function renderCityGrid() {
     const regionOrder = ['rural', 'gyeonggi_outer', 'gyeonggi_main', 'seoul', 'seoul_core'];
 
     let gridHtml = `
-        <div class="city-map-wrapper isometric">
+        <div class="city-map-wrapper region-based">
             <div class="city-map-title">🗺️ 개발 지도</div>
             <div class="city-map-legend">
                 <span class="legend-item tier-1">🌾 지방</span>
@@ -148,7 +148,7 @@ export function renderCityGrid() {
                 <span class="legend-arrow">→</span>
                 <span class="legend-item tier-5">✨ 서울 핵심</span>
             </div>
-            <div class="city-grid-container isometric-grid">
+            <div class="city-grid-container region-grid">
     `;
 
     regionOrder.forEach((regionId, rowIndex) => {
@@ -164,7 +164,7 @@ export function renderCityGrid() {
 
         gridHtml += `
             <div class="city-row ${tierClass}" data-region="${regionId}" style="--region-color: ${region.color}">
-                <div class="district-label isometric-label">
+                <div class="district-label region-label">
                     <span class="district-emoji">${region.emoji}</span>
                     <span class="district-name">${region.name}</span>
                 </div>
@@ -174,9 +174,9 @@ export function renderCityGrid() {
         if (items.length === 0) {
             // 빈 지역 - 빈 슬롯 하나 표시
             gridHtml += `
-                <div class="city-cell ${tierClass} isometric-cell empty-region"
+                <div class="city-cell ${tierClass} region-cell empty-region"
                      data-region="${regionId}">
-                    <div class="cell-terrain isometric-terrain"></div>
+                    <div class="cell-terrain"></div>
                     <div class="cell-empty">
                         <span class="empty-icon">${getEmptySlotIcon(region.tier)}</span>
                     </div>
@@ -204,12 +204,12 @@ export function renderCityGrid() {
                     }
 
                     gridHtml += `
-                        <div class="city-cell ${ownerClass} ${tierClass} ${projectClass} isometric-cell"
+                        <div class="city-cell ${ownerClass} ${tierClass} ${projectClass} region-cell"
                              data-region="${regionId}" data-owner="${item.ownerIndex}" data-type="project">
-                            <div class="cell-terrain isometric-terrain"></div>
+                            <div class="cell-terrain"></div>
                             <div class="cell-owner-tag">${playerName}</div>
                             ${hasBuilding ? `
-                                <div class="cell-building isometric-building">
+                                <div class="cell-building">
                                     <span class="building-emoji">${project.building.emoji}</span>
                                     <div class="building-glow"></div>
                                 </div>
@@ -224,11 +224,11 @@ export function renderCityGrid() {
                 } else if (item.type === 'building') {
                     const building = item.data;
                     gridHtml += `
-                        <div class="city-cell ${ownerClass} ${tierClass} has-building isometric-cell"
+                        <div class="city-cell ${ownerClass} ${tierClass} has-building region-cell"
                              data-region="${regionId}" data-owner="${item.ownerIndex}" data-type="building">
-                            <div class="cell-terrain isometric-terrain"></div>
+                            <div class="cell-terrain"></div>
                             <div class="cell-owner-tag">${playerName}</div>
-                            <div class="cell-building isometric-building">
+                            <div class="cell-building">
                                 <span class="building-emoji">${building.building.emoji}</span>
                                 <div class="building-glow"></div>
                             </div>
@@ -238,9 +238,9 @@ export function renderCityGrid() {
                 } else if (item.type === 'sold') {
                     const sold = item.data;
                     gridHtml += `
-                        <div class="city-cell ${ownerClass} ${tierClass} sold isometric-cell"
+                        <div class="city-cell ${ownerClass} ${tierClass} sold region-cell"
                              data-region="${regionId}" data-owner="${item.ownerIndex}" data-type="sold">
-                            <div class="cell-terrain isometric-terrain"></div>
+                            <div class="cell-terrain"></div>
                             <div class="cell-owner-tag">${playerName}</div>
                             <div class="cell-sold">
                                 <span class="sold-icon">${sold.building ? sold.building.emoji : '🏞️'}💰</span>

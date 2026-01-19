@@ -62,7 +62,7 @@ function renderPlayerPanel(player, isActive) {
             <span class="stat-label">건물</span>
           </div>
           ${wildcardCount > 0 ? `
-          <div class="stat-item wildcard">
+          <div class="stat-item wildcard clickable-wildcard" data-action="toggle-wildcard" title="클릭하여 와일드카드 보기">
             <span class="stat-icon">🃏</span>
             <span class="stat-value">${wildcardCount}</span>
             <span class="stat-label">카드</span>
