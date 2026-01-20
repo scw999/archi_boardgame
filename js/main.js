@@ -1890,17 +1890,17 @@ class GameApp {
 
         <div class="eval-final ${isProfit ? 'profit' : 'loss'}">
           <div class="final-row sale">
-            <span class="label">💵 매각 금액</span>
+            <span class="label">💎 총 평가금액</span>
             <span class="value large">${gameState.formatMoney(bd.salePrice)}</span>
           </div>
           ${bd.loanRepayment > 0 ? `
           <div class="final-row repay">
-            <span class="label">🏦 대출 상환</span>
+            <span class="label">🏦 대출 잔액</span>
             <span class="value">-${gameState.formatMoney(bd.loanRepayment)}</span>
           </div>
           ` : ''}
           <div class="final-row result ${isProfit ? 'profit' : 'loss'}">
-            <span class="label">${isProfit ? '🎉 최종 수익' : '📉 최종 결과'}</span>
+            <span class="label">${isProfit ? '🎉 예상 순이익' : '📉 예상 결과'}</span>
             <span class="value super-large">${gameState.formatMoney(bd.netProfit)}</span>
           </div>
         </div>
