@@ -1,6 +1,7 @@
 // 아이소메트릭 개발 지도 UI
 import { gameState } from '../core/game-state.js';
 import { REGIONS } from '../data/lands.js';
+import { BUILDING_IMAGES } from '../data/buildings.js';
 
 let is3DView = false;
 let selectedPlotIndex = null;
@@ -298,13 +299,22 @@ function renderPlotMarker(plot, index, owned) {
     const isOwned = owned !== undefined;
     const ownerClass = isOwned ? `owned owner-${owned.playerIndex}` : 'available';
     const playerColor = isOwned ? PLAYER_COLORS[owned.playerIndex] : null;
+    const hasBuilding = isOwned && owned.building;
 
     let content = '';
     let statusIcon = '';
 
     if (isOwned) {
-        if (owned.building) {
-            content = `<span class="plot-building">${owned.building.emoji}</span>`;
+        if (hasBuilding) {
+            // 건물 이미지가 있으면 이미지 사용, 없으면 이모지 폴백
+            const buildingImage = BUILDING_IMAGES[owned.building.name];
+            if (buildingImage) {
+                content = `<img src="${buildingImage}" alt="${owned.building.name}" class="plot-building-img"
+                           onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                          <span class="plot-building-emoji" style="display:none;">${owned.building.emoji}</span>`;
+            } else {
+                content = `<span class="plot-building-emoji">${owned.building.emoji}</span>`;
+            }
         } else {
             content = `<span class="plot-land">🏞️</span>`;
         }
@@ -327,8 +337,11 @@ function renderPlotMarker(plot, index, owned) {
         --owner-glow: ${playerColor.glow};
     ` : '';
 
+    // 건물 이미지가 있을 때는 더 큰 마커 사용
+    const markerSizeClass = hasBuilding ? 'has-building-img' : '';
+
     return `
-        <div class="plot-marker ${tierClass} ${ownerClass}"
+        <div class="plot-marker ${tierClass} ${ownerClass} ${markerSizeClass}"
              data-plot-index="${index}"
              data-zone="${plot.zone}"
              style="left: ${plot.x}%; top: ${plot.y}%; ${style}">
@@ -355,12 +368,23 @@ function renderOwnedPlotMarker(owned) {
     const plotInfo = MAP_PLOTS[owned.plotIndex] || MAP_PLOTS[0];
     const playerColor = PLAYER_COLORS[owned.playerIndex];
 
+    let buildingContent = '🏞️';
+    if (owned.building) {
+        const buildingImage = BUILDING_IMAGES[owned.building.name];
+        if (buildingImage) {
+            buildingContent = `<img src="${buildingImage}" alt="${owned.building.name}" class="owned-building-img"
+                               onerror="this.outerHTML='${owned.building.emoji}';">`;
+        } else {
+            buildingContent = owned.building.emoji;
+        }
+    }
+
     return `
         <div class="owned-marker owner-${owned.playerIndex}"
              style="left: ${plotInfo.x}%; top: ${plotInfo.y}%;
                     --owner-color: ${playerColor.border};">
             <div class="owned-marker-content">
-                ${owned.building ? owned.building.emoji : '🏞️'}
+                ${buildingContent}
             </div>
             <div class="owned-marker-label">${owned.playerName}</div>
         </div>

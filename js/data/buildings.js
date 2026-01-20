@@ -11,6 +11,19 @@ export const BUILDING_TYPES = {
     PENSION: '펜션'
 };
 
+// 건물 이미지 매핑 (아이소메트릭 이미지)
+export const BUILDING_IMAGES = {
+    '단독주택': 'assets/images/building-house.png',
+    '상가주택': 'assets/images/building-commercial-house.png',
+    '카페': 'assets/images/building-cafe.png',
+    '풀빌라': 'assets/images/building-villa.png',
+    '호텔': 'assets/images/building-hotel.png',
+    '대형카페': 'assets/images/building-large-cafe.png',
+    '상가': 'assets/images/building-retail.png',
+    '복합몰': 'assets/images/building-complex.png',
+    '펜션': 'assets/images/building-pension.png'
+};
+
 export const buildings = {
     '단독주택': {
         id: 'house',
