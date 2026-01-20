@@ -4,7 +4,7 @@ import { renderGameBoard, renderGameLog, renderActionArea, showNotification, sho
 import { renderPlayerPanels } from './ui/player-panel.js';
 import { renderCardGrid, highlightCard, renderBuildingSelector } from './ui/card-display.js';
 import { showDiceRoll, showStartingDiceRoll, showLandPurchaseDice, showRiskCardDraw } from './ui/dice-roller.js';
-import { initProjectMap, renderProjectMap, renderCityGrid } from './ui/game-map.js';
+import { initProjectMap, renderProjectMap, renderCityGrid, resetPlotAssignments } from './ui/game-map.js';
 import { selectLand, attemptLandPurchase, attemptLandPurchaseByLand, checkLandPhaseComplete, getLandDisplayInfo, useWildcard as useLandWildcard } from './phases/land-phase.js';
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
@@ -76,6 +76,9 @@ class GameApp {
 
         // 게임 초기화
         gameState.initGame(playerNames, easyStart);
+
+        // 지도 플롯 할당 초기화
+        resetPlotAssignments();
 
         // UI 전환
         document.getElementById('player-setup').classList.add('hidden');

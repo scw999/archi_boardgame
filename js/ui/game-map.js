@@ -6,6 +6,12 @@ import { BUILDING_IMAGES } from '../data/buildings.js';
 let is3DView = false;
 let selectedPlotIndex = null;
 
+// 토지별 고정 플롯 인덱스 저장 (토지 ID -> 플롯 인덱스)
+const landPlotAssignments = new Map();
+
+// 사용된 플롯 인덱스 추적
+const usedPlotIndices = new Set();
+
 // 아이소메트릭 맵 위의 플롯(대지) 위치 정의
 // 이미지 기준 상대 좌표 (%) - 실제 빈 플롯 위치에 맞춤
 const MAP_PLOTS = [
@@ -73,6 +79,12 @@ export function initProjectMap() {
     if (toggleBtn) {
         toggleBtn.addEventListener('click', toggleMapView);
     }
+}
+
+// 플롯 할당 초기화 (새 게임 시작 시 호출)
+export function resetPlotAssignments() {
+    landPlotAssignments.clear();
+    usedPlotIndices.clear();
 }
 
 // 3D 보기 토글
@@ -199,13 +211,15 @@ export function renderCityGrid() {
 // 소유 대지 정보 수집
 function collectOwnedPlots() {
     const ownedPlots = [];
-    let plotCounter = 0;
 
     gameState.players.forEach((player, playerIndex) => {
         // 현재 진행 중인 프로젝트
         if (player.currentProject && player.currentProject.land) {
             const project = player.currentProject;
-            const assignedPlot = assignPlotByRegion(project.land.region, plotCounter++);
+            const landId = project.land.id;
+
+            // 이미 할당된 플롯이 있으면 사용, 없으면 새로 할당
+            const assignedPlot = getOrAssignPlotForLand(landId, project.land.region, project.land.name);
 
             ownedPlots.push({
                 type: 'project',
@@ -222,7 +236,9 @@ function collectOwnedPlots() {
         // 완성된 건물
         if (player.buildings) {
             player.buildings.forEach(building => {
-                const assignedPlot = assignPlotByRegion(building.land.region, plotCounter++);
+                const landId = building.land.id;
+                const assignedPlot = getOrAssignPlotForLand(landId, building.land.region, building.land.name);
+
                 ownedPlots.push({
                     type: 'completed',
                     playerIndex,
@@ -236,10 +252,12 @@ function collectOwnedPlots() {
             });
         }
 
-        // 매각 이력
+        // 매각 이력 (건물은 지도에 남음)
         if (player.soldHistory) {
             player.soldHistory.forEach(sold => {
-                const assignedPlot = assignPlotByRegion(sold.land.region, plotCounter++);
+                const landId = sold.land.id;
+                const assignedPlot = getOrAssignPlotForLand(landId, sold.land.region, sold.land.name);
+
                 ownedPlots.push({
                     type: 'sold',
                     playerIndex,
@@ -257,19 +275,99 @@ function collectOwnedPlots() {
     return ownedPlots;
 }
 
-// 지역에 맞는 플롯 할당
-function assignPlotByRegion(region, counter) {
-    if (!region) return counter % MAP_PLOTS.length;
-
-    const regionId = region.id;
-    const matchingPlots = MAP_PLOTS.map((plot, index) => ({ ...plot, index }))
-        .filter(plot => plot.zone === regionId || getTierFromZone(plot.zone) === region.tier);
-
-    if (matchingPlots.length > 0) {
-        return matchingPlots[counter % matchingPlots.length].index;
+// 토지 ID에 대해 고정 플롯 할당 (한 번 할당되면 변경 안 됨)
+function getOrAssignPlotForLand(landId, region, landName) {
+    // 이미 할당된 플롯이 있으면 반환
+    if (landPlotAssignments.has(landId)) {
+        return landPlotAssignments.get(landId);
     }
 
-    return counter % MAP_PLOTS.length;
+    // 새로 할당
+    const plotIndex = assignPlotByRegionAndName(region, landName);
+    landPlotAssignments.set(landId, plotIndex);
+    usedPlotIndices.add(plotIndex);
+
+    return plotIndex;
+}
+
+// 지역과 이름을 기반으로 적절한 플롯 할당
+function assignPlotByRegionAndName(region, landName) {
+    if (!region) {
+        return findFirstAvailablePlot();
+    }
+
+    const regionId = region.id;
+
+    // 특정 토지명과 플롯 매핑 (정확한 위치 지정)
+    const landNameMappings = {
+        '판교 테크노밸리 필지': 'city_1',   // 판교
+        '강남 역세권 필지': 'city_2',       // 강남역
+        '청담동 고급 필지': 'river_4',      // 청담
+        '해운대 오션뷰 필지': 'beach_1',    // 마리나/해안
+        '제주 서귀포 절경 필지': 'coast_1', // 해안가
+        '양평 프리미엄 전원 필지': 'suburb_1' // 용인/외곽
+    };
+
+    // 토지명으로 정확한 매핑이 있으면 사용
+    if (landName && landNameMappings[landName]) {
+        const targetId = landNameMappings[landName];
+        const plotIndex = MAP_PLOTS.findIndex(plot => plot.id === targetId);
+        if (plotIndex !== -1 && !usedPlotIndices.has(plotIndex)) {
+            return plotIndex;
+        }
+    }
+
+    // 지역 ID를 맵 존으로 변환
+    const regionToZoneMapping = {
+        'rural': ['rural'],
+        'gyeonggi_outer': ['gyeonggi_outer', 'rural'],
+        'gyeonggi_main': ['gyeonggi_main', 'gyeonggi_outer'],
+        'seoul': ['seoul', 'gyeonggi_main'],
+        'seoul_core': ['seoul_core', 'seoul'],
+        'landmark': ['landmark', 'seoul', 'riverside'],
+        'tech_hub': ['gyeonggi_main', 'seoul'],  // 판교는 경기 주요
+        'seaside': ['seaside', 'riverside'],
+        'riverside': ['riverside', 'seaside']
+    };
+
+    const targetZones = regionToZoneMapping[regionId] || [regionId];
+
+    // 해당 존에서 사용 가능한 플롯 찾기
+    for (const zone of targetZones) {
+        const matchingPlots = MAP_PLOTS
+            .map((plot, index) => ({ ...plot, index }))
+            .filter(plot => plot.zone === zone && !usedPlotIndices.has(plot.index));
+
+        if (matchingPlots.length > 0) {
+            // 랜덤하게 선택하여 다양성 확보
+            const randomIndex = Math.floor(Math.random() * matchingPlots.length);
+            return matchingPlots[randomIndex].index;
+        }
+    }
+
+    // 티어로 매칭 시도
+    const tierMatchingPlots = MAP_PLOTS
+        .map((plot, index) => ({ ...plot, index }))
+        .filter(plot => getTierFromZone(plot.zone) === region.tier && !usedPlotIndices.has(plot.index));
+
+    if (tierMatchingPlots.length > 0) {
+        const randomIndex = Math.floor(Math.random() * tierMatchingPlots.length);
+        return tierMatchingPlots[randomIndex].index;
+    }
+
+    // 모두 실패하면 사용 가능한 첫 번째 플롯
+    return findFirstAvailablePlot();
+}
+
+// 사용 가능한 첫 번째 플롯 찾기
+function findFirstAvailablePlot() {
+    for (let i = 0; i < MAP_PLOTS.length; i++) {
+        if (!usedPlotIndices.has(i)) {
+            return i;
+        }
+    }
+    // 모든 플롯이 사용 중이면 첫 번째 반환
+    return 0;
 }
 
 // 존에서 티어 가져오기
@@ -302,7 +400,8 @@ function getProjectStatus(project) {
 function renderPlotMarker(plot, index, owned) {
     const tierClass = `tier-${plot.tier}`;
     const isOwned = owned !== undefined;
-    const ownerClass = isOwned ? `owned owner-${owned.playerIndex}` : 'available';
+    const isSold = isOwned && owned.status === 'sold';
+    const ownerClass = isOwned ? `owned owner-${owned.playerIndex}${isSold ? ' sold' : ''}` : 'available';
     const playerColor = isOwned ? PLAYER_COLORS[owned.playerIndex] : null;
     const hasBuilding = isOwned && owned.building;
 
@@ -314,11 +413,11 @@ function renderPlotMarker(plot, index, owned) {
             // 건물 이미지가 있으면 이미지 사용, 없으면 이모지 폴백
             const buildingImage = BUILDING_IMAGES[owned.building.name];
             if (buildingImage) {
-                content = `<img src="${buildingImage}" alt="${owned.building.name}" class="plot-building-img"
+                content = `<img src="${buildingImage}" alt="${owned.building.name}" class="plot-building-img${isSold ? ' sold-building' : ''}"
                            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                           <span class="plot-building-emoji" style="display:none;">${owned.building.emoji}</span>`;
             } else {
-                content = `<span class="plot-building-emoji">${owned.building.emoji}</span>`;
+                content = `<span class="plot-building-emoji${isSold ? ' sold-building' : ''}">${owned.building.emoji}</span>`;
             }
         } else {
             content = `<span class="plot-land">🏞️</span>`;
@@ -336,8 +435,8 @@ function renderPlotMarker(plot, index, owned) {
         content = `<span class="plot-empty">${plot.emoji}</span>`;
     }
 
+    // 건물 이미지가 있으면 배경 투명하게 (style 변수에서 owner-bg 제거)
     const style = isOwned ? `
-        --owner-bg: ${playerColor.bg};
         --owner-border: ${playerColor.border};
         --owner-glow: ${playerColor.glow};
     ` : '';
@@ -345,10 +444,14 @@ function renderPlotMarker(plot, index, owned) {
     // 건물 이미지가 있을 때는 더 큰 마커 사용
     const markerSizeClass = hasBuilding ? 'has-building-img' : '';
 
+    // 매각된 건물은 클릭 가능하다는 표시
+    const clickHint = isSold ? '클릭하여 상세정보 보기' : '';
+
     return `
         <div class="plot-marker ${tierClass} ${ownerClass} ${markerSizeClass}"
              data-plot-index="${index}"
              data-zone="${plot.zone}"
+             data-status="${owned?.status || 'empty'}"
              style="left: ${plot.x}%; top: ${plot.y}%; ${style}">
             <div class="plot-marker-inner">
                 ${content}
@@ -357,9 +460,10 @@ function renderPlotMarker(plot, index, owned) {
             <div class="plot-tooltip">
                 <div class="tooltip-title">${plot.label}</div>
                 ${isOwned ? `
-                    <div class="tooltip-owner">${owned.playerName}</div>
+                    <div class="tooltip-owner">${isSold ? '(매각됨) ' : ''}${owned.playerName}</div>
                     <div class="tooltip-land">${owned.land.name}</div>
                     ${owned.building ? `<div class="tooltip-building">${owned.building.emoji} ${owned.building.name}</div>` : ''}
+                    ${clickHint ? `<div class="tooltip-hint">${clickHint}</div>` : ''}
                 ` : `
                     <div class="tooltip-zone">${getZoneName(plot.zone)}</div>
                 `}
@@ -488,7 +592,6 @@ function bindPlotEvents() {
 // 플롯 클릭 처리
 function handlePlotClick(plotIndex) {
     const plot = MAP_PLOTS[plotIndex];
-    console.log('Plot clicked:', plot);
 
     // 선택 상태 토글
     const markers = document.querySelectorAll('.plot-marker');
@@ -498,7 +601,110 @@ function handlePlotClick(plotIndex) {
     if (selectedMarker) {
         selectedMarker.classList.add('selected');
         selectedPlotIndex = plotIndex;
+
+        // 소유된 플롯이면 상세 정보 표시
+        if (selectedMarker.classList.contains('owned')) {
+            showBuildingDetailModal(plotIndex);
+        }
     }
+}
+
+// 건물 상세 정보 모달 표시
+function showBuildingDetailModal(plotIndex) {
+    // 해당 플롯의 소유 정보 찾기
+    const ownedPlots = collectOwnedPlots();
+    const owned = ownedPlots.find(o => o.plotIndex === plotIndex);
+
+    if (!owned) return;
+
+    // 기존 모달 제거
+    const existingModal = document.querySelector('.building-detail-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    const plot = MAP_PLOTS[plotIndex];
+    const playerColor = PLAYER_COLORS[owned.playerIndex];
+
+    // 상태에 따른 라벨
+    const statusLabels = {
+        'land': { text: '대지 확보', class: 'status-land' },
+        'design': { text: '설계 중', class: 'status-design' },
+        'construction': { text: '시공 중', class: 'status-construction' },
+        'completed': { text: '완공', class: 'status-completed' },
+        'sold': { text: '매각됨', class: 'status-sold' }
+    };
+    const statusInfo = statusLabels[owned.status] || { text: owned.status, class: '' };
+
+    // 건물 정보
+    let buildingInfo = '';
+    if (owned.building) {
+        const buildingImage = BUILDING_IMAGES[owned.building.name];
+        buildingInfo = `
+            <div class="modal-building-section">
+                <div class="modal-building-visual">
+                    ${buildingImage ?
+                        `<img src="${buildingImage}" alt="${owned.building.name}" class="modal-building-img">` :
+                        `<span class="modal-building-emoji">${owned.building.emoji}</span>`
+                    }
+                </div>
+                <div class="modal-building-info">
+                    <div class="modal-building-name">${owned.building.emoji} ${owned.building.name}</div>
+                    <div class="modal-building-stat">면적: ${owned.building.area || '-'}평</div>
+                    <div class="modal-building-stat">설계비: ${gameState.formatMoney(owned.building.designFee || 0)}</div>
+                    <div class="modal-building-stat">시공비: ${gameState.formatMoney(owned.building.constructionCost || 0)}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 가치/가격 정보
+    let priceInfo = '';
+    if (owned.salePrice) {
+        priceInfo = `<div class="modal-price">건물 가치: ${gameState.formatMoney(owned.salePrice)}</div>`;
+    }
+    if (owned.sellPrice) {
+        priceInfo = `<div class="modal-price sold">매각가: ${gameState.formatMoney(owned.sellPrice)}</div>`;
+    }
+
+    const modalHtml = `
+        <div class="building-detail-modal" data-plot-index="${plotIndex}">
+            <div class="modal-content">
+                <button class="modal-close" onclick="this.closest('.building-detail-modal').remove()">✕</button>
+
+                <div class="modal-header" style="--player-color: ${playerColor.border}">
+                    <span class="modal-status ${statusInfo.class}">${statusInfo.text}</span>
+                    <span class="modal-owner">${owned.playerName}</span>
+                </div>
+
+                <div class="modal-land-section">
+                    <div class="modal-land-name">${plot.label}</div>
+                    <div class="modal-land-actual">${owned.land.name}</div>
+                    <div class="modal-land-region">${owned.land.region?.name || ''} ${owned.land.region?.emoji || ''}</div>
+                    <div class="modal-land-area">면적: ${owned.land.area}평</div>
+                </div>
+
+                ${buildingInfo}
+                ${priceInfo}
+
+                ${owned.status === 'sold' ? `
+                    <div class="modal-sold-badge">
+                        💰 매각 완료
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // 모달 외부 클릭시 닫기
+    const modal = document.querySelector('.building-detail-modal');
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
 }
 
 // 개별 프로젝트 타일 렌더링

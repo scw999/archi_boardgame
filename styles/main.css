@@ -5446,17 +5446,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
+  background: transparent;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(2px);
+  border: none;
   transition: all 0.3s ease;
 }
 
 /* 빈 플롯 */
 .plot-marker.available .plot-marker-inner {
   background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
 }
 
 .plot-marker.available .plot-empty {
@@ -5472,9 +5472,8 @@ body {
 
 /* 소유된 플롯 */
 .plot-marker.owned .plot-marker-inner {
-  background: var(--owner-bg, rgba(100, 100, 100, 0.8));
-  border-color: var(--owner-border, #888);
-  box-shadow: 0 0 15px var(--owner-glow, rgba(255, 255, 255, 0.3));
+  background: transparent;
+  border: none;
 }
 
 .plot-marker.owned .plot-building,
@@ -5564,15 +5563,23 @@ body {
   transform: translate(-50%, -50%) scale(1.15);
 }
 
-.plot-marker:hover .plot-marker-inner {
+.plot-marker.available:hover .plot-marker-inner {
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
 }
 
+.plot-marker.has-building-img:hover .plot-marker-inner {
+  box-shadow: none;
+}
+
 /* 플롯 선택 효과 */
-.plot-marker.selected .plot-marker-inner {
+.plot-marker.available.selected .plot-marker-inner {
   border-color: var(--accent-gold);
   box-shadow: 0 0 25px var(--accent-gold);
   animation: selectedPulse 1.5s ease-in-out infinite;
+}
+
+.plot-marker.has-building-img.selected {
+  filter: drop-shadow(0 0 15px var(--accent-gold));
 }
 
 @keyframes selectedPulse {
@@ -5580,12 +5587,12 @@ body {
   50% { box-shadow: 0 0 30px var(--accent-gold); }
 }
 
-/* 티어별 스타일 */
-.plot-marker.tier-1 .plot-marker-inner { border-color: #4a7c4e; }
-.plot-marker.tier-2 .plot-marker-inner { border-color: #6b8e6b; }
-.plot-marker.tier-3 .plot-marker-inner { border-color: #7a9ec2; }
-.plot-marker.tier-4 .plot-marker-inner { border-color: #9b7cb8; }
-.plot-marker.tier-5 .plot-marker-inner {
+/* 티어별 스타일 (빈 플롯에만 적용) */
+.plot-marker.available.tier-1 .plot-marker-inner { border-color: #4a7c4e; }
+.plot-marker.available.tier-2 .plot-marker-inner { border-color: #6b8e6b; }
+.plot-marker.available.tier-3 .plot-marker-inner { border-color: #7a9ec2; }
+.plot-marker.available.tier-4 .plot-marker-inner { border-color: #9b7cb8; }
+.plot-marker.available.tier-5 .plot-marker-inner {
   border-color: var(--accent-gold);
   box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
@@ -5663,16 +5670,15 @@ body {
 }
 
 .owned-marker-content {
-  width: 45px;
-  height: 45px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
-  border: 3px solid var(--owner-color);
-  border-radius: 50%;
+  background: transparent;
+  border: none;
   font-size: 1.5rem;
-  box-shadow: 0 0 12px var(--owner-color);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
 }
 
 .owned-marker-label {
@@ -5824,4 +5830,250 @@ body {
 #city-grid {
   grid-column: 1 / -1;
   margin-top: 1rem;
+}
+
+/* 매각된 건물 스타일 */
+.plot-marker.sold .plot-marker-inner {
+  opacity: 0.7;
+}
+
+.plot-marker.sold .plot-building-img,
+.plot-marker.sold .plot-building-emoji {
+  filter: grayscale(50%) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.sold-building {
+  filter: grayscale(30%) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) !important;
+}
+
+.plot-marker.sold::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 1;
+}
+
+/* 툴팁 힌트 */
+.tooltip-hint {
+  font-size: 0.65rem;
+  color: var(--accent-gold);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+/* 건물 상세 모달 */
+.building-detail-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: modalFadeIn 0.2s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.building-detail-modal .modal-content {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30, 35, 45, 0.98) 100%);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: modalSlideUp 0.3s ease;
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.building-detail-modal .modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.building-detail-modal .modal-close:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.building-detail-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.building-detail-modal .modal-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.building-detail-modal .modal-status.status-land {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.building-detail-modal .modal-status.status-design {
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+}
+
+.building-detail-modal .modal-status.status-construction {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.building-detail-modal .modal-status.status-completed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.building-detail-modal .modal-status.status-sold {
+  background: rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+}
+
+.building-detail-modal .modal-owner {
+  font-weight: 600;
+  color: var(--player-color, var(--text-primary));
+  padding-left: 0.5rem;
+  border-left: 3px solid var(--player-color, var(--text-muted));
+}
+
+.building-detail-modal .modal-land-section {
+  margin-bottom: 1rem;
+}
+
+.building-detail-modal .modal-land-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.building-detail-modal .modal-land-actual {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.building-detail-modal .modal-land-region {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.building-detail-modal .modal-land-area {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.building-detail-modal .modal-building-section {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.building-detail-modal .modal-building-visual {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.building-detail-modal .modal-building-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+.building-detail-modal .modal-building-emoji {
+  font-size: 3rem;
+}
+
+.building-detail-modal .modal-building-info {
+  flex: 1;
+}
+
+.building-detail-modal .modal-building-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.building-detail-modal .modal-building-stat {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.building-detail-modal .modal-price {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  padding: 0.75rem;
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+}
+
+.building-detail-modal .modal-price.sold {
+  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.1);
+}
+
+.building-detail-modal .modal-sold-badge {
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(156, 163, 175, 0.1);
+  border-radius: var(--radius-sm);
+  color: #9ca3af;
+  font-weight: 600;
 }
