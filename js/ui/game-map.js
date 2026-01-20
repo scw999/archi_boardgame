@@ -13,56 +13,55 @@ const landPlotAssignments = new Map();
 const usedPlotIndices = new Set();
 
 // 아이소메트릭 맵 위의 플롯(대지) 위치 정의
-// 이미지 기준 상대 좌표 (%) - 실제 빈 플롯 위치에 맞춤
+// 이미지 기준 상대 좌표 (%) - 실제 빈 땅(베이지색 빈 필지) 위치에 맞춤
 const MAP_PLOTS = [
-    // === 1열: 산악/숲 지역 (상단) ===
-    { id: 'mountain_1', x: 8, y: 12, zone: 'rural', tier: 1, label: '산촌마을', emoji: '🏔️' },
-    { id: 'forest_1', x: 22, y: 8, zone: 'rural', tier: 1, label: '숲속전원', emoji: '🌲' },
-    { id: 'forest_2', x: 35, y: 5, zone: 'rural', tier: 1, label: '임야부지', emoji: '🌾' },
+    // === 상단 우측: 외곽 빈 땅 ===
+    { id: 'outer_1', x: 89, y: 8, zone: 'gyeonggi_outer', tier: 2, label: '하남 외곽', emoji: '🏡' },
+    { id: 'outer_2', x: 93, y: 14, zone: 'gyeonggi_outer', tier: 2, label: '구리', emoji: '🏘️' },
+    { id: 'outer_3', x: 96, y: 21, zone: 'gyeonggi_outer', tier: 2, label: '남양주', emoji: '🌳' },
 
-    // === 2열: 외곽 주거지역 (상단-중단) ===
-    { id: 'suburb_1', x: 6, y: 28, zone: 'gyeonggi_outer', tier: 2, label: '용인', emoji: '🏡' },
-    { id: 'suburb_2', x: 18, y: 22, zone: 'gyeonggi_outer', tier: 2, label: '광교', emoji: '🏘️' },
-    { id: 'park_1', x: 32, y: 18, zone: 'gyeonggi_main', tier: 3, label: '분당공원', emoji: '🌳' },
+    // === 우측 중상단: 도로변 빈 땅 ===
+    { id: 'road_1', x: 91, y: 28, zone: 'gyeonggi_main', tier: 3, label: '위례신도시', emoji: '🏗️' },
+    { id: 'road_2', x: 94, y: 35, zone: 'riverside', tier: 4, label: '강변도로', emoji: '🛣️' },
 
-    // === 3열: 도심 핵심 (중앙 타워 지역) ===
-    { id: 'core_1', x: 45, y: 20, zone: 'seoul_core', tier: 5, label: '잠실타워', emoji: '🗼' },
-    { id: 'core_2', x: 58, y: 15, zone: 'seoul_core', tier: 5, label: '코엑스', emoji: '✨' },
-    { id: 'core_3', x: 72, y: 12, zone: 'seoul_core', tier: 5, label: 'R&D센터', emoji: '🔬' },
+    // === 우측 중앙: 리버사이드 빈 땅 ===
+    { id: 'river_1', x: 92, y: 43, zone: 'riverside', tier: 4, label: '한강뷰', emoji: '🌉' },
+    { id: 'river_2', x: 95, y: 50, zone: 'riverside', tier: 3, label: '워터프론트', emoji: '⛵' },
 
-    // === 4열: 도심 주변 (중앙) ===
-    { id: 'city_1', x: 8, y: 42, zone: 'gyeonggi_main', tier: 3, label: '판교', emoji: '💼' },
-    { id: 'city_2', x: 22, y: 38, zone: 'seoul', tier: 4, label: '강남역', emoji: '🌆' },
-    { id: 'city_3', x: 38, y: 32, zone: 'seoul', tier: 4, label: '서초', emoji: '🏙️' },
-    { id: 'city_4', x: 52, y: 28, zone: 'seoul', tier: 4, label: '삼성', emoji: '🏢' },
-    { id: 'city_5', x: 68, y: 24, zone: 'seoul', tier: 4, label: '송파', emoji: '🏛️' },
-    { id: 'city_6', x: 85, y: 18, zone: 'gyeonggi_outer', tier: 2, label: '하남', emoji: '🌳' },
+    // === 우측 하단: 해안가 빈 땅 ===
+    { id: 'coast_1', x: 93, y: 58, zone: 'seaside', tier: 3, label: '마리나', emoji: '🚤' },
+    { id: 'coast_2', x: 96, y: 66, zone: 'seaside', tier: 2, label: '해변리조트', emoji: '🌴' },
 
-    // === 5열: 상업/주거 혼합 (중앙-하단) ===
-    { id: 'mixed_1', x: 12, y: 55, zone: 'gyeonggi_main', tier: 3, label: '위례', emoji: '🏗️' },
-    { id: 'mixed_2', x: 28, y: 50, zone: 'seoul', tier: 4, label: '잠실', emoji: '🎡' },
-    { id: 'mixed_3', x: 45, y: 45, zone: 'landmark', tier: 4, label: '올림픽공원', emoji: '🎪' },
-    { id: 'mixed_4', x: 62, y: 40, zone: 'riverside', tier: 4, label: '한강뷰', emoji: '🌉' },
-    { id: 'mixed_5', x: 78, y: 35, zone: 'riverside', tier: 4, label: '강변테라스', emoji: '🏞️' },
-    { id: 'mixed_6', x: 92, y: 30, zone: 'gyeonggi_outer', tier: 2, label: '구리', emoji: '🏡' },
+    // === 하단 중앙: 해안 빈 땅 ===
+    { id: 'beach_1', x: 75, y: 80, zone: 'seaside', tier: 2, label: '선셋비치', emoji: '🌅' },
+    { id: 'beach_2', x: 85, y: 75, zone: 'seaside', tier: 2, label: '팜비치', emoji: '🏝️' },
+    { id: 'beach_3', x: 65, y: 85, zone: 'seaside', tier: 2, label: '해안도로', emoji: '🏖️' },
 
-    // === 6열: 리버프론트 (하단-중앙) ===
-    { id: 'river_1', x: 18, y: 68, zone: 'gyeonggi_main', tier: 3, label: '분당', emoji: '🏘️' },
-    { id: 'river_2', x: 35, y: 62, zone: 'riverside', tier: 4, label: '반포', emoji: '🌊' },
-    { id: 'river_3', x: 52, y: 58, zone: 'riverside', tier: 4, label: '압구정', emoji: '🛶' },
-    { id: 'river_4', x: 68, y: 52, zone: 'riverside', tier: 3, label: '청담', emoji: '💎' },
-    { id: 'river_5', x: 85, y: 48, zone: 'seaside', tier: 3, label: '워터프론트', emoji: '⛵' },
+    // === 중앙 하단: 강변/공원 빈 땅 ===
+    { id: 'park_1', x: 55, y: 72, zone: 'landmark', tier: 4, label: '올림픽공원', emoji: '🎪' },
+    { id: 'park_2', x: 45, y: 78, zone: 'landmark', tier: 4, label: '한강공원', emoji: '🌳' },
 
-    // === 7열: 해변/휴양지 (하단) ===
-    { id: 'beach_1', x: 42, y: 75, zone: 'landmark', tier: 4, label: '마리나', emoji: '🚤' },
-    { id: 'beach_2', x: 58, y: 70, zone: 'seaside', tier: 3, label: '선착장', emoji: '⚓' },
-    { id: 'beach_3', x: 75, y: 65, zone: 'seaside', tier: 3, label: '요트클럽', emoji: '🏖️' },
-    { id: 'beach_4', x: 90, y: 60, zone: 'seaside', tier: 2, label: '해변리조트', emoji: '🌴' },
+    // === 좌측 하단: 주거지역 빈 땅 ===
+    { id: 'suburb_1', x: 25, y: 82, zone: 'gyeonggi_main', tier: 3, label: '분당', emoji: '🏘️' },
+    { id: 'suburb_2', x: 15, y: 78, zone: 'gyeonggi_outer', tier: 2, label: '용인', emoji: '🏡' },
 
-    // === 8열: 최하단 해안가 ===
-    { id: 'coast_1', x: 55, y: 85, zone: 'seaside', tier: 2, label: '팜비치', emoji: '🏝️' },
-    { id: 'coast_2', x: 72, y: 80, zone: 'seaside', tier: 2, label: '선셋비치', emoji: '🌅' },
-    { id: 'coast_3', x: 88, y: 75, zone: 'seaside', tier: 2, label: '해안도로', emoji: '🛣️' }
+    // === 도심 외곽 빈 땅 (기존 건물 사이) ===
+    { id: 'city_1', x: 78, y: 22, zone: 'seoul', tier: 4, label: '송파', emoji: '🏛️' },
+    { id: 'city_2', x: 82, y: 30, zone: 'seoul', tier: 4, label: '강동', emoji: '🏢' },
+    { id: 'city_3', x: 70, y: 38, zone: 'seoul', tier: 4, label: '잠실', emoji: '🎡' },
+
+    // === 테크밸리/비즈니스 빈 땅 ===
+    { id: 'tech_1', x: 58, y: 45, zone: 'gyeonggi_main', tier: 3, label: '판교', emoji: '💼' },
+    { id: 'tech_2', x: 50, y: 52, zone: 'seoul', tier: 4, label: '강남', emoji: '🌆' },
+
+    // === 추가 빈 땅 ===
+    { id: 'extra_1', x: 35, y: 70, zone: 'gyeonggi_main', tier: 3, label: '수원', emoji: '🏙️' },
+    { id: 'extra_2', x: 42, y: 62, zone: 'seoul', tier: 4, label: '서초', emoji: '🏢' },
+    { id: 'extra_3', x: 62, y: 58, zone: 'riverside', tier: 4, label: '반포', emoji: '🌊' },
+
+    // === 산악/전원 지역 ===
+    { id: 'rural_1', x: 5, y: 65, zone: 'rural', tier: 1, label: '양평', emoji: '🏔️' },
+    { id: 'rural_2', x: 8, y: 55, zone: 'rural', tier: 1, label: '가평', emoji: '🌲' }
 ];
 
 // 플레이어별 색상
@@ -300,12 +299,12 @@ function assignPlotByRegionAndName(region, landName) {
 
     // 특정 토지명과 플롯 매핑 (정확한 위치 지정)
     const landNameMappings = {
-        '판교 테크노밸리 필지': 'city_1',   // 판교
-        '강남 역세권 필지': 'city_2',       // 강남역
-        '청담동 고급 필지': 'river_4',      // 청담
-        '해운대 오션뷰 필지': 'beach_1',    // 마리나/해안
-        '제주 서귀포 절경 필지': 'coast_1', // 해안가
-        '양평 프리미엄 전원 필지': 'suburb_1' // 용인/외곽
+        '판교 테크노밸리 필지': 'tech_1',   // 판교
+        '강남 역세권 필지': 'tech_2',       // 강남
+        '청담동 고급 필지': 'extra_3',      // 반포/청담
+        '해운대 오션뷰 필지': 'coast_1',    // 마리나/해안
+        '제주 서귀포 절경 필지': 'beach_1', // 해안가
+        '양평 프리미엄 전원 필지': 'rural_1' // 양평/전원
     };
 
     // 토지명으로 정확한 매핑이 있으면 사용
@@ -450,8 +449,8 @@ function renderPlotMarker(plot, index, owned) {
     // 상단 근처 플롯은 툴팁을 아래에 표시 (y < 20%)
     const tooltipPositionClass = plot.y < 20 ? 'tooltip-bottom' : '';
 
-    // 소유자 깃발 표시 (건물이 있을 때만)
-    const ownerFlag = isOwned && hasBuilding ? `
+    // 소유자 깃발 표시 (건물이 있고 매각되지 않은 경우만)
+    const ownerFlag = isOwned && hasBuilding && !isSold ? `
         <div class="owner-flag" style="--flag-color: ${playerColor.border};">
             <span class="flag-name">${owned.playerName}</span>
         </div>
@@ -506,7 +505,6 @@ function renderOwnedPlotMarker(owned) {
             <div class="owned-marker-content">
                 ${buildingContent}
             </div>
-            <div class="owned-marker-label">${owned.playerName}</div>
         </div>
     `;
 }
