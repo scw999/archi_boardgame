@@ -193,21 +193,42 @@ export function processRisks(playerIndex) {
     const totalConstructionPayment = paymentSchedule.reduce((sum, p) => sum + p, 0);
     const totalNeeded = totalConstructionPayment + project.interestCost + project.totalLoss;
 
-    // 가용 자금 계산 (현재 보유 + 추가 대출 가능액)
-    const currentLoan = player.loan;
-    const maxLoan = gameState.getMaxLoan(player);
-    const additionalLoanAvailable = maxLoan - currentLoan;
-    const maxAvailable = player.money + additionalLoanAvailable;
+    // 예상 건물 가치 계산 (건물 담보 대출 한도 계산용)
+    const totalInvestment = project.landPrice + project.designFee + project.constructionCost;
+    const estimatedBuildingValue = Math.floor(totalInvestment * project.evaluationFactor * 0.9); // 90% 보수적 평가
 
-    // 시공비 지불 (단계별) - 자금 부족 시에도 가능한 만큼 지불
+    // 기본 대출 한도 + 건물 담보 대출 한도
+    const baseMaxLoan = gameState.getMaxLoan(player);
+    const buildingCollateralLoan = Math.floor(estimatedBuildingValue * 0.7); // 건물 가치의 70%까지 추가 대출
+    const extendedMaxLoan = baseMaxLoan + buildingCollateralLoan;
+
+    // 대출 필요 여부 및 건물 담보 대출 사용 알림
+    const currentLoan = player.loan;
+    const normalLoanAvailable = baseMaxLoan - currentLoan;
+    const maxAvailable = player.money + (extendedMaxLoan - currentLoan);
+
+    if (totalNeeded > player.money + normalLoanAvailable && totalNeeded <= maxAvailable) {
+        gameState.addLog(`🏗️ 시공비 부족으로 건물 담보 대출 실행 (한도: ${gameState.formatMoney(buildingCollateralLoan)})`);
+    }
+
+    // 대출 도우미 함수 (건물 담보 포함 확장 한도 사용)
+    const takeLoanWithCollateral = (amount) => {
+        const availableLoan = extendedMaxLoan - player.loan;
+        const loanAmount = Math.min(amount, availableLoan);
+        if (loanAmount > 0) {
+            // 직접 대출 처리 (확장 한도 사용)
+            player.loan += loanAmount;
+            player.money += loanAmount;
+            return loanAmount;
+        }
+        return 0;
+    };
+
+    // 시공비 지불 (단계별) - 건물 담보 대출 포함
     paymentSchedule.forEach((payment, stage) => {
         let loanNeeded = payment - player.money;
         if (loanNeeded > 0) {
-            // 대출 가능한 만큼만 대출
-            const loanableAmount = Math.min(loanNeeded, gameState.getMaxLoan(player) - player.loan);
-            if (loanableAmount > 0) {
-                gameState.takeLoan(playerIndex, loanableAmount);
-            }
+            takeLoanWithCollateral(loanNeeded);
         }
         // 보유 자금 범위 내에서만 지불
         const payableAmount = Math.min(payment, player.money);
@@ -216,14 +237,11 @@ export function processRisks(playerIndex) {
         }
     });
 
-    // 이자 비용 지불 - 자금 부족 시에도 가능한 만큼 지불
+    // 이자 비용 지불 - 건물 담보 대출 포함
     if (project.interestCost > 0) {
         let loanNeeded = project.interestCost - player.money;
         if (loanNeeded > 0) {
-            const loanableAmount = Math.min(loanNeeded, gameState.getMaxLoan(player) - player.loan);
-            if (loanableAmount > 0) {
-                gameState.takeLoan(playerIndex, loanableAmount);
-            }
+            takeLoanWithCollateral(loanNeeded);
         }
         const payableAmount = Math.min(project.interestCost, player.money);
         if (payableAmount > 0) {
@@ -231,14 +249,11 @@ export function processRisks(playerIndex) {
         }
     }
 
-    // 손실 비용 지불 (리스크로 인한 추가 비용)
+    // 손실 비용 지불 (리스크로 인한 추가 비용) - 건물 담보 대출 포함
     if (project.totalLoss > 0) {
         let loanNeeded = project.totalLoss - player.money;
         if (loanNeeded > 0) {
-            const loanableAmount = Math.min(loanNeeded, gameState.getMaxLoan(player) - player.loan);
-            if (loanableAmount > 0) {
-                gameState.takeLoan(playerIndex, loanableAmount);
-            }
+            takeLoanWithCollateral(loanNeeded);
         }
         const payableAmount = Math.min(project.totalLoss, player.money);
         if (payableAmount > 0) {
