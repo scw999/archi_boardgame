@@ -5364,6 +5364,30 @@ body {
 .iso-city-legend {
   display: flex;
   gap: 1rem;
+  align-items: center;
+}
+
+/* 개발자 모드 버튼 */
+.dev-mode-btn {
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.5;
+  transition: all 0.2s;
+}
+
+.dev-mode-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dev-mode-btn.active {
+  opacity: 1;
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #f59e0b;
 }
 
 .legend-player {

@@ -5,6 +5,7 @@ import { BUILDING_IMAGES } from '../data/buildings.js';
 
 let is3DView = false;
 let selectedPlotIndex = null;
+let isDevMode = false; // 개발자 모드 (좌표 조정용)
 
 // 토지별 고정 플롯 인덱스 저장 (토지 ID -> 플롯 인덱스)
 const landPlotAssignments = new Map();
@@ -153,6 +154,9 @@ export function renderCityGrid() {
                             <span class="legend-dot"></span>${p.name}
                         </span>
                     `).join('')}
+                    <button id="toggle-dev-mode-btn" class="dev-mode-btn ${isDevMode ? 'active' : ''}" title="좌표 조정 모드">
+                        🔧
+                    </button>
                 </div>
             </div>
 
@@ -202,6 +206,14 @@ export function renderCityGrid() {
 
     // 플롯 클릭 이벤트 바인딩
     bindPlotEvents();
+
+    // 개발자 모드 버튼 이벤트
+    const devModeBtn = document.getElementById('toggle-dev-mode-btn');
+    if (devModeBtn) {
+        devModeBtn.addEventListener('click', () => {
+            toggleDevMode();
+        });
+    }
 }
 
 // 소유 대지 정보 수집
@@ -597,6 +609,241 @@ function bindPlotEvents() {
         marker.addEventListener('mouseleave', () => {
             marker.classList.remove('hovered');
         });
+
+        // 개발자 모드: 드래그 이벤트
+        if (isDevMode) {
+            enableDragForMarker(marker);
+        }
+    });
+}
+
+// 개발자 모드 토글
+export function toggleDevMode() {
+    isDevMode = !isDevMode;
+
+    if (isDevMode) {
+        console.log('🔧 개발자 모드 활성화: 마커를 드래그하여 좌표 조정 가능');
+        showDevPanel();
+    } else {
+        console.log('🔧 개발자 모드 비활성화');
+        hideDevPanel();
+    }
+
+    // 맵 다시 렌더링
+    renderCityGrid();
+
+    return isDevMode;
+}
+
+// 개발자 패널 표시
+function showDevPanel() {
+    // 기존 패널 제거
+    hideDevPanel();
+
+    const panel = document.createElement('div');
+    panel.id = 'dev-coords-panel';
+    panel.innerHTML = `
+        <div class="dev-panel-header">
+            <h4>🔧 좌표 조정 모드</h4>
+            <button onclick="window.copyAllCoords()">📋 전체 복사</button>
+            <button onclick="window.toggleDevMode()">✕ 닫기</button>
+        </div>
+        <div class="dev-panel-info">마커를 드래그하여 위치 조정</div>
+        <div class="dev-coords-list" id="dev-coords-list"></div>
+    `;
+    document.body.appendChild(panel);
+
+    // 스타일 추가
+    if (!document.getElementById('dev-panel-styles')) {
+        const style = document.createElement('style');
+        style.id = 'dev-panel-styles';
+        style.textContent = `
+            #dev-coords-panel {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                width: 350px;
+                max-height: 80vh;
+                background: rgba(0, 0, 0, 0.95);
+                border: 2px solid #f59e0b;
+                border-radius: 8px;
+                padding: 10px;
+                z-index: 10000;
+                font-family: monospace;
+                font-size: 12px;
+                color: #fff;
+                overflow-y: auto;
+            }
+            .dev-panel-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #444;
+            }
+            .dev-panel-header h4 {
+                margin: 0;
+                flex: 1;
+                color: #f59e0b;
+            }
+            .dev-panel-header button {
+                padding: 4px 8px;
+                background: #333;
+                border: 1px solid #666;
+                color: #fff;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            .dev-panel-header button:hover {
+                background: #444;
+            }
+            .dev-panel-info {
+                color: #aaa;
+                margin-bottom: 10px;
+            }
+            .dev-coord-item {
+                padding: 4px 8px;
+                margin: 2px 0;
+                background: #222;
+                border-radius: 4px;
+                display: flex;
+                justify-content: space-between;
+            }
+            .dev-coord-item.updated {
+                background: #1a3d1a;
+                border: 1px solid #22c55e;
+            }
+            .dev-coord-item .label {
+                color: #888;
+            }
+            .dev-coord-item .coords {
+                color: #22c55e;
+            }
+            .plot-marker.dev-mode {
+                cursor: move !important;
+            }
+            .plot-marker.dragging {
+                z-index: 1000 !important;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // 전역 함수 등록
+    window.toggleDevMode = toggleDevMode;
+    window.copyAllCoords = copyAllCoords;
+
+    updateDevPanel();
+}
+
+// 개발자 패널 숨기기
+function hideDevPanel() {
+    const panel = document.getElementById('dev-coords-panel');
+    if (panel) {
+        panel.remove();
+    }
+}
+
+// 개발자 패널 업데이트
+function updateDevPanel() {
+    const list = document.getElementById('dev-coords-list');
+    if (!list) return;
+
+    list.innerHTML = MAP_PLOTS.map((plot, index) => `
+        <div class="dev-coord-item" data-index="${index}">
+            <span class="label">${plot.id} (${plot.label})</span>
+            <span class="coords">x: ${plot.x}, y: ${plot.y}</span>
+        </div>
+    `).join('');
+}
+
+// 전체 좌표 복사
+function copyAllCoords() {
+    const coordsText = MAP_PLOTS.map(plot =>
+        `    { id: '${plot.id}', x: ${plot.x}, y: ${plot.y}, zone: '${plot.zone}', tier: ${plot.tier}, label: '${plot.label}', emoji: '${plot.emoji}' },`
+    ).join('\n');
+
+    const fullText = `const MAP_PLOTS = [\n${coordsText}\n];`;
+
+    navigator.clipboard.writeText(fullText).then(() => {
+        console.log('📋 좌표가 클립보드에 복사되었습니다!');
+        alert('좌표가 클립보드에 복사되었습니다!\n콘솔에서도 확인 가능합니다.');
+        console.log(fullText);
+    }).catch(err => {
+        console.log('좌표 복사 실패, 콘솔에서 복사하세요:');
+        console.log(fullText);
+    });
+}
+
+// 마커 드래그 활성화
+function enableDragForMarker(marker) {
+    marker.classList.add('dev-mode');
+
+    let isDragging = false;
+    let startX, startY;
+
+    marker.addEventListener('mousedown', (e) => {
+        if (!isDevMode) return;
+
+        isDragging = true;
+        marker.classList.add('dragging');
+        startX = e.clientX;
+        startY = e.clientY;
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging || !isDevMode) return;
+
+        const mapContainer = document.getElementById('iso-city-map');
+        if (!mapContainer) return;
+
+        const rect = mapContainer.getBoundingClientRect();
+
+        // 새 좌표 계산 (%)
+        let newX = ((e.clientX - rect.left) / rect.width) * 100;
+        let newY = ((e.clientY - rect.top) / rect.height) * 100;
+
+        // 범위 제한
+        newX = Math.max(0, Math.min(100, newX));
+        newY = Math.max(0, Math.min(100, newY));
+
+        // 소수점 반올림
+        newX = Math.round(newX);
+        newY = Math.round(newY);
+
+        // 마커 위치 업데이트
+        marker.style.left = `${newX}%`;
+        marker.style.top = `${newY}%`;
+
+        // MAP_PLOTS 업데이트
+        const plotIndex = parseInt(marker.dataset.plotIndex);
+        if (MAP_PLOTS[plotIndex]) {
+            MAP_PLOTS[plotIndex].x = newX;
+            MAP_PLOTS[plotIndex].y = newY;
+
+            // 패널 업데이트
+            const coordItem = document.querySelector(`.dev-coord-item[data-index="${plotIndex}"]`);
+            if (coordItem) {
+                coordItem.classList.add('updated');
+                coordItem.querySelector('.coords').textContent = `x: ${newX}, y: ${newY}`;
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDragging && isDevMode) {
+            isDragging = false;
+            marker.classList.remove('dragging');
+
+            const plotIndex = parseInt(marker.dataset.plotIndex);
+            const plot = MAP_PLOTS[plotIndex];
+            if (plot) {
+                console.log(`📍 ${plot.id} (${plot.label}): x: ${plot.x}, y: ${plot.y}`);
+            }
+        }
     });
 }
 
