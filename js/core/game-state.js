@@ -589,10 +589,8 @@ class GameState {
     // PM 활동 (턴 패스하고 돈 벌기)
     doPMActivity(playerIndex) {
         const player = this.players[playerIndex];
-        // PM 활동 수익: 기본 5천만원 + 보유 건물 수 x 2천만원
-        const baseIncome = 50000000;
-        const buildingBonus = player.buildings.length * 20000000;
-        const totalIncome = baseIncome + buildingBonus;
+        // PM 활동 수익: 고정 1억
+        const totalIncome = 100000000;
 
         player.money += totalIncome;
         this.addLog(`${player.name}: PM 활동으로 ${this.formatMoney(totalIncome)} 수입`);
