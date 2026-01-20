@@ -447,12 +447,23 @@ function renderPlotMarker(plot, index, owned) {
     // 매각된 건물은 클릭 가능하다는 표시
     const clickHint = isSold ? '클릭하여 상세정보 보기' : '';
 
+    // 상단 근처 플롯은 툴팁을 아래에 표시 (y < 20%)
+    const tooltipPositionClass = plot.y < 20 ? 'tooltip-bottom' : '';
+
+    // 소유자 깃발 표시 (건물이 있을 때만)
+    const ownerFlag = isOwned && hasBuilding ? `
+        <div class="owner-flag" style="--flag-color: ${playerColor.border};">
+            <span class="flag-name">${owned.playerName}</span>
+        </div>
+    ` : '';
+
     return `
-        <div class="plot-marker ${tierClass} ${ownerClass} ${markerSizeClass}"
+        <div class="plot-marker ${tierClass} ${ownerClass} ${markerSizeClass} ${tooltipPositionClass}"
              data-plot-index="${index}"
              data-zone="${plot.zone}"
              data-status="${owned?.status || 'empty'}"
              style="left: ${plot.x}%; top: ${plot.y}%; ${style}">
+            ${ownerFlag}
             <div class="plot-marker-inner">
                 ${content}
                 ${statusIcon ? `<span class="plot-status">${statusIcon}</span>` : ''}
@@ -525,13 +536,17 @@ function renderOwnedAssetsList(ownedPlots) {
             <div class="asset-player-group" style="--player-color: ${playerColor.border}">
                 <div class="asset-player-name">${playerName}</div>
                 <div class="asset-list">
-                    ${plots.map(plot => `
+                    ${plots.map(plot => {
+                        // 건물이 완성되었으면 건물 이름 표시, 아니면 토지 이름 표시
+                        const hasCompletedBuilding = plot.building && (plot.status === 'completed' || plot.status === 'sold');
+                        const assetName = hasCompletedBuilding ? `${plot.building.name} 건물` : `${plot.land.name.replace(' 필지', '')} 택지`;
+                        return `
                         <div class="asset-item ${plot.status}">
                             <span class="asset-icon">${plot.building ? plot.building.emoji : '🏞️'}</span>
-                            <span class="asset-name">${plot.land.name}</span>
+                            <span class="asset-name">${assetName}</span>
                             <span class="asset-status">${getStatusLabel(plot.status)}</span>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
             </div>
         `;
