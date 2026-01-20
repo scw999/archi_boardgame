@@ -6154,3 +6154,37 @@ body {
   color: #9ca3af;
   font-weight: 600;
 }
+
+/* ===== 자금 부족 알림 ===== */
+.insufficient-funds-notice {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.insufficient-funds-notice .notice-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.insufficient-funds-notice h3 {
+  font-size: 1.5rem;
+  color: var(--accent-gold);
+  margin-bottom: 1rem;
+}
+
+.insufficient-funds-notice p {
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.insufficient-funds-notice strong {
+  color: var(--accent-orange);
+}
+
+.insufficient-funds-notice .notice-detail {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-md);
+  color: #f87171;
+}
