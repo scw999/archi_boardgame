@@ -176,11 +176,11 @@ export function processRisks(playerIndex) {
         gameState.addLog(`[${index + 1}개월] ${effect.message}`);
     });
 
-    // 비용 증가분 반영
+    // 비용 증가분 반영 (totalLoss에만 추가 - constructionCost는 원래 시공비 유지)
     if (totalCostIncrease > 0) {
         const additionalCost = Math.floor(project.constructionCost * totalCostIncrease);
         project.totalLoss += additionalCost;
-        project.constructionCost += additionalCost;
+        // Note: constructionCost는 증가시키지 않음 (이중 계산 방지)
     }
 
     // 이자 비용 계산
@@ -188,23 +188,62 @@ export function processRisks(playerIndex) {
     const monthlyInterest = gameState.calculateInterest(player, 1);
     project.interestCost = Math.floor(monthlyInterest * constructionMonths * interestMultiplier);
 
-    // 시공비 지불 (단계별)
+    // 총 필요 금액 계산
     const paymentSchedule = calculatePaymentSchedule(constructor, project.constructionCost);
+    const totalConstructionPayment = paymentSchedule.reduce((sum, p) => sum + p, 0);
+    const totalNeeded = totalConstructionPayment + project.interestCost + project.totalLoss;
+
+    // 가용 자금 계산 (현재 보유 + 추가 대출 가능액)
+    const currentLoan = player.loan;
+    const maxLoan = gameState.getMaxLoan(player);
+    const additionalLoanAvailable = maxLoan - currentLoan;
+    const maxAvailable = player.money + additionalLoanAvailable;
+
+    // 시공비 지불 (단계별) - 자금 부족 시에도 가능한 만큼 지불
     paymentSchedule.forEach((payment, stage) => {
         let loanNeeded = payment - player.money;
         if (loanNeeded > 0) {
-            gameState.takeLoan(playerIndex, loanNeeded);
+            // 대출 가능한 만큼만 대출
+            const loanableAmount = Math.min(loanNeeded, gameState.getMaxLoan(player) - player.loan);
+            if (loanableAmount > 0) {
+                gameState.takeLoan(playerIndex, loanableAmount);
+            }
         }
-        gameState.payMoney(playerIndex, payment);
+        // 보유 자금 범위 내에서만 지불
+        const payableAmount = Math.min(payment, player.money);
+        if (payableAmount > 0) {
+            gameState.payMoney(playerIndex, payableAmount);
+        }
     });
 
-    // 이자 비용 지불
+    // 이자 비용 지불 - 자금 부족 시에도 가능한 만큼 지불
     if (project.interestCost > 0) {
         let loanNeeded = project.interestCost - player.money;
         if (loanNeeded > 0) {
-            gameState.takeLoan(playerIndex, loanNeeded);
+            const loanableAmount = Math.min(loanNeeded, gameState.getMaxLoan(player) - player.loan);
+            if (loanableAmount > 0) {
+                gameState.takeLoan(playerIndex, loanableAmount);
+            }
         }
-        gameState.payMoney(playerIndex, project.interestCost);
+        const payableAmount = Math.min(project.interestCost, player.money);
+        if (payableAmount > 0) {
+            gameState.payMoney(playerIndex, payableAmount);
+        }
+    }
+
+    // 손실 비용 지불 (리스크로 인한 추가 비용)
+    if (project.totalLoss > 0) {
+        let loanNeeded = project.totalLoss - player.money;
+        if (loanNeeded > 0) {
+            const loanableAmount = Math.min(loanNeeded, gameState.getMaxLoan(player) - player.loan);
+            if (loanableAmount > 0) {
+                gameState.takeLoan(playerIndex, loanableAmount);
+            }
+        }
+        const payableAmount = Math.min(project.totalLoss, player.money);
+        if (payableAmount > 0) {
+            gameState.payMoney(playerIndex, payableAmount);
+        }
     }
 
     // 아뜰리에 시공사 보너스
