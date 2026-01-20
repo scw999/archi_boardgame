@@ -215,7 +215,8 @@ function collectOwnedPlots() {
         // 현재 진행 중인 프로젝트
         if (player.currentProject && player.currentProject.land) {
             const project = player.currentProject;
-            const landId = project.land.id;
+            // instanceId가 있으면 사용, 없으면 기존 id 사용 (하위 호환성)
+            const landId = project.land.instanceId || project.land.id;
 
             // 이미 할당된 플롯이 있으면 사용, 없으면 새로 할당
             const assignedPlot = getOrAssignPlotForLand(landId, project.land.region, project.land.name);
@@ -235,7 +236,7 @@ function collectOwnedPlots() {
         // 완성된 건물
         if (player.buildings) {
             player.buildings.forEach(building => {
-                const landId = building.land.id;
+                const landId = building.land.instanceId || building.land.id;
                 const assignedPlot = getOrAssignPlotForLand(landId, building.land.region, building.land.name);
 
                 ownedPlots.push({
@@ -254,7 +255,7 @@ function collectOwnedPlots() {
         // 매각 이력 (건물은 지도에 남음)
         if (player.soldHistory) {
             player.soldHistory.forEach(sold => {
-                const landId = sold.land.id;
+                const landId = sold.land.instanceId || sold.land.id;
                 const assignedPlot = getOrAssignPlotForLand(landId, sold.land.region, sold.land.name);
 
                 ownedPlots.push({
