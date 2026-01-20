@@ -18,7 +18,7 @@ export const constructors = [
         riskBlocks: 3,
         paymentStages: 4,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '호텔', '대형카페', '상가', '복합몰', '펜션'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '풀빌라', '호텔', '대형카페', '상가', '복합몰', '펜션', '대형빌딩'],
         description: '국내 Top 5 건설사, 안정적인 시공'
     },
     {
@@ -30,7 +30,7 @@ export const constructors = [
         riskBlocks: 3,
         paymentStages: 4,
         artistryBonus: 1.0,
-        canBuild: ['상가주택', '호텔', '대형카페', '상가', '복합몰'],
+        canBuild: ['상가주택', '호텔', '대형카페', '상가', '복합몰', '대형빌딩'],
         description: '프리미엄 대형 건물 전문'
     },
     {
@@ -42,7 +42,7 @@ export const constructors = [
         riskBlocks: 3,
         paymentStages: 4,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '호텔', '대형카페', '상가', '복합몰', '펜션'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '풀빌라', '호텔', '대형카페', '상가', '복합몰', '펜션', '대형빌딩'],
         description: '믿을 수 있는 대형 건설사'
     },
     {
@@ -54,7 +54,7 @@ export const constructors = [
         riskBlocks: 3,
         paymentStages: 4,
         artistryBonus: 1.0,
-        canBuild: ['상가주택', '호텔', '대형카페', '상가', '복합몰', '단독주택'],
+        canBuild: ['상가주택', '호텔', '대형카페', '상가', '복합몰', '단독주택', '전원주택', '대형빌딩'],
         description: '철강 기반 대형 건설사, 견고한 시공'
     },
     {
@@ -66,7 +66,7 @@ export const constructors = [
         riskBlocks: 3,
         paymentStages: 4,
         artistryBonus: 1.05,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '호텔', '대형카페', '상가', '복합몰', '펜션'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '풀빌라', '호텔', '대형카페', '상가', '복합몰', '펜션', '대형빌딩'],
         description: '자이 브랜드의 프리미엄 시공'
     },
 
@@ -80,7 +80,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '펜션', '상가', '대형카페'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '풀빌라', '펜션', '상가', '대형카페'],
         description: '중형 건물까지 안정적 시공'
     },
     {
@@ -92,7 +92,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '상가', '펜션', '복합몰'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '상가', '펜션', '복합몰'],
         description: '상가 건물 시공 경험 풍부'
     },
     {
@@ -104,7 +104,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '풀빌라', '펜션', '호텔'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '풀빌라', '펜션', '호텔'],
         description: '주거시설 전문 중견 건설사'
     },
     {
@@ -116,7 +116,7 @@ export const constructors = [
         riskBlocks: 2,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '대형카페', '펜션', '호텔', '상가'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '풀빌라', '대형카페', '펜션', '호텔', '상가'],
         description: '성장하는 중견 건설사'
     },
     {
@@ -128,7 +128,7 @@ export const constructors = [
         riskBlocks: 2,
         paymentStages: 3,
         artistryBonus: 1.15,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '대형카페', '펜션', '호텔', '복합몰'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '풀빌라', '대형카페', '펜션', '호텔', '복합몰'],
         description: '건축 전문 설계시공사, 디자인과 품질의 완벽 조화'
     },
     {
@@ -140,7 +140,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '펜션', '상가', '대형카페'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '펜션', '상가', '대형카페'],
         description: '40년 전통의 중견 건설사'
     },
     {
@@ -152,7 +152,7 @@ export const constructors = [
         riskBlocks: 2,
         paymentStages: 3,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '상가', '펜션', '복합몰', '호텔'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '풀빌라', '상가', '펜션', '복합몰', '호텔'],
         description: '데시앙 브랜드, 품질과 가격의 균형'
     },
 
@@ -166,7 +166,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 2,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '펜션'],
+        canBuild: ['단독주택', '전원주택', '펜션'],
         description: '저렴하지만 리스크 있는 선택'
     },
     {
@@ -178,7 +178,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 2,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '펜션'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '펜션'],
         description: '최저가 시공, 하지만 불안'
     },
     {
@@ -190,7 +190,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 2,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '카페', '풀빌라', '펜션'],
+        canBuild: ['단독주택', '전원주택', '카페', '풀빌라', '펜션'],
         description: '열정은 가득, 경험은 부족'
     },
     {
@@ -202,7 +202,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 2,
         artistryBonus: 1.05,
-        canBuild: ['단독주택', '카페', '펜션'],
+        canBuild: ['단독주택', '전원주택', '카페', '펜션'],
         description: '젊은 건축가들의 도전'
     },
     {
@@ -214,7 +214,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 2,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '펜션'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '펜션'],
         description: '새벽같이 일하는 열정 시공사'
     },
 
@@ -228,7 +228,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 3,
         artistryBonus: 1.3,
-        canBuild: ['단독주택', '카페', '풀빌라', '펜션'],
+        canBuild: ['단독주택', '전원주택', '카페', '풀빌라', '펜션'],
         description: '예술적 감각의 장인 시공'
     },
     {
@@ -252,7 +252,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 3,
         artistryBonus: 1.35,
-        canBuild: ['단독주택', '카페', '풀빌라', '호텔'],
+        canBuild: ['단독주택', '전원주택', '카페', '풀빌라', '호텔'],
         description: '공간을 예술로 만드는 장인들'
     },
     {
@@ -264,7 +264,7 @@ export const constructors = [
         riskBlocks: 1,
         paymentStages: 3,
         artistryBonus: 1.45,
-        canBuild: ['단독주택', '카페', '풀빌라', '대형카페', '펜션'],
+        canBuild: ['단독주택', '전원주택', '카페', '풀빌라', '대형카페', '펜션'],
         description: '자연과 모던의 조화, 프리미엄 아뜰리에'
     },
 
@@ -278,7 +278,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 6,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '펜션'],
+        canBuild: ['단독주택', '전원주택', '펜션'],
         description: '직접 관리하여 비용 절감, 시간 오래 걸림'
     },
     {
@@ -290,7 +290,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 6,
         artistryBonus: 1.0,
-        canBuild: ['단독주택', '상가주택', '카페', '풀빌라', '펜션'],
+        canBuild: ['단독주택', '전원주택', '상가주택', '카페', '풀빌라', '펜션'],
         description: '중형 건물까지 직접 관리 가능'
     },
     {
@@ -302,7 +302,7 @@ export const constructors = [
         riskBlocks: 0,
         paymentStages: 8,
         artistryBonus: 1.1,
-        canBuild: ['단독주택', '카페', '펜션'],
+        canBuild: ['단독주택', '전원주택', '카페', '펜션'],
         description: '최저 비용 직접 시공, 매우 느림'
     }
 ];
