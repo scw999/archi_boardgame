@@ -17,49 +17,30 @@ const usedPlotIndices = new Set();
 // 이미지 기준 상대 좌표 (%) - 실제 빈 땅(베이지색 빈 필지) 위치에 맞춤
 // 건물이 없는 빈 공간 (도로, 공원, 빈터 등)에만 배치
 const MAP_PLOTS = [
-    // === 좌측 하단: 빈 터 (건물 없는 공간) ===
-    { id: 'suburb_1', x: 18, y: 83, zone: 'gyeonggi_outer', tier: 2, label: '용인', emoji: '🏡' },
-    { id: 'suburb_2', x: 8, y: 75, zone: 'rural', tier: 1, label: '양평', emoji: '🏔️' },
-    { id: 'suburb_3', x: 12, y: 68, zone: 'rural', tier: 1, label: '가평', emoji: '🌲' },
-
-    // === 좌측 중앙: 산 근처 빈 터 ===
-    { id: 'rural_1', x: 5, y: 58, zone: 'rural', tier: 1, label: '북한산', emoji: '⛰️' },
-    { id: 'rural_2', x: 15, y: 52, zone: 'gyeonggi_outer', tier: 2, label: '의정부', emoji: '🏘️' },
-
-    // === 하단 중앙-좌측: 강변/해안 빈 터 ===
-    { id: 'beach_1', x: 28, y: 88, zone: 'seaside', tier: 2, label: '인천', emoji: '🏖️' },
-    { id: 'beach_2', x: 40, y: 85, zone: 'seaside', tier: 2, label: '시흥', emoji: '🌊' },
-    { id: 'beach_3', x: 52, y: 82, zone: 'seaside', tier: 3, label: '송도', emoji: '🌅' },
-
-    // === 하단 우측: 해안 지역 ===
-    { id: 'coast_1', x: 65, y: 88, zone: 'seaside', tier: 2, label: '해안도로', emoji: '🚗' },
-    { id: 'coast_2', x: 78, y: 85, zone: 'seaside', tier: 2, label: '마리나', emoji: '⛵' },
-    { id: 'coast_3', x: 88, y: 80, zone: 'seaside', tier: 2, label: '리조트', emoji: '🏝️' },
-
-    // === 우측 하단: 강변 빈 터 ===
-    { id: 'river_1', x: 92, y: 72, zone: 'riverside', tier: 3, label: '한강뷰', emoji: '🌉' },
-    { id: 'river_2', x: 95, y: 62, zone: 'riverside', tier: 3, label: '워터프론트', emoji: '🚤' },
-
-    // === 우측 중앙: 도로변 빈 터 ===
-    { id: 'road_1', x: 93, y: 52, zone: 'gyeonggi_main', tier: 3, label: '하남', emoji: '🛣️' },
-    { id: 'road_2', x: 90, y: 42, zone: 'gyeonggi_main', tier: 3, label: '위례', emoji: '🏗️' },
-    { id: 'road_3', x: 95, y: 32, zone: 'gyeonggi_outer', tier: 2, label: '구리', emoji: '🏘️' },
-
-    // === 우측 상단: 외곽 빈 터 ===
-    { id: 'outer_1', x: 92, y: 22, zone: 'gyeonggi_outer', tier: 2, label: '남양주', emoji: '🌳' },
-    { id: 'outer_2', x: 88, y: 12, zone: 'gyeonggi_outer', tier: 2, label: '포천', emoji: '🏡' },
-
-    // === 중앙 하단: 공원/녹지 빈 터 ===
-    { id: 'park_1', x: 48, y: 73, zone: 'landmark', tier: 4, label: '올림픽공원', emoji: '🎪' },
-    { id: 'park_2', x: 38, y: 68, zone: 'gyeonggi_main', tier: 3, label: '분당', emoji: '🌳' },
-
-    // === 중앙: 도심 내 빈 터 (작은 공간) ===
-    { id: 'city_1', x: 55, y: 65, zone: 'seoul', tier: 4, label: '서초', emoji: '🏢' },
-    { id: 'city_2', x: 62, y: 72, zone: 'seoul', tier: 4, label: '반포', emoji: '🌆' },
-
-    // === 테크밸리 지역: 빈 터 ===
-    { id: 'tech_1', x: 45, y: 58, zone: 'gyeonggi_main', tier: 3, label: '판교', emoji: '💼' },
-    { id: 'tech_2', x: 52, y: 52, zone: 'seoul', tier: 4, label: '강남', emoji: '🏛️' }
+    { id: 'suburb_1', x: 42, y: 27, zone: 'gyeonggi_outer', tier: 2, label: '용인', emoji: '🏡' },
+    { id: 'suburb_2', x: 96, y: 8, zone: 'rural', tier: 1, label: '양평', emoji: '🏔️' },
+    { id: 'suburb_3', x: 69, y: 5, zone: 'rural', tier: 1, label: '가평', emoji: '🌲' },
+    { id: 'rural_1', x: 16, y: 20, zone: 'rural', tier: 1, label: '북한산', emoji: '⛰️' },
+    { id: 'rural_2', x: 24, y: 24, zone: 'gyeonggi_outer', tier: 2, label: '의정부', emoji: '🏘️' },
+    { id: 'beach_1', x: 18, y: 87, zone: 'seaside', tier: 2, label: '인천', emoji: '🏖️' },
+    { id: 'beach_2', x: 24, y: 87, zone: 'seaside', tier: 2, label: '시흥', emoji: '🌊' },
+    { id: 'beach_3', x: 3, y: 86, zone: 'seaside', tier: 3, label: '송도', emoji: '🌅' },
+    { id: 'coast_1', x: 77, y: 84, zone: 'seaside', tier: 2, label: '해안도로', emoji: '🚗' },
+    { id: 'coast_2', x: 86, y: 78, zone: 'seaside', tier: 2, label: '마리나', emoji: '⛵' },
+    { id: 'coast_3', x: 94, y: 71, zone: 'seaside', tier: 2, label: '리조트', emoji: '🏝️' },
+    { id: 'river_1', x: 49, y: 62, zone: 'riverside', tier: 3, label: '한강뷰', emoji: '🌉' },
+    { id: 'river_2', x: 54, y: 52, zone: 'riverside', tier: 3, label: '워터프론트', emoji: '🚤' },
+    { id: 'road_1', x: 96, y: 49, zone: 'gyeonggi_main', tier: 3, label: '하남', emoji: '🛣️' },
+    { id: 'road_2', x: 91, y: 29, zone: 'gyeonggi_main', tier: 3, label: '위례', emoji: '🏗️' },
+    { id: 'road_3', x: 96, y: 21, zone: 'gyeonggi_outer', tier: 2, label: '구리', emoji: '🏘️' },
+    { id: 'outer_1', x: 91, y: 16, zone: 'gyeonggi_outer', tier: 2, label: '남양주', emoji: '🌳' },
+    { id: 'outer_2', x: 82, y: 6, zone: 'gyeonggi_outer', tier: 2, label: '포천', emoji: '🏡' },
+    { id: 'park_1', x: 43, y: 64, zone: 'landmark', tier: 4, label: '올림픽공원', emoji: '🎪' },
+    { id: 'park_2', x: 84, y: 37, zone: 'gyeonggi_main', tier: 3, label: '분당', emoji: '🌳' },
+    { id: 'city_1', x: 64, y: 81, zone: 'seoul', tier: 4, label: '서초', emoji: '🏢' },
+    { id: 'city_2', x: 74, y: 72, zone: 'seoul', tier: 4, label: '반포', emoji: '🌆' },
+    { id: 'tech_1', x: 88, y: 59, zone: 'gyeonggi_main', tier: 3, label: '판교', emoji: '💼' },
+    { id: 'tech_2', x: 82, y: 65, zone: 'seoul', tier: 4, label: '강남', emoji: '🏛️' },
 ];
 
 // 플레이어별 색상
