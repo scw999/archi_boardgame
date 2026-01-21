@@ -586,19 +586,23 @@ class GameState {
         return false;
     }
 
-    // PM 활동 (턴 패스하고 돈 벌기)
+    // PM 활동 (라운드 스킵하고 3억 벌기)
     doPMActivity(playerIndex) {
         const player = this.players[playerIndex];
-        // PM 활동 수익: 고정 1억
-        const totalIncome = 100000000;
+        // PM 활동 수익: 고정 3억
+        const totalIncome = 300000000;
 
         player.money += totalIncome;
-        this.addLog(`${player.name}: PM 활동으로 ${this.formatMoney(totalIncome)} 수입`);
+        // 라운드 스킵 플래그 설정
+        player.pmSkippedRound = this.currentRound;
+
+        this.addLog(`${player.name}: PM 컨설팅으로 ${this.formatMoney(totalIncome)} 수입 (이번 라운드 스킵)`);
 
         return {
             success: true,
             income: totalIncome,
-            message: `PM 활동 완료! ${this.formatMoney(totalIncome)} 수입`
+            skippedRound: true,
+            message: `PM 컨설팅 완료! ${this.formatMoney(totalIncome)} 수입 (이번 라운드 스킵)`
         };
     }
 

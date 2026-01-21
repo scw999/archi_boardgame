@@ -152,97 +152,10 @@ class GameApp {
         }
     }
 
-    // 공통 액션 패널 (모든 페이즈에서 표시)
+    // 공통 액션 패널 - 더 이상 사용하지 않음 (항상 가능한 액션 박스 제거됨)
     showCommonActionPanel() {
-        const player = gameState.getCurrentPlayer();
-        if (!player) return;
-
-        // 기존 패널 제거
+        // 기존 패널 제거만 수행
         document.getElementById('common-action-panel')?.remove();
-
-        const pmIncome = 50000000 + (player.buildings.length * 20000000);
-
-        const panel = document.createElement('div');
-        panel.id = 'common-action-panel';
-        panel.className = 'common-action-panel';
-        panel.innerHTML = `
-            <div class="panel-title">💼 항상 가능한 액션</div>
-            <div class="action-buttons-row">
-                <button class="common-action-btn pm" id="common-pm">
-                    <span class="btn-icon">👷</span>
-                    <span class="btn-text">PM 컨설팅</span>
-                    <span class="btn-value">+${gameState.formatMoney(pmIncome)}</span>
-                </button>
-                ${player.currentProject?.land ? `
-                <button class="common-action-btn sell-land" id="common-sell-land">
-                    <span class="btn-icon">🏞️</span>
-                    <span class="btn-text">대지 매각</span>
-                    <span class="btn-value">${gameState.formatMoney(Math.floor((player.currentProject.landPrice + (player.currentProject.developmentCost || 0)) * 1.1))}</span>
-                </button>
-                ` : ''}
-                ${player.buildings.length > 0 ? `
-                <button class="common-action-btn sell-building" id="common-sell-building">
-                    <span class="btn-icon">🏢</span>
-                    <span class="btn-text">건물 매각</span>
-                    <span class="btn-value">${player.buildings.length}개 보유</span>
-                </button>
-                ` : ''}
-                <button class="common-action-btn skip" id="common-skip">
-                    <span class="btn-icon">⏭️</span>
-                    <span class="btn-text">턴 넘기기</span>
-                </button>
-            </div>
-        `;
-
-        // 게임 보드에 패널 추가 (action-area 위에)
-        const actionArea = document.getElementById('action-area');
-        if (actionArea) {
-            actionArea.parentNode.insertBefore(panel, actionArea);
-        }
-
-        // 이벤트 바인딩
-        document.getElementById('common-pm')?.addEventListener('click', () => {
-            const result = gameState.doPMActivity(gameState.currentPlayerIndex);
-            if (result.success) {
-                showNotification(result.message, 'success');
-                this.updateUI();
-                // PM 활동 후 자동으로 턴 넘기기
-                this.nextPlayerOrPhase(this.getCurrentCheckField());
-            }
-        });
-
-        document.getElementById('common-sell-land')?.addEventListener('click', () => {
-            // 설계/시공 단계에서 대지 매각 시 경고
-            if (gameState.phase === GAME_PHASES.DESIGN || gameState.phase === GAME_PHASES.CONSTRUCTION) {
-                const confirmMsg = '⚠️ 주의: 설계/시공 단계에서 대지를 매각하면 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?';
-                if (!confirm(confirmMsg)) {
-                    return;
-                }
-            } else {
-                if (!confirm('정말로 현재 대지를 매각하시겠습니까? 진행 중인 프로젝트가 취소됩니다.')) {
-                    return;
-                }
-            }
-
-            const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
-            if (result.success) {
-                showNotification(result.message, 'success');
-                // 설계/시공 단계에서 토지 매각 시 자동으로 턴 넘기기
-                this.nextPlayerOrPhase(this.getCurrentCheckField());
-            }
-        });
-
-        document.getElementById('common-sell-building')?.addEventListener('click', () => {
-            this.showBuildingSellModal(() => this.updateUI());
-        });
-
-        document.getElementById('common-skip')?.addEventListener('click', () => {
-            if (confirm('이번 턴을 넘기시겠습니까?')) {
-                gameState.addLog(`${player.name}: 턴 패스`);
-                showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
-                this.nextPlayerOrPhase(this.getCurrentCheckField());
-            }
-        });
     }
 
     // 현재 체크 필드 반환
@@ -263,6 +176,13 @@ class GameApp {
         this.selectedPriceType = 'market';
 
         const player = gameState.getCurrentPlayer();
+
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
+        if (player.pmSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('land');
+            return;
+        }
 
         renderCardGrid(gameState.availableLands, 'land', (index, land) => {
             this.selectedCardIndex = index;
@@ -669,6 +589,13 @@ class GameApp {
 
         const player = gameState.getCurrentPlayer();
 
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
+        if (player.pmSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('architect');
+            return;
+        }
+
         // 토지가 없으면 설계 불가 - 평가 단계까지 쉼
         if (!player.currentProject || !player.currentProject.land) {
             showNotification(`${player.name}님은 토지가 없어 평가 단계까지 쉽니다.`, 'info');
@@ -697,12 +624,15 @@ class GameApp {
         const buildings = getAvailableBuildings(land);
         const pmIncome = 50000000 + (player.buildings.length * 20000000);
 
-        const designPanel = document.getElementById('design-panel') || document.createElement('div');
-        designPanel.id = 'design-panel';
-        designPanel.className = 'design-panel';
+        // 기존 모달 제거
+        document.getElementById('design-modal-overlay')?.remove();
 
-        designPanel.innerHTML = `
-            <div class="design-panel-content">
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'design-modal-overlay';
+        modalOverlay.className = 'design-modal-overlay';
+
+        modalOverlay.innerHTML = `
+            <div class="design-modal-content">
                 <h3>📐 설계 진행</h3>
                 <div class="architect-info">
                     <span class="portrait">${architect.portrait}</span>
@@ -747,7 +677,7 @@ class GameApp {
                 </div>
 
                 <div class="design-action-buttons">
-                    <button class="action-btn" id="design-pm">👷 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})</button>
+                    <button class="action-btn pm-consulting" id="design-pm">👷 PM 컨설팅 (+3억, 라운드 스킵)</button>
                     <button class="action-btn" id="design-sell-land">🏞️ 대지 매각</button>
                     ${player.buildings.length > 0 ? '<button class="action-btn" id="design-sell-building">🏢 건물 매각</button>' : ''}
                     <button class="action-btn" id="design-skip">⏭️ 턴 넘기기</button>
@@ -755,18 +685,19 @@ class GameApp {
             </div>
         `;
 
-        // 패널을 DOM에 추가
-        const actionArea = document.getElementById('action-area');
-        if (actionArea) {
-            actionArea.innerHTML = '';
-            actionArea.appendChild(designPanel);
-        }
+        // 모달을 body에 추가
+        document.body.appendChild(modalOverlay);
 
         // 기존 공통 액션 패널 제거 (중복 방지)
         document.getElementById('common-action-panel')?.remove();
 
         // 액션 버튼 이벤트 바인딩
         document.getElementById('design-pm')?.addEventListener('click', () => {
+            if (!confirm('PM 컨설팅을 진행하면 3억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
+
+            // 모달 닫기
+            this.hideDesignPanel();
+
             const result = gameState.doPMActivity(gameState.currentPlayerIndex);
             if (result.success) {
                 showNotification(result.message, 'success');
@@ -879,6 +810,9 @@ class GameApp {
             showNotification('건축가와 건물을 선택해주세요.', 'error');
             return;
         }
+
+        // 설계 모달 닫기
+        this.hideDesignPanel();
 
         const player = gameState.getCurrentPlayer();
         const constructionCost = Math.round(building.constructionCost * architect.constructionMultiplier);
@@ -1098,6 +1032,13 @@ class GameApp {
 
         const player = gameState.getCurrentPlayer();
 
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
+        if (player.pmSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('constructor');
+            return;
+        }
+
         // 토지가 없는 경우 - 평가 단계까지 쉼
         if (!player.currentProject || !player.currentProject.land) {
             showNotification(`${player.name}님은 토지가 없어 평가 단계까지 쉽니다.`, 'info');
@@ -1277,9 +1218,12 @@ class GameApp {
             return;
         }
 
-        const constructionPanel = document.getElementById('construction-panel') || document.createElement('div');
-        constructionPanel.id = 'construction-panel';
-        constructionPanel.className = 'construction-panel';
+        // 기존 모달 제거
+        document.getElementById('construction-modal-overlay')?.remove();
+
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'construction-modal-overlay';
+        modalOverlay.className = 'construction-modal-overlay';
 
         const sizeNames = {
             large: '🏢 대형',
@@ -1289,8 +1233,8 @@ class GameApp {
             direct: '👷 직영공사'
         };
 
-        constructionPanel.innerHTML = `
-            <div class="construction-panel-content">
+        modalOverlay.innerHTML = `
+            <div class="construction-modal-content">
                 <h3>🏗️ 시공 계약</h3>
                 
                 <div class="constructor-info">
@@ -1364,15 +1308,8 @@ class GameApp {
             </div>
         `;
 
-        // 패널을 DOM에 추가
-        const actionArea = document.getElementById('action-area');
-        if (actionArea) {
-            actionArea.innerHTML = '';
-            actionArea.appendChild(constructionPanel);
-        }
-
-        // 공통 액션 패널 다시 표시 (시공 패널 위에)
-        this.showCommonActionPanel();
+        // 모달을 body에 추가
+        document.body.appendChild(modalOverlay);
 
         // 시공 계약 버튼 이벤트
         const confirmBtn = document.getElementById('btn-confirm-construction');
@@ -1386,20 +1323,25 @@ class GameApp {
         const cancelBtn = document.getElementById('btn-cancel-construction');
         if (cancelBtn) {
             cancelBtn.onclick = () => {
+                this.hideConstructionPanel();
                 this.runConstructionPhase();
             };
         }
     }
 
-    // 시공 패널 숨기기
+    // 시공 모달 숨기기
     hideConstructionPanel() {
-        const constructionPanel = document.getElementById('construction-panel');
-        if (constructionPanel) {
-            constructionPanel.remove();
+        const modal = document.getElementById('construction-modal-overlay');
+        if (modal) {
+            modal.remove();
         }
-        const actionArea = document.getElementById('action-area');
-        if (actionArea) {
-            actionArea.innerHTML = '';
+    }
+
+    // 설계 모달 숨기기
+    hideDesignPanel() {
+        const modal = document.getElementById('design-modal-overlay');
+        if (modal) {
+            modal.remove();
         }
     }
 
@@ -1837,6 +1779,13 @@ class GameApp {
     runEvaluationPhase() {
         const player = gameState.getCurrentPlayer();
         const project = player.currentProject;
+
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
+        if (player.pmSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('salePrice');
+            return;
+        }
 
         // 평가할 프로젝트가 없는 경우 스킵 (토지, 건물, 시공사 모두 필요)
         if (!project || !project.land || !project.building) {
