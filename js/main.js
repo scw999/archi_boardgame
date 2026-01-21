@@ -632,17 +632,19 @@ class GameApp {
             return;
         }
 
-        // 카드 영역으로 스크롤
-        const cardGrid = document.getElementById('card-grid');
-        if (cardGrid) {
-            cardGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
         renderCardGrid(gameState.availableArchitects, 'architect', (index, architect) => {
             this.selectedArchitectIndex = index;
             highlightCard(index);
             this.showDesignPanel(architect);
         });
+
+        // 카드 렌더링 후 첫 번째 카드가 상단에 오도록 스크롤
+        setTimeout(() => {
+            const cardGrid = document.getElementById('card-grid');
+            if (cardGrid) {
+                window.scrollTo({ top: cardGrid.offsetTop - 120, behavior: 'smooth' });
+            }
+        }, 100);
     }
 
     // 설계 패널 표시 (건축가 선택 후)
@@ -1101,12 +1103,6 @@ class GameApp {
             return;
         }
 
-        // 카드 영역으로 스크롤
-        const cardGrid = document.getElementById('card-grid');
-        if (cardGrid) {
-            cardGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
         const building = player.currentProject.building;
         const architect = player.currentProject.architect;
 
@@ -1184,6 +1180,14 @@ class GameApp {
             const originalIndex = gameState.availableConstructors.findIndex(c => c.id === constructor.id);
             this.showConstructionPanel(constructor, originalIndex, building, architect);
         });
+
+        // 카드 렌더링 후 첫 번째 카드가 상단에 오도록 스크롤
+        setTimeout(() => {
+            const cardGrid = document.getElementById('card-grid');
+            if (cardGrid) {
+                window.scrollTo({ top: cardGrid.offsetTop - 120, behavior: 'smooth' });
+            }
+        }, 100);
     }
 
     // 시공 단계 돈벌기 옵션 표시
