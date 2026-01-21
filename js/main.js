@@ -632,6 +632,12 @@ class GameApp {
             return;
         }
 
+        // 카드 영역으로 스크롤
+        const cardGrid = document.getElementById('card-grid');
+        if (cardGrid) {
+            cardGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         renderCardGrid(gameState.availableArchitects, 'architect', (index, architect) => {
             this.selectedArchitectIndex = index;
             highlightCard(index);
@@ -1093,6 +1099,12 @@ class GameApp {
             showNotification(`${player.name}님은 설계가 완료되지 않아 평가 단계까지 쉽니다.`, 'info');
             this.nextPlayerOrPhase('constructor');
             return;
+        }
+
+        // 카드 영역으로 스크롤
+        const cardGrid = document.getElementById('card-grid');
+        if (cardGrid) {
+            cardGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         const building = player.currentProject.building;

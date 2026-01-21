@@ -332,15 +332,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   background: var(--gradient-blue);
-  padding: 0.4rem 1.2rem;
+  padding: 0.8rem 2.4rem;
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
 .current-phase-name {
-  font-size: 1rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -434,13 +434,35 @@ body {
 
 .phase-step.active {
   opacity: 1;
-  background: var(--gradient-blue);
   box-shadow: var(--shadow-md);
 }
 
 .phase-step.completed {
   opacity: 0.8;
-  background: var(--accent-emerald);
+}
+
+/* 페이즈별 색상 - 대지 구매 (초록색) */
+.phase-step.phase-land.active,
+.phase-step.phase-land.completed {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* 페이즈별 색상 - 건축가 선정 (보라색) */
+.phase-step.phase-design.active,
+.phase-step.phase-design.completed {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+/* 페이즈별 색상 - 시공사 선정 (오렌지색) */
+.phase-step.phase-construction.active,
+.phase-step.phase-construction.completed {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+/* 페이즈별 색상 - 평가 (파란색) */
+.phase-step.phase-evaluation.active,
+.phase-step.phase-evaluation.completed {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
 .phase-step .phase-icon {
@@ -5421,9 +5443,8 @@ body {
 
 /* 매각 완료 셀 */
 .city-cell.region-cell.sold {
-  opacity: 0.7;
-  filter: grayscale(0.3);
-  background: linear-gradient(135deg, rgba(100, 100, 100, 0.3), rgba(80, 80, 80, 0.2));
+  opacity: 1;
+  filter: none;
 }
 
 .city-cell.region-cell.sold .cell-sold {
@@ -5436,7 +5457,7 @@ body {
 
 .city-cell.region-cell.sold .sold-icon {
   font-size: 1.6rem;
-  opacity: 0.8;
+  opacity: 1;
 }
 
 /* 지역 셀 - 빈 상태 */
@@ -6317,16 +6338,16 @@ body {
 
 /* 매각된 건물 스타일 */
 .plot-marker.sold .plot-marker-inner {
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .plot-marker.sold .plot-building-img,
 .plot-marker.sold .plot-building-emoji {
-  filter: grayscale(50%) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
 .sold-building {
-  filter: grayscale(30%) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) !important;
 }
 
 .plot-marker.sold::before {

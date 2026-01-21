@@ -78,10 +78,10 @@ function getPhaseDisplayNameOnly(phase) {
 // 페이즈 진행 표시
 function renderPhaseProgress() {
     const phases = [
-        { key: GAME_PHASES.LAND_PURCHASE, icon: '🗺️', name: '대지 구매' },
-        { key: GAME_PHASES.DESIGN, icon: '📏', name: '건축가 선정' },
-        { key: GAME_PHASES.CONSTRUCTION, icon: '🏗️', name: '시공사 선정' },
-        { key: GAME_PHASES.EVALUATION, icon: '☑️', name: '평가' }
+        { key: GAME_PHASES.LAND_PURCHASE, icon: '🗺️', name: '대지 구매', type: 'land' },
+        { key: GAME_PHASES.DESIGN, icon: '📏', name: '건축가 선정', type: 'design' },
+        { key: GAME_PHASES.CONSTRUCTION, icon: '🏗️', name: '시공사 선정', type: 'construction' },
+        { key: GAME_PHASES.EVALUATION, icon: '☑️', name: '평가', type: 'evaluation' }
     ];
 
     const currentIndex = phases.findIndex(p => p.key === gameState.phase);
@@ -92,7 +92,7 @@ function renderPhaseProgress() {
         else if (index === currentIndex) status = 'active';
 
         return `
-      <div class="phase-step ${status}">
+      <div class="phase-step ${status} phase-${phase.type}">
         <div class="phase-icon">${phase.icon}</div>
         <div class="phase-name">${phase.name}</div>
       </div>
