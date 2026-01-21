@@ -263,6 +263,7 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  max-height: calc(100vh - 180px); /* 높이 제한으로 내부 스크롤 활성화 */
 }
 
 /* 고정 보드 헤더 (스크롤 시 고정) */
@@ -347,6 +348,8 @@ body {
 .phase-progress-row {
   display: flex;
   justify-content: center;
+  width: 100%;
+  padding: 0.5rem 0;
 }
 
 .board-header {
@@ -1096,6 +1099,30 @@ body {
   content: ' (부적합)';
   color: var(--accent-red);
   font-size: 0.75rem;
+}
+
+/* 자금 부족으로 비활성화된 건물 */
+.design-modal-content .building-option.building-disabled {
+  opacity: 0.4;
+  background: rgba(80, 80, 80, 0.3);
+  border-color: rgba(100, 100, 100, 0.4);
+  cursor: not-allowed;
+  filter: grayscale(60%);
+}
+
+.design-modal-content .building-option.building-disabled:hover {
+  border-color: rgba(100, 100, 100, 0.4);
+  transform: none;
+}
+
+.unaffordable-badge {
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 4px;
 }
 
 /* 모달 닫기 버튼 */
@@ -5870,8 +5897,18 @@ body {
 
 /* 설계/시공 단계 건물 반투명 */
 .building-transparent {
-  opacity: 0.5;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) grayscale(20%);
+  opacity: 0.6;
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+  border: 3px dashed rgba(59, 130, 246, 0.8);
+  border-radius: 8px;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.7);
+  animation: design-pulse 2s ease-in-out infinite;
+}
+
+@keyframes design-pulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)); }
+  50% { filter: drop-shadow(0 0 15px rgba(59, 130, 246, 1)); }
 }
 
 .plot-building-emoji {

@@ -670,11 +670,18 @@ class GameApp {
             const constructionCost = Math.round(building.constructionCost * architect.constructionMultiplier);
             const isMasterpiece = architect.masterpieces.includes(building.name);
 
+            // 총 필요 비용 계산 (설계비 + 시공비)
+            const totalCost = designFee + constructionCost;
+            const maxAvailable = player.money + gameState.getMaxLoan(player) - player.loan;
+            const canAfford = maxAvailable >= totalCost;
+            const disabledClass = canAfford ? '' : ' building-disabled';
+
             return `
-                            <div class="building-option"
+                            <div class="building-option${disabledClass}"
                                  data-index="${index}"
-                                 data-building="${building.name}">
-                                <div class="building-emoji">${getBuildingImage(building.name, '56px')}</div>
+                                 data-building="${building.name}"
+                                 data-affordable="${canAfford}">
+                                <div class="building-emoji">${getBuildingImage(building.name, '100px')}</div>
                                 <div class="building-name">${building.name}</div>
                                 ${isMasterpiece ? '<div class="masterpiece-badge">✨ 대표작</div>' : ''}
                                 <div class="building-costs">
@@ -687,6 +694,7 @@ class GameApp {
                                         <span class="cost-value">${gameState.formatMoney(constructionCost)}</span>
                                     </div>
                                 </div>
+                                ${!canAfford ? '<div class="unaffordable-badge">💸 자금 부족</div>' : ''}
                                 ${building.isSuitable ? '<div class="suitable-badge">✓ 토지 적합</div>' : ''}
                             </div>
                         `;
@@ -760,6 +768,12 @@ class GameApp {
         // 건물 선택 이벤트
         modalOverlay.querySelectorAll('.building-option').forEach(option => {
             option.addEventListener('click', () => {
+                // 비활성화된 건물은 선택 불가
+                if (option.dataset.affordable === 'false') {
+                    showNotification('자금이 부족하여 이 건물을 선택할 수 없습니다.', 'warning');
+                    return;
+                }
+
                 // 이전 선택 해제
                 modalOverlay.querySelectorAll('.building-option').forEach(o => o.classList.remove('selected'));
                 option.classList.add('selected');
