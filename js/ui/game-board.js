@@ -77,9 +77,9 @@ function getPhaseDisplayNameOnly(phase) {
 // 페이즈 진행 표시
 function renderPhaseProgress() {
     const phases = [
-        { key: GAME_PHASES.LAND_PURCHASE, icon: '🗺️', name: '대지' },
-        { key: GAME_PHASES.DESIGN, icon: '📏', name: '설계' },
-        { key: GAME_PHASES.CONSTRUCTION, icon: '🏗️', name: '시공' },
+        { key: GAME_PHASES.LAND_PURCHASE, icon: '🗺️', name: '대지 구매' },
+        { key: GAME_PHASES.DESIGN, icon: '📏', name: '건축가 선정' },
+        { key: GAME_PHASES.CONSTRUCTION, icon: '🏗️', name: '시공사 선정' },
         { key: GAME_PHASES.EVALUATION, icon: '☑️', name: '평가' }
     ];
 

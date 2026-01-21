@@ -649,7 +649,7 @@ class GameApp {
             const isMasterpiece = architect.masterpieces.includes(building.name);
 
             return `
-                            <div class="building-option ${building.isSuitable ? 'suitable' : 'not-suitable'}"
+                            <div class="building-option"
                                  data-index="${index}"
                                  data-building="${building.name}">
                                 <div class="building-emoji">${building.emoji}</div>
@@ -739,7 +739,7 @@ class GameApp {
         modalOverlay.querySelectorAll('.building-option').forEach(option => {
             option.addEventListener('click', () => {
                 // 이전 선택 해제
-                designPanel.querySelectorAll('.building-option').forEach(o => o.classList.remove('selected'));
+                modalOverlay.querySelectorAll('.building-option').forEach(o => o.classList.remove('selected'));
                 option.classList.add('selected');
 
                 const buildingName = option.dataset.building;
