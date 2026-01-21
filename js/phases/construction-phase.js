@@ -317,6 +317,10 @@ export function checkConstructionPhaseComplete() {
         if (!player.currentProject.building) {
             return true;
         }
+        // 자금 부족으로 이번 라운드 시공 스킵한 플레이어도 완료로 처리
+        if (player.currentProject.constructionSkippedRound === gameState.currentRound) {
+            return true;
+        }
         // 토지와 설계가 있으면 시공사가 선택되어야 함
         return player.currentProject.constructor !== null;
     });

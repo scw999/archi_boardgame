@@ -250,6 +250,7 @@ body {
   gap: 1rem;
   min-height: 100vh;
   padding: 1rem;
+  padding-top: 110px; /* 고정 헤더 공간 확보 */
   padding-bottom: 140px; /* 하단 고정 로그 공간 확보 */
   position: relative;
 }
@@ -257,28 +258,32 @@ body {
 /* ===== 게임 보드 (중앙) ===== */
 #game-board {
   grid-area: board;
-  background: var(--bg-secondary);
+  background: transparent;
   border-radius: var(--radius-lg);
   padding: 0;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 180px); /* 높이 제한으로 내부 스크롤 활성화 */
 }
 
-/* 고정 보드 헤더 (스크롤 시 고정) */
+/* 고정 보드 헤더 (뷰포트 고정) */
 .board-header-sticky {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 240px; /* 왼쪽 플레이어 패널 너비 + gap */
+  right: 0;
+  z-index: 1000;
   background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(15, 23, 42, 0.98) 100%);
   padding: 0.6rem 1.5rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  margin-top: 1rem;
   border-bottom: 2px solid var(--accent-blue);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  flex-shrink: 0;
 }
 
 /* 게임 보드 컨텐츠 영역 */
@@ -291,8 +296,9 @@ body {
 .header-top-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 1.5rem;
+  width: 100%;
 }
 
 /* 라운드 배지 */
@@ -988,6 +994,7 @@ body {
 @media (max-width: 1024px) {
   #game-container {
     grid-template-columns: 1fr;
+    padding-top: 130px; /* 모바일에서 고정 헤더 공간 */
   }
 
   #player-panels,
@@ -1000,6 +1007,14 @@ body {
 
   .player-panel {
     min-width: 250px;
+  }
+
+  /* 모바일에서 고정 헤더 전체 너비 */
+  .board-header-sticky {
+    left: 0;
+    margin-left: 1rem;
+    right: 0;
+    margin-right: 1rem;
   }
 }
 
@@ -4755,6 +4770,27 @@ body {
   padding: 0.4rem 1rem;
   background: rgba(59, 130, 246, 0.2);
   border-radius: var(--radius-sm);
+}
+
+/* 컴팩트 버전 blueprint frame (설계 진행 창용) */
+#design-preview-modal .blueprint-frame.compact {
+  width: auto;
+  height: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#design-preview-modal .blueprint-frame.compact .blueprint-grid {
+  margin-bottom: 0;
+}
+
+#design-preview-modal .blueprint-frame.compact .blueprint-label {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
 }
 
 #design-preview-modal .design-details {

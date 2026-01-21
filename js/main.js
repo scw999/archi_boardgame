@@ -885,11 +885,11 @@ class GameApp {
 
                     <div class="blueprint-content">
                         <div class="blueprint-image">
-                            <div class="blueprint-frame">
+                            <div class="blueprint-frame compact">
                                 <div class="blueprint-grid">
-                                    ${getBuildingImage(building.name, '120px')}
+                                    ${getBuildingImage(building.name, '100px')}
                                 </div>
-                                <div class="blueprint-label">설계도<br>미리보기</div>
+                                <div class="blueprint-label">설계도 미리보기</div>
                             </div>
                         </div>
 
@@ -1134,6 +1134,8 @@ class GameApp {
             `, () => {
                 // 설계만 완료된 상태로 턴 넘기기 (건물은 없어지지 않음)
                 player.currentProject.constructor = null;
+                // 이번 라운드 시공 스킵 기록 (무한 반복 방지)
+                player.currentProject.constructionSkippedRound = gameState.currentRound;
                 this.nextPlayerOrPhase('constructor');
             });
             return;
