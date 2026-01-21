@@ -36,7 +36,18 @@ class GameApp {
     init() {
         this.bindEvents();
         initProjectMap();
+        this.preloadImages(); // 이미지 프리로드
         this.showMainMenu();
+    }
+
+    // 이미지 프리로드 (로딩 속도 개선)
+    preloadImages() {
+        const imageUrls = Object.values(BUILDING_IMAGES);
+        imageUrls.forEach(url => {
+            const img = new Image();
+            img.src = url;
+        });
+        console.log(`🖼️ ${imageUrls.length}개 건물 이미지 프리로드 시작`);
     }
 
     // 이벤트 바인딩
@@ -864,7 +875,7 @@ class GameApp {
                                 <div class="blueprint-grid">
                                     ${getBuildingImage(building.name, '120px')}
                                 </div>
-                                <div class="blueprint-label">설계도 미리보기</div>
+                                <div class="blueprint-label">설계도<br>미리보기</div>
                             </div>
                         </div>
 

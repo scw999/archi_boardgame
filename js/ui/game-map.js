@@ -412,12 +412,15 @@ function renderPlotMarker(plot, index, owned) {
         if (hasBuilding) {
             // 건물 이미지가 있으면 이미지 사용, 없으면 이모지 폴백
             const buildingImage = BUILDING_IMAGES[owned.building.name];
+            // 설계/시공 단계에서는 반투명, 완료/매각 시 선명
+            const isTransparent = owned.status === 'design' || owned.status === 'construction';
+            const transparentClass = isTransparent ? ' building-transparent' : '';
             if (buildingImage) {
-                content = `<img src="${buildingImage}" alt="${owned.building.name}" class="plot-building-img${isSold ? ' sold-building' : ''}"
+                content = `<img src="${buildingImage}" alt="${owned.building.name}" class="plot-building-img${isSold ? ' sold-building' : ''}${transparentClass}"
                            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                           <span class="plot-building-emoji" style="display:none;">${owned.building.emoji}</span>`;
             } else {
-                content = `<span class="plot-building-emoji${isSold ? ' sold-building' : ''}">${owned.building.emoji}</span>`;
+                content = `<span class="plot-building-emoji${isSold ? ' sold-building' : ''}${transparentClass}">${owned.building.emoji}</span>`;
             }
         } else {
             content = `<span class="plot-land">🏞️</span>`;

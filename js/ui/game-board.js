@@ -16,7 +16,6 @@ export function renderGameBoard() {
         <div class="current-phase-large">
           <span class="current-phase-name">${getPhaseDisplayNameOnly(gameState.phase)}</span>
         </div>
-        <div class="header-spacer"></div>
       </div>
 
       <div class="phase-progress-row">
@@ -26,8 +25,10 @@ export function renderGameBoard() {
       </div>
     </div>
 
-    <div class="current-player-info">
-      ${renderCurrentPlayerInfo()}
+    <div class="game-board-content">
+      <div class="current-player-info">
+        ${renderCurrentPlayerInfo()}
+      </div>
     </div>
   `;
 }

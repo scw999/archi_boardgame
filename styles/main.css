@@ -259,9 +259,10 @@ body {
   grid-area: board;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  /* padding-top 제거 - sticky 헤더 사용 */
+  padding: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 고정 보드 헤더 (스크롤 시 고정) */
@@ -270,13 +271,19 @@ body {
   top: 0;
   z-index: 100;
   background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(15, 23, 42, 0.98) 100%);
-  padding: 0.5rem 1rem;
-  margin: -1.5rem -1.5rem 1rem -1.5rem;
+  padding: 0.6rem 1.5rem;
   border-bottom: 2px solid var(--accent-blue);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+/* 게임 보드 컨텐츠 영역 */
+.game-board-content {
+  padding: 1.5rem;
+  flex: 1;
 }
 
 /* 상단 줄: 라운드 + 현재 페이즈 */
@@ -5859,6 +5866,12 @@ body {
 
 .plot-marker.has-building-img:hover .plot-building-img {
   transform: scale(1.1);
+}
+
+/* 설계/시공 단계 건물 반투명 */
+.building-transparent {
+  opacity: 0.5;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) grayscale(20%);
 }
 
 .plot-building-emoji {
