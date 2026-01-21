@@ -364,16 +364,18 @@ class GameState {
             }
         }
 
-        // 건축가 덱 리필
+        // 건축가 덱 리필 (중복 방지)
         if (this.architectDeck.length < minCards) {
-            const newCards = createArchitectDeck();
+            const existingIds = new Set(this.architectDeck.map(a => a.id));
+            const newCards = createArchitectDeck().filter(a => !existingIds.has(a.id));
             this.architectDeck = [...this.architectDeck, ...newCards].sort(() => Math.random() - 0.5);
             this.addLog('🎨 건축가 카드가 보충되었습니다.');
         }
 
-        // 시공사 덱 리필
+        // 시공사 덱 리필 (중복 방지)
         if (this.constructorDeck.length < minCards) {
-            const newCards = createConstructorDeck();
+            const existingIds = new Set(this.constructorDeck.map(c => c.id));
+            const newCards = createConstructorDeck().filter(c => !existingIds.has(c.id));
             this.constructorDeck = [...this.constructorDeck, ...newCards].sort(() => Math.random() - 0.5);
             this.addLog('🏗️ 시공사 카드가 보충되었습니다.');
         }
