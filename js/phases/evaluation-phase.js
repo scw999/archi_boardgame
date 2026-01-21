@@ -262,9 +262,9 @@ export function completeEvaluation(playerIndex) {
         });
     }
 
-    gameState.addLog(`매각 금액: ${gameState.formatMoney(bd.salePrice)}`);
-    gameState.addLog(`대출 상환: ${gameState.formatMoney(bd.loanRepayment)}`);
-    gameState.addLog(`최종 수익: ${gameState.formatMoney(bd.netProfit)}`);
+    gameState.addLog(`평가 금액: ${gameState.formatMoney(bd.salePrice)}`);
+    gameState.addLog(`대출 잔액: ${gameState.formatMoney(bd.loanRepayment)}`);
+    gameState.addLog(`예상 순이익: ${gameState.formatMoney(bd.netProfit)}`);
 
     // 와일드카드 지급
     const grantedWildcards = grantWildcard(playerIndex, bd.awards);

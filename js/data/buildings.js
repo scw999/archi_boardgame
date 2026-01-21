@@ -1,6 +1,7 @@
 // 건물 유형 데이터
 export const BUILDING_TYPES = {
     HOUSE: '단독주택',
+    COUNTRY_HOUSE: '전원주택',
     COMMERCIAL_HOUSE: '상가주택',
     CAFE: '카페',
     POOL_VILLA: '풀빌라',
@@ -8,7 +9,23 @@ export const BUILDING_TYPES = {
     LARGE_CAFE: '대형카페',
     COMMERCIAL: '상가',
     COMPLEX: '복합몰',
-    PENSION: '펜션'
+    PENSION: '펜션',
+    LARGE_BUILDING: '대형빌딩'
+};
+
+// 건물 이미지 매핑 (아이소메트릭 이미지)
+export const BUILDING_IMAGES = {
+    '단독주택': 'assets/images/building-house.png',
+    '전원주택': 'assets/images/building-country-house.png',
+    '상가주택': 'assets/images/building-commercial-house.png',
+    '카페': 'assets/images/building-cafe.png',
+    '풀빌라': 'assets/images/building-villa.png',
+    '호텔': 'assets/images/building-hotel.png',
+    '대형카페': 'assets/images/building-large-cafe.png',
+    '상가': 'assets/images/building-retail.png',
+    '복합몰': 'assets/images/building-complex.png',
+    '펜션': 'assets/images/building-pension.png',
+    '대형빌딩': 'assets/images/building-large-building.png'
 };
 
 export const buildings = {
@@ -27,6 +44,23 @@ export const buildings = {
             fame: 1.1           // 유명도
         },
         description: '아늑한 단독주택으로 가족의 보금자리'
+    },
+
+    '전원주택': {
+        id: 'country_house',
+        name: '전원주택',
+        emoji: '🏠',
+        area: 70,
+        designFee: 70000000,               // 7000만원
+        constructionCost: 700000000,       // 7억
+        constructionPeriod: 7,
+        valueFactors: {
+            artistry: 1.3,
+            efficiency: 1.3,
+            functionality: 1.6,
+            fame: 1.2
+        },
+        description: '자연과 함께하는 여유로운 전원생활'
     },
 
     '상가주택': {
@@ -163,6 +197,23 @@ export const buildings = {
             fame: 1.4
         },
         description: '자연 속 휴양을 위한 펜션'
+    },
+
+    '대형빌딩': {
+        id: 'large_building',
+        name: '대형빌딩',
+        emoji: '🏙️',
+        area: 300,
+        designFee: 300000000,              // 3억
+        constructionCost: 3000000000,      // 30억
+        constructionPeriod: 30,
+        valueFactors: {
+            artistry: 1.3,
+            efficiency: 1.7,
+            functionality: 1.5,
+            fame: 1.8
+        },
+        description: '도심의 랜드마크 대형 오피스 빌딩'
     }
 };
 

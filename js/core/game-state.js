@@ -748,12 +748,17 @@ class GameState {
 
     // 금액 포맷
     formatMoney(amount) {
-        if (amount >= 100000000) {
-            return `${(amount / 100000000).toFixed(1)}억`;
-        } else if (amount >= 10000) {
-            return `${(amount / 10000).toFixed(0)}만`;
+        // 음수 처리
+        const isNegative = amount < 0;
+        const absAmount = Math.abs(amount);
+        const prefix = isNegative ? '-' : '';
+
+        if (absAmount >= 100000000) {
+            return `${prefix}${(absAmount / 100000000).toFixed(1)}억`;
+        } else if (absAmount >= 10000) {
+            return `${prefix}${(absAmount / 10000).toFixed(0)}만`;
         }
-        return `${amount}원`;
+        return `${prefix}${absAmount}원`;
     }
 
     // 게임 상태 저장

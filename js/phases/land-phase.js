@@ -155,9 +155,12 @@ export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResu
         // 자금 지불
         gameState.payMoney(playerIndex, totalCost);
 
-        // 프로젝트에 토지 정보 저장
+        // 프로젝트에 토지 정보 저장 (고유 인스턴스 ID 부여)
         const project = player.currentProject;
-        project.land = land;
+        project.land = {
+            ...land,
+            instanceId: `${land.id}_${Date.now()}_${playerIndex}`  // 고유 인스턴스 ID
+        };
         project.landPrice = price;
         project.priceType = priceType;
         project.developmentCost = developmentCost;
@@ -196,8 +199,11 @@ function completeLandPurchase(playerIndex, landIndex, priceType, selection) {
     // 자금 지불
     gameState.payMoney(playerIndex, selection.totalCost);
 
-    // 프로젝트에 토지 정보 저장
-    project.land = selection.land;
+    // 프로젝트에 토지 정보 저장 (고유 인스턴스 ID 부여)
+    project.land = {
+        ...selection.land,
+        instanceId: `${selection.land.id}_${Date.now()}_${playerIndex}`
+    };
     project.landPrice = selection.price;
     project.priceType = priceType;
     project.developmentCost = selection.developmentCost;

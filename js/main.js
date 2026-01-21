@@ -4,7 +4,7 @@ import { renderGameBoard, renderGameLog, renderActionArea, showNotification, sho
 import { renderPlayerPanels } from './ui/player-panel.js';
 import { renderCardGrid, highlightCard, renderBuildingSelector } from './ui/card-display.js';
 import { showDiceRoll, showStartingDiceRoll, showLandPurchaseDice, showRiskCardDraw } from './ui/dice-roller.js';
-import { initProjectMap, renderProjectMap, renderCityGrid } from './ui/game-map.js';
+import { initProjectMap, renderProjectMap, renderCityGrid, resetPlotAssignments } from './ui/game-map.js';
 import { selectLand, attemptLandPurchase, attemptLandPurchaseByLand, checkLandPhaseComplete, getLandDisplayInfo, useWildcard as useLandWildcard } from './phases/land-phase.js';
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
@@ -76,6 +76,9 @@ class GameApp {
 
         // 게임 초기화
         gameState.initGame(playerNames, easyStart);
+
+        // 지도 플롯 할당 초기화
+        resetPlotAssignments();
 
         // UI 전환
         document.getElementById('player-setup').classList.add('hidden');
@@ -1127,6 +1130,32 @@ class GameApp {
             return;
         }
 
+        // 자금 부족 확인: 어떤 시공사도 선택할 수 없는 경우 자동 스킵
+        const canAffordAny = availableConstructors.some(c => {
+            const constructorIndex = gameState.availableConstructors.findIndex(gc => gc.id === c.id);
+            const check = canSelectConstructor(gameState.currentPlayerIndex, constructorIndex);
+            return check.success && check.canAfford;
+        });
+
+        if (availableConstructors.length > 0 && !canAffordAny) {
+            // 자금 부족으로 시공 불가 - 다음 라운드까지 휴식
+            gameState.addLog(`${player.name}: 자금 부족으로 시공 포기 (다음 라운드까지 휴식)`);
+            showResultModal('💸 자금 부족', `
+                <div class="insufficient-funds-notice">
+                    <div class="notice-icon">😔</div>
+                    <h3>${player.name}님</h3>
+                    <p>시공에 필요한 자금이 부족합니다.</p>
+                    <p>현재 보유: <strong>${gameState.formatMoney(player.money)}</strong></p>
+                    <p class="notice-detail">다음 라운드까지 휴식합니다.</p>
+                </div>
+            `, () => {
+                // 설계만 완료된 상태로 턴 넘기기 (건물은 없어지지 않음)
+                player.currentProject.constructor = null;
+                this.nextPlayerOrPhase('constructor');
+            });
+            return;
+        }
+
         // 시공 비용 확인해서 부족하면 돈벌기 버튼 표시
         const cheapestConstructor = availableConstructors.length > 0
             ? availableConstructors.reduce((min, c) => {
@@ -1887,17 +1916,17 @@ class GameApp {
 
         <div class="eval-final ${isProfit ? 'profit' : 'loss'}">
           <div class="final-row sale">
-            <span class="label">💵 매각 금액</span>
+            <span class="label">💎 총 평가금액</span>
             <span class="value large">${gameState.formatMoney(bd.salePrice)}</span>
           </div>
           ${bd.loanRepayment > 0 ? `
           <div class="final-row repay">
-            <span class="label">🏦 대출 상환</span>
+            <span class="label">🏦 대출 잔액</span>
             <span class="value">-${gameState.formatMoney(bd.loanRepayment)}</span>
           </div>
           ` : ''}
           <div class="final-row result ${isProfit ? 'profit' : 'loss'}">
-            <span class="label">${isProfit ? '🎉 최종 수익' : '📉 최종 결과'}</span>
+            <span class="label">${isProfit ? '🎉 예상 순이익' : '📉 예상 결과'}</span>
             <span class="value super-large">${gameState.formatMoney(bd.netProfit)}</span>
           </div>
         </div>
@@ -2077,8 +2106,125 @@ class GameApp {
         </div>
       </div>
     `, () => {
-            this.showMainMenu();
+            this.showFinalMapView();
         });
+    }
+
+    // 최종 지도 보기 (게임 종료 후)
+    showFinalMapView() {
+        // 게임 컨테이너 숨기고 최종 지도 뷰 표시
+        const gameContainer = document.getElementById('game-container');
+        const setupContainer = document.getElementById('setup-container');
+
+        if (gameContainer) gameContainer.classList.add('hidden');
+        if (setupContainer) setupContainer.classList.add('hidden');
+
+        // 최종 지도 뷰 생성
+        let finalMapView = document.getElementById('final-map-view');
+        if (!finalMapView) {
+            finalMapView = document.createElement('div');
+            finalMapView.id = 'final-map-view';
+            document.body.appendChild(finalMapView);
+        }
+
+        finalMapView.innerHTML = `
+            <div class="final-map-container">
+                <div class="final-map-header">
+                    <h2>🏙️ 개발 완료 지도</h2>
+                    <p>총 ${gameState.maxRounds}라운드 동안 건설된 모든 건물들</p>
+                </div>
+                <div class="final-map-content">
+                    <div id="final-city-grid"></div>
+                </div>
+                <div class="final-map-footer">
+                    <button id="end-game-btn" class="btn-end-game">🏠 게임 종료</button>
+                </div>
+            </div>
+        `;
+
+        finalMapView.classList.remove('hidden');
+
+        // 지도 렌더링
+        const finalCityGrid = document.getElementById('final-city-grid');
+        if (finalCityGrid) {
+            // renderCityGrid 함수를 재사용하여 지도 렌더링
+            const cityGridSection = document.getElementById('city-grid');
+            if (cityGridSection) {
+                finalCityGrid.innerHTML = cityGridSection.innerHTML;
+            }
+        }
+
+        // 게임 종료 버튼 이벤트
+        const endGameBtn = document.getElementById('end-game-btn');
+        if (endGameBtn) {
+            endGameBtn.addEventListener('click', () => {
+                finalMapView.classList.add('hidden');
+                this.showMainMenu();
+            });
+        }
+
+        // 스타일 추가
+        if (!document.getElementById('final-map-styles')) {
+            const style = document.createElement('style');
+            style.id = 'final-map-styles';
+            style.textContent = `
+                #final-map-view {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: var(--bg-primary);
+                    z-index: 1000;
+                    overflow-y: auto;
+                    padding: 2rem;
+                }
+                .final-map-container {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                }
+                .final-map-header {
+                    text-align: center;
+                    margin-bottom: 2rem;
+                }
+                .final-map-header h2 {
+                    font-size: 2rem;
+                    color: var(--accent-gold);
+                    margin-bottom: 0.5rem;
+                }
+                .final-map-header p {
+                    color: var(--text-secondary);
+                }
+                .final-map-content {
+                    background: var(--bg-secondary);
+                    border-radius: var(--radius-lg);
+                    padding: 1rem;
+                    margin-bottom: 2rem;
+                }
+                .final-map-footer {
+                    text-align: center;
+                }
+                .btn-end-game {
+                    padding: 1rem 3rem;
+                    font-size: 1.2rem;
+                    background: var(--gradient-gold);
+                    color: var(--bg-primary);
+                    border: none;
+                    border-radius: var(--radius-lg);
+                    cursor: pointer;
+                    font-weight: 700;
+                    transition: all 0.3s ease;
+                }
+                .btn-end-game:hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+                }
+                #final-map-view.hidden {
+                    display: none;
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 
     // UI 업데이트
