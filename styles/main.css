@@ -4516,9 +4516,9 @@ body {
 /* ===== 유틸리티 버튼 ===== */
 #game-utility-buttons {
   position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 200;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1001;
   display: flex;
   gap: 0.5rem;
 }
