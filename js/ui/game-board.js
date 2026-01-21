@@ -7,25 +7,39 @@ export function renderGameBoard() {
     if (!board) return;
 
     board.innerHTML = `
-    <div class="board-header">
-      <div class="round-info">
-        <span class="round-label">라운드</span>
+    <div class="board-header-sticky">
+      <div class="current-phase-large">
+        <span class="current-phase-icon">${getPhaseIcon(gameState.phase)}</span>
+        <span class="current-phase-name">${getPhaseDisplayName(gameState.phase)}</span>
+      </div>
+
+      <div class="phase-progress">
+        ${renderPhaseProgress()}
+      </div>
+
+      <div class="round-badge-small">
         <span class="round-number">${gameState.currentRound} / ${gameState.maxRounds}</span>
       </div>
-      <div class="phase-info">
-        <span class="phase-label">현재 단계</span>
-        <span class="phase-name">${getPhaseDisplayName(gameState.phase)}</span>
-      </div>
     </div>
-    
-    <div class="phase-progress">
-      ${renderPhaseProgress()}
-    </div>
-    
+
     <div class="current-player-info">
       ${renderCurrentPlayerInfo()}
     </div>
   `;
+}
+
+// 페이즈 아이콘 반환
+function getPhaseIcon(phase) {
+    const icons = {
+        [GAME_PHASES.SETUP]: '🎮',
+        [GAME_PHASES.LAND_PURCHASE]: '🗺️',
+        [GAME_PHASES.DESIGN]: '📏',
+        [GAME_PHASES.CONSTRUCTION]: '🏗️',
+        [GAME_PHASES.EVALUATION]: '☑️',
+        [GAME_PHASES.ROUND_END]: '📊',
+        [GAME_PHASES.GAME_END]: '🏆'
+    };
+    return icons[phase] || '🎮';
 }
 
 // 페이즈 이름 반환

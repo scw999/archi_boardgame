@@ -147,6 +147,26 @@ export function processRisks(playerIndex) {
     let remainingBlocks = constructor.riskBlocks;
 
     project.risks.forEach((risk, index) => {
+        // 이미 UI에서 방어된 리스크는 효과 적용 안함
+        if (risk.isBlocked) {
+            blockedCount++;
+            const effect = {
+                costIncrease: 0,
+                delayMonths: 0,
+                interestMultiplier: 1,
+                isTotalLoss: false,
+                isBlocked: true,
+                message: `🛡️ "${risk.name}" 방어 완료!`
+            };
+            results.push({
+                risk,
+                effect,
+                month: index + 1
+            });
+            gameState.addLog(`[${index + 1}개월] ${effect.message}`);
+            return;
+        }
+
         const effect = applyRiskEffect(risk, gameState, {
             ...constructor,
             riskBlocks: remainingBlocks

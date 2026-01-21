@@ -1851,16 +1851,18 @@ class GameApp {
             return;
         }
 
-        const result = calculateSalePrice(gameState.currentPlayerIndex);
+        // 먼저 평가 완료 처리 (와일드카드 지급 포함)
+        const evalResult = completeEvaluation(gameState.currentPlayerIndex);
 
-        if (!result.success) {
-            showNotification(result.message, 'error');
+        if (!evalResult.success) {
+            showNotification(evalResult.message, 'error');
             return;
         }
 
-        const bd = result.breakdown;
+        const bd = evalResult.breakdown;
         const hasAwards = bd.awards.length > 0;
         const isProfit = bd.netProfit > bd.totalInvestment;
+        const grantedWildcards = evalResult.grantedWildcards || [];
 
         showResultModal(`🏆 ${player.name}의 건물 평가`, `
       <div class="evaluation-result fancy">
@@ -1879,6 +1881,23 @@ class GameApp {
                 <span class="award-emoji">${a.emoji}</span>
                 <span class="award-name">${a.name}</span>
                 <span class="award-bonus">+${Math.round((a.bonus - 1) * 100)}%</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${grantedWildcards.length > 0 ? `
+        <div class="wildcard-grant-section">
+          <h3>🎁 와일드카드 획득!</h3>
+          <div class="wildcard-grant-list">
+            ${grantedWildcards.map((card, i) => `
+              <div class="wildcard-grant-item animate-wildcard" style="animation-delay: ${i * 0.3}s">
+                <div class="wildcard-grant-icon">${card.name.split(' ')[0]}</div>
+                <div class="wildcard-grant-info">
+                  <div class="wildcard-grant-name">${card.name}</div>
+                  <div class="wildcard-grant-desc">${card.description}</div>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -1937,7 +1956,7 @@ class GameApp {
             }
       </div>
     `, () => {
-            completeEvaluation(gameState.currentPlayerIndex);
+            // completeEvaluation은 이미 위에서 호출됨
             this.nextPlayerOrPhase('salePrice');
         });
     }
