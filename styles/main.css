@@ -260,23 +260,22 @@ body {
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  padding-top: 95px; /* 고정 헤더 공간 확보 */
+  /* padding-top 제거 - sticky 헤더 사용 */
   overflow-y: auto;
 }
 
 /* 고정 보드 헤더 (스크롤 시 고정) */
 .board-header-sticky {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 250px; /* 플레이어 패널 너비 */
-  right: 280px; /* 게임 로그 너비 */
-  z-index: 1000;
+  z-index: 100;
   background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(15, 23, 42, 0.98) 100%);
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1rem;
+  margin: -1.5rem -1.5rem 1rem -1.5rem;
   border-bottom: 2px solid var(--accent-blue);
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -285,7 +284,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 /* 라운드 배지 */
@@ -381,19 +380,20 @@ body {
 /* 고정 헤더 내 페이즈 진행 표시 */
 .board-header-sticky .phase-progress {
   margin-bottom: 0;
-  gap: 0.3rem;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
 .board-header-sticky .phase-step {
-  padding: 0.4rem 0.8rem;
+  padding: 0.6rem 1.2rem;
 }
 
 .board-header-sticky .phase-step .phase-icon {
-  font-size: 1.3rem;
+  font-size: 1.8rem;
 }
 
 .board-header-sticky .phase-step .phase-name {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 

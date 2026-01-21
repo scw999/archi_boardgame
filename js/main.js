@@ -9,8 +9,19 @@ import { selectLand, attemptLandPurchase, attemptLandPurchaseByLand, checkLandPh
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
 import { calculateSalePrice, completeEvaluation, checkEvaluationPhaseComplete, getRoundSummary, getFinalResults } from './phases/evaluation-phase.js';
-import { buildings } from './data/buildings.js';
+import { buildings, BUILDING_IMAGES } from './data/buildings.js';
 import { constructors } from './data/constructors.js';
+
+// 건물 이미지 HTML 생성 헬퍼 함수
+function getBuildingImage(buildingName, size = '48px') {
+    const imagePath = BUILDING_IMAGES[buildingName];
+    if (imagePath) {
+        return `<img src="${imagePath}" alt="${buildingName}" class="building-img" style="width: ${size}; height: ${size}; object-fit: contain;">`;
+    }
+    // 이미지가 없으면 기본 이모지 반환
+    const building = buildings[buildingName];
+    return building ? building.emoji : '🏢';
+}
 
 // 게임 앱 클래스
 class GameApp {
@@ -364,7 +375,7 @@ class GameApp {
 
         const buildingList = player.buildings.map((b, idx) => `
             <div class="sell-building-item" data-index="${idx}">
-                <span class="building-info">${b.building.emoji} ${b.building.name} @ ${b.land.name}</span>
+                <span class="building-info">${getBuildingImage(b.building.name, '32px')} ${b.building.name} @ ${b.land.name}</span>
                 <span class="sell-price">매각가: ${gameState.formatMoney(Math.floor(b.salePrice * 0.9))}</span>
                 <button class="btn-sell-item" data-index="${idx}">매각</button>
             </div>
@@ -652,7 +663,7 @@ class GameApp {
                             <div class="building-option"
                                  data-index="${index}"
                                  data-building="${building.name}">
-                                <div class="building-emoji">${building.emoji}</div>
+                                <div class="building-emoji">${getBuildingImage(building.name, '56px')}</div>
                                 <div class="building-name">${building.name}</div>
                                 ${isMasterpiece ? '<div class="masterpiece-badge">✨ 대표작</div>' : ''}
                                 <div class="building-costs">
@@ -778,7 +789,7 @@ class GameApp {
             <div class="summary-grid">
                 <div class="summary-item">
                     <span class="label">건물</span>
-                    <span class="value">${building.emoji} ${building.name}</span>
+                    <span class="value">${getBuildingImage(building.name, '24px')} ${building.name}</span>
                 </div>
                 <div class="summary-item">
                     <span class="label">건축가</span>
@@ -842,7 +853,7 @@ class GameApp {
 
                 <div class="blueprint-modal">
                     <div class="blueprint-header">
-                        <div class="building-icon">${building.emoji}</div>
+                        <div class="building-icon">${getBuildingImage(building.name, '64px')}</div>
                         <h2>${building.name}</h2>
                         ${isMasterpiece ? '<span class="masterpiece-badge">✨ 대표작</span>' : ''}
                     </div>
@@ -851,7 +862,7 @@ class GameApp {
                         <div class="blueprint-image">
                             <div class="blueprint-frame">
                                 <div class="blueprint-grid">
-                                    ${building.emoji}
+                                    ${getBuildingImage(building.name, '120px')}
                                 </div>
                                 <div class="blueprint-label">설계도 미리보기</div>
                             </div>
@@ -956,15 +967,15 @@ class GameApp {
         showResultModal(`📐 설계 완료!`, `
             <div class="blueprint-modal">
                 <div class="blueprint-header">
-                    <div class="building-icon">${building.emoji}</div>
+                    <div class="building-icon">${getBuildingImage(building.name, '64px')}</div>
                     <h2>${building.name}</h2>
                 </div>
-                
+
                 <div class="blueprint-content">
                     <div class="blueprint-image">
                         <div class="blueprint-frame">
                             <div class="blueprint-grid">
-                                ${building.emoji}
+                                ${getBuildingImage(building.name, '120px')}
                             </div>
                             <div class="blueprint-label">설계도</div>
                         </div>
@@ -1257,7 +1268,7 @@ class GameApp {
                     <div class="detail-grid">
                         <div class="detail-item">
                             <span class="label">건물</span>
-                            <span class="value">${building.emoji} ${building.name}</span>
+                            <span class="value">${getBuildingImage(building.name, '24px')} ${building.name}</span>
                         </div>
                         <div class="detail-item highlight">
                             <span class="label">시공비</span>
@@ -1594,7 +1605,7 @@ class GameApp {
                             <div class="risk-emoji">${risk.emoji}</div>
                             <div class="risk-name">${risk.name}</div>
                             <div class="risk-effect">${risk.description || ''}</div>
-                            <div class="risk-blocked">🛡️ 방어!<br><small>${blockSource}</small></div>
+                            <div class="risk-blocked">🛡️ 방어!</div>
                         `;
 
                         // 리스크 카드에 방어 표시
@@ -1738,7 +1749,7 @@ class GameApp {
         showResultModal('🏗️ 시공 완료!', `
             <div class="construction-result">
                 <div class="result-header">
-                    <span class="building-emoji">${project.building.emoji}</span>
+                    <span class="building-emoji">${getBuildingImage(project.building.name, '64px')}</span>
                     <h2>${project.building.name}</h2>
                 </div>
                 
@@ -1829,7 +1840,7 @@ class GameApp {
         showResultModal(`🏆 ${player.name}의 건물 평가`, `
       <div class="evaluation-result fancy">
         <div class="eval-building-showcase">
-          <div class="building-icon-large">${player.currentProject.building.emoji}</div>
+          <div class="building-icon-large">${getBuildingImage(player.currentProject.building.name, '100px')}</div>
           <h2>${player.currentProject.building.name}</h2>
           <p class="location">📍 ${player.currentProject.land.name}</p>
         </div>
@@ -2046,7 +2057,7 @@ class GameApp {
                 <div class="rank-info">
                   <div class="rank-name">${r.name}</div>
                   <div class="rank-buildings">
-                    ${r.buildings.map(b => `<span class="building-emoji">${b.emoji}</span>`).join('')}
+                    ${r.buildings.map(b => `<span class="building-emoji">${getBuildingImage(b.name, '32px')}</span>`).join('')}
                     ${r.buildingsCount === 0 ? '<span class="no-buildings">건물 없음</span>' : ''}
                   </div>
                 </div>
@@ -2380,7 +2391,7 @@ class GameApp {
         showResultModal(`📊 ${building.name} 상세 정보`, `
             <div class="property-detail">
                 <div class="property-header">
-                    <span class="property-emoji">${building.emoji}</span>
+                    <span class="property-emoji">${getBuildingImage(building.name, '64px')}</span>
                     <div class="property-title">
                         <h2>${building.name}</h2>
                         <span class="property-location">📍 ${landName}</span>
@@ -2581,7 +2592,7 @@ class GameApp {
                         ${project.building ? `
                         <div class="info-row">
                             <span class="label">설계 건물</span>
-                            <span class="value">${project.building.emoji} ${project.building.name}</span>
+                            <span class="value">${getBuildingImage(project.building.name, '24px')} ${project.building.name}</span>
                         </div>
                         ` : ''}
                     </div>
@@ -2669,7 +2680,7 @@ class GameApp {
         showResultModal(`💰 ${sold.building.name} 매각 이력`, `
             <div class="sold-detail">
                 <div class="sold-header">
-                    <span class="sold-emoji">${sold.building.emoji}</span>
+                    <span class="sold-emoji">${getBuildingImage(sold.building.name, '64px')}</span>
                     <div class="sold-title">
                         <h2>${sold.building.name}</h2>
                         <span class="sold-location">📍 ${sold.land.name}</span>
