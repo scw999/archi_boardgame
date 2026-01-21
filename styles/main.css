@@ -250,7 +250,7 @@ body {
   gap: 1rem;
   min-height: 100vh;
   padding: 1rem;
-  padding-top: 110px; /* 고정 헤더 공간 확보 */
+  padding-top: 160px; /* 고정 헤더 공간 확보 (헤더 높이 + 여유) */
   padding-bottom: 140px; /* 하단 고정 로그 공간 확보 */
   position: relative;
 }
@@ -1016,7 +1016,7 @@ body {
 @media (max-width: 1024px) {
   #game-container {
     grid-template-columns: 1fr;
-    padding-top: 130px; /* 모바일에서 고정 헤더 공간 */
+    padding-top: 180px; /* 모바일에서 고정 헤더 공간 */
   }
 
   #player-panels,
