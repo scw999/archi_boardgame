@@ -633,6 +633,7 @@ class GameApp {
 
         modalOverlay.innerHTML = `
             <div class="design-modal-content">
+                <button class="modal-close-btn" id="design-close-btn">&times;</button>
                 <h3>📐 설계 진행</h3>
                 <div class="architect-info">
                     <span class="portrait">${architect.portrait}</span>
@@ -648,7 +649,7 @@ class GameApp {
             const isMasterpiece = architect.masterpieces.includes(building.name);
 
             return `
-                            <div class="building-option ${building.isSuitable ? 'suitable' : ''}"
+                            <div class="building-option ${building.isSuitable ? 'suitable' : 'not-suitable'}"
                                  data-index="${index}"
                                  data-building="${building.name}">
                                 <div class="building-emoji">${building.emoji}</div>
@@ -687,6 +688,11 @@ class GameApp {
 
         // 모달을 body에 추가
         document.body.appendChild(modalOverlay);
+
+        // 닫기 버튼 이벤트
+        document.getElementById('design-close-btn')?.addEventListener('click', () => {
+            this.hideDesignPanel();
+        });
 
         // 기존 공통 액션 패널 제거 (중복 방지)
         document.getElementById('common-action-panel')?.remove();
@@ -730,7 +736,7 @@ class GameApp {
         });
 
         // 건물 선택 이벤트
-        designPanel.querySelectorAll('.building-option').forEach(option => {
+        modalOverlay.querySelectorAll('.building-option').forEach(option => {
             option.addEventListener('click', () => {
                 // 이전 선택 해제
                 designPanel.querySelectorAll('.building-option').forEach(o => o.classList.remove('selected'));
@@ -1235,8 +1241,9 @@ class GameApp {
 
         modalOverlay.innerHTML = `
             <div class="construction-modal-content">
+                <button class="modal-close-btn" id="construction-close-btn">&times;</button>
                 <h3>🏗️ 시공 계약</h3>
-                
+
                 <div class="constructor-info">
                     <div class="constructor-header">
                         <span class="emoji">${constructor.emoji}</span>
@@ -1310,6 +1317,12 @@ class GameApp {
 
         // 모달을 body에 추가
         document.body.appendChild(modalOverlay);
+
+        // 닫기 버튼 이벤트
+        document.getElementById('construction-close-btn')?.addEventListener('click', () => {
+            this.hideConstructionPanel();
+            this.runConstructionPhase();
+        });
 
         // 시공 계약 버튼 이벤트
         const confirmBtn = document.getElementById('btn-confirm-construction');

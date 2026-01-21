@@ -60,16 +60,16 @@ function getPhaseDisplayName(phase) {
     return names[phase] || phase;
 }
 
-// 페이즈 이름만 반환 (아이콘 없이)
+// 페이즈 이름만 반환 (이모지 포함)
 function getPhaseDisplayNameOnly(phase) {
     const names = {
-        [GAME_PHASES.SETUP]: '게임 설정',
-        [GAME_PHASES.LAND_PURCHASE]: '대지 구매',
-        [GAME_PHASES.DESIGN]: '설계',
-        [GAME_PHASES.CONSTRUCTION]: '시공',
-        [GAME_PHASES.EVALUATION]: '평가',
-        [GAME_PHASES.ROUND_END]: '라운드 종료',
-        [GAME_PHASES.GAME_END]: '게임 종료'
+        [GAME_PHASES.SETUP]: '🎮 게임 설정',
+        [GAME_PHASES.LAND_PURCHASE]: '🗺️ 대지 구매',
+        [GAME_PHASES.DESIGN]: '📏 설계',
+        [GAME_PHASES.CONSTRUCTION]: '🏗️ 시공',
+        [GAME_PHASES.EVALUATION]: '☑️ 평가',
+        [GAME_PHASES.ROUND_END]: '📊 라운드 종료',
+        [GAME_PHASES.GAME_END]: '🏆 게임 종료'
     };
     return names[phase] || phase;
 }
