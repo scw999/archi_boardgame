@@ -1370,6 +1370,29 @@ body {
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: modalSlideUp 0.3s ease;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-orange) transparent;
+}
+
+.design-modal-content::-webkit-scrollbar,
+.construction-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.design-modal-content::-webkit-scrollbar-track,
+.construction-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.design-modal-content::-webkit-scrollbar-thumb,
+.construction-modal-content::-webkit-scrollbar-thumb {
+  background: var(--accent-orange);
+  border-radius: 4px;
+}
+
+.design-modal-content::-webkit-scrollbar-thumb:hover,
+.construction-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
 }
 
 .design-modal-content h3,
