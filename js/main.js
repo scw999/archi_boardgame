@@ -37,18 +37,64 @@ class GameApp {
     init() {
         this.bindEvents();
         initProjectMap();
-        this.preloadImages(); // 이미지 프리로드
-        this.showMainMenu();
+        this.preloadAllAssets(); // 이미지 및 에셋 프리로드
     }
 
-    // 이미지 프리로드 (로딩 속도 개선)
-    preloadImages() {
-        const imageUrls = Object.values(BUILDING_IMAGES);
-        imageUrls.forEach(url => {
-            const img = new Image();
-            img.src = url;
-        });
-        console.log(`🖼️ ${imageUrls.length}개 건물 이미지 프리로드 시작`);
+    // 모든 에셋 프리로드 (이미지, 지도 등)
+    async preloadAllAssets() {
+        const preloader = document.getElementById('preloader');
+        const progressBar = document.getElementById('preloader-progress-bar');
+        const preloaderText = document.querySelector('.preloader-text');
+
+        // 프리로드할 이미지 목록
+        const buildingImages = Object.values(BUILDING_IMAGES);
+        const mapImages = ['assets/images/city-map.png'];
+        const allImages = [...buildingImages, ...mapImages];
+
+        let loadedCount = 0;
+        const totalCount = allImages.length;
+
+        const updateProgress = () => {
+            loadedCount++;
+            const percent = Math.round((loadedCount / totalCount) * 100);
+            if (progressBar) {
+                progressBar.style.width = `${percent}%`;
+            }
+            if (preloaderText) {
+                preloaderText.textContent = `로딩 중... ${percent}%`;
+            }
+        };
+
+        // 이미지 로드 프로미스 생성
+        const loadImage = (url) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    updateProgress();
+                    resolve(true);
+                };
+                img.onerror = () => {
+                    updateProgress();
+                    resolve(false); // 에러가 나도 진행
+                };
+                img.src = url;
+            });
+        };
+
+        console.log(`🖼️ ${totalCount}개 에셋 프리로드 시작...`);
+
+        // 모든 이미지 로드 대기
+        await Promise.all(allImages.map(url => loadImage(url)));
+
+        console.log('✅ 모든 에셋 로드 완료!');
+
+        // 프리로더 숨기기 (약간의 딜레이 후)
+        setTimeout(() => {
+            if (preloader) {
+                preloader.classList.add('hidden');
+            }
+            this.showMainMenu();
+        }, 500);
     }
 
     // 이벤트 바인딩
