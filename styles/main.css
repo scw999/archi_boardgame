@@ -1201,23 +1201,14 @@ body {
   border-radius: 3px;
 }
 
-/* 결과 모달 스크롤바 */
+/* 결과 모달 스크롤바 (숨김 처리) */
 .result-modal {
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-gold) transparent;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 .result-modal::-webkit-scrollbar {
-  width: 6px;
-}
-
-.result-modal::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.result-modal::-webkit-scrollbar-thumb {
-  background: var(--accent-gold);
-  border-radius: 3px;
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .manual-section {

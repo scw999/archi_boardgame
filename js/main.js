@@ -3165,6 +3165,23 @@ class GameApp {
         if (confirm(`정말로 ${project.building.name}을(를) ${gameState.formatMoney(estimatedValue)}에 매각하시겠습니까?`)) {
             const player = gameState.getCurrentPlayer();
 
+            // 손익 계산
+            const originalSalePrice = project.salePrice || estimatedValue;
+            const profitLoss = estimatedValue - originalSalePrice;
+
+            // 매각 이력에 추가 (지도에 흔적을 남김)
+            player.soldHistory.push({
+                type: 'building',
+                building: project.building,
+                land: project.land,
+                architect: project.architect,
+                sellPrice: estimatedValue,
+                profitLoss,
+                marketFactor: 1.0,
+                soldAt: gameState.currentRound,
+                originalProject: { ...project }
+            });
+
             // 매각 처리
             player.money += estimatedValue;
 
@@ -3186,7 +3203,7 @@ class GameApp {
                 player.currentProject = null;
             }
 
-            // 지도에서 제거
+            // 지도에서 제거 (cityMap에서만 제거, 아이소메트릭 맵에서는 soldHistory로 표시)
             for (let y = 0; y < 5; y++) {
                 for (let x = 0; x < 5; x++) {
                     if (gameState.cityMap[y][x].project === project) {
@@ -3330,9 +3347,19 @@ class GameApp {
     confirmLandSale(project) {
         const totalInvestment = (project.landPrice || 0) + (project.developmentCost || 0) + (project.designFee || 0);
         const salePrice = Math.floor(totalInvestment * 0.8);
+        const profit = salePrice - totalInvestment;
 
         if (confirm(`정말로 ${project.land.name}을(를) ${gameState.formatMoney(salePrice)}에 매각하시겠습니까?\n(투자 대비 20% 손실)`)) {
             const player = gameState.getCurrentPlayer();
+
+            // 매각 이력에 추가 (지도에 흔적을 남김)
+            player.soldHistory.push({
+                type: 'land',
+                land: project.land,
+                sellPrice: salePrice,
+                profit,
+                soldAt: gameState.currentRound
+            });
 
             // 매각 처리
             player.money += salePrice;
