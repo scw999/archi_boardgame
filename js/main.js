@@ -112,6 +112,7 @@ class GameApp {
         document.getElementById('btn-budget-table')?.addEventListener('click', () => this.showBudgetTable());
         document.getElementById('btn-game-manual')?.addEventListener('click', () => this.showGameManual());
         document.getElementById('btn-save-game')?.addEventListener('click', () => this.saveGame());
+        document.getElementById('btn-load-game-utility')?.addEventListener('click', () => this.loadGame());
     }
 
     // 게임 저장
@@ -235,12 +236,6 @@ class GameApp {
             overlay.style.background = 'rgba(0, 0, 0, 0.95)';
             modal.style.maxWidth = '700px';
             modal.style.width = '95%';
-
-            // 닫기 버튼 텍스트를 "이어하기"로 변경
-            const closeBtn = modal.querySelector('.btn-close');
-            if (closeBtn) {
-                closeBtn.textContent = '게임 이어하기';
-            }
         }
     }
 
