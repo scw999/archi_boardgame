@@ -147,6 +147,26 @@ export function processRisks(playerIndex) {
     let remainingBlocks = constructor.riskBlocks;
 
     project.risks.forEach((risk, index) => {
+        // 이미 UI에서 방어된 리스크는 효과 적용 안함
+        if (risk.isBlocked) {
+            blockedCount++;
+            const effect = {
+                costIncrease: 0,
+                delayMonths: 0,
+                interestMultiplier: 1,
+                isTotalLoss: false,
+                isBlocked: true,
+                message: `🛡️ "${risk.name}" 방어 완료!`
+            };
+            results.push({
+                risk,
+                effect,
+                month: index + 1
+            });
+            gameState.addLog(`[${index + 1}개월] ${effect.message}`);
+            return;
+        }
+
         const effect = applyRiskEffect(risk, gameState, {
             ...constructor,
             riskBlocks: remainingBlocks
@@ -289,12 +309,20 @@ export function processRisks(playerIndex) {
 // 페이즈 완료 체크
 export function checkConstructionPhaseComplete() {
     return gameState.players.every(player => {
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 완료로 처리
+        if (player.pmSkippedRound === gameState.currentRound) {
+            return true;
+        }
         // 토지가 없는 플레이어는 시공 완료로 처리 (스킵)
         if (!player.currentProject || !player.currentProject.land) {
             return true;
         }
         // 설계가 완료되지 않은 플레이어도 시공 완료로 처리 (스킵)
         if (!player.currentProject.building) {
+            return true;
+        }
+        // 자금 부족으로 이번 라운드 시공 스킵한 플레이어도 완료로 처리
+        if (player.currentProject.constructionSkippedRound === gameState.currentRound) {
             return true;
         }
         // 토지와 설계가 있으면 시공사가 선택되어야 함
