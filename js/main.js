@@ -313,6 +313,9 @@ class GameApp {
         // 공통 액션 패널 제거 (하단 액션 영역에 통합)
         document.getElementById('common-action-panel')?.remove();
 
+        // 단계 시작 시 지도 먼저 보여주기
+        this.scrollToMapThenCards();
+
         switch (gameState.phase) {
             case GAME_PHASES.LAND_PURCHASE:
                 this.runLandPhase();
@@ -332,6 +335,24 @@ class GameApp {
             case GAME_PHASES.GAME_END:
                 this.showFinalResults();
                 break;
+        }
+    }
+
+    // 단계 시작 시 지도를 먼저 보여주고 카드로 스크롤
+    scrollToMapThenCards() {
+        const cityGrid = document.getElementById('city-grid');
+        const cardGrid = document.getElementById('card-grid');
+
+        if (cityGrid) {
+            // 먼저 지도로 스크롤
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 1.5초 후 카드 영역으로 스크롤
+            setTimeout(() => {
+                if (cardGrid) {
+                    window.scrollTo({ top: cardGrid.offsetTop - 120, behavior: 'smooth' });
+                }
+            }, 1500);
         }
     }
 
