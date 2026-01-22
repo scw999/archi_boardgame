@@ -226,44 +226,15 @@ class GameApp {
                     </ul>
                 </div>
             </div>
-        `, () => {}, 'manual-modal');
+        `, () => {});
 
-        // 메뉴얼 스타일 추가
-        if (!document.getElementById('manual-styles')) {
-            const style = document.createElement('style');
-            style.id = 'manual-styles';
-            style.textContent = `
-                .game-manual {
-                    max-height: 70vh;
-                    overflow-y: auto;
-                    padding-right: 1rem;
-                }
-                .manual-section {
-                    margin-bottom: 1rem;
-                }
-                .manual-section h3 {
-                    color: var(--accent-gold);
-                    margin-bottom: 0.5rem;
-                    font-size: 1.1rem;
-                }
-                .manual-section p {
-                    margin-bottom: 0.4rem;
-                    line-height: 1.5;
-                }
-                .manual-section ul, .manual-section ol {
-                    margin-left: 1.5rem;
-                    margin-bottom: 0.4rem;
-                }
-                .manual-section li {
-                    margin-bottom: 0.3rem;
-                    line-height: 1.4;
-                }
-                .manual-section ul ul {
-                    margin-top: 0.2rem;
-                    margin-bottom: 0.2rem;
-                }
-            `;
-            document.head.appendChild(style);
+        // 메뉴얼 모달 너비 조정 및 오버레이 강화
+        const overlay = document.querySelector('.modal-overlay:last-child');
+        const modal = overlay?.querySelector('.result-modal');
+        if (overlay && modal) {
+            overlay.style.background = 'rgba(0, 0, 0, 0.95)';
+            modal.style.maxWidth = '700px';
+            modal.style.width = '95%';
         }
     }
 
