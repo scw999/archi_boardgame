@@ -385,17 +385,27 @@ class GameApp {
             return;
         }
 
-        const buildingList = player.buildings.map((b, idx) => `
+        const buildingList = player.buildings.map((b, idx) => {
+            // 실제 매각 계산식과 동일하게 예상 가격 계산
+            const totalInvestment = b.landPrice + b.designFee + b.constructionCost;
+            const evalFactor = b.evaluationFactor || 1.0;
+            const architectBonus = b.architect ? (b.architect.fame || 0) * 0.02 : 0;
+            // 시장 변동 범위 (85% ~ 115%)
+            const minPrice = Math.floor(totalInvestment * evalFactor * 0.85 * (1 + architectBonus));
+            const maxPrice = Math.floor(totalInvestment * evalFactor * 1.15 * (1 + architectBonus));
+
+            return `
             <div class="sell-building-item" data-index="${idx}">
                 <span class="building-info">${getBuildingImage(b.building.name, '32px')} ${b.building.name} @ ${b.land.name}</span>
-                <span class="sell-price">매각가: ${gameState.formatMoney(Math.floor(b.salePrice * 0.9))}</span>
+                <span class="sell-price">예상가: ${gameState.formatMoney(minPrice)} ~ ${gameState.formatMoney(maxPrice)}</span>
                 <button class="btn-sell-item" data-index="${idx}">매각</button>
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         showResultModal('건물 매각', `
             <div class="sell-modal">
-                <p>매각할 건물을 선택하세요. (원가의 90%)</p>
+                <p>매각할 건물을 선택하세요. (시장 상황에 따라 85%~115% 변동)</p>
                 <div class="sell-list">${buildingList}</div>
             </div>
         `, () => { });
