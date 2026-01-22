@@ -239,33 +239,28 @@ class GameApp {
                     padding-right: 1rem;
                 }
                 .manual-section {
-                    margin-bottom: 1.5rem;
-                    padding-bottom: 1rem;
-                    border-bottom: 1px solid rgba(255,255,255,0.1);
-                }
-                .manual-section:last-child {
-                    border-bottom: none;
+                    margin-bottom: 1rem;
                 }
                 .manual-section h3 {
                     color: var(--accent-gold);
-                    margin-bottom: 0.75rem;
+                    margin-bottom: 0.5rem;
                     font-size: 1.1rem;
                 }
                 .manual-section p {
-                    margin-bottom: 0.5rem;
-                    line-height: 1.6;
-                }
-                .manual-section ul, .manual-section ol {
-                    margin-left: 1.5rem;
-                    margin-bottom: 0.5rem;
-                }
-                .manual-section li {
                     margin-bottom: 0.4rem;
                     line-height: 1.5;
                 }
-                .manual-section ul ul {
-                    margin-top: 0.3rem;
+                .manual-section ul, .manual-section ol {
+                    margin-left: 1.5rem;
+                    margin-bottom: 0.4rem;
+                }
+                .manual-section li {
                     margin-bottom: 0.3rem;
+                    line-height: 1.4;
+                }
+                .manual-section ul ul {
+                    margin-top: 0.2rem;
+                    margin-bottom: 0.2rem;
                 }
             `;
             document.head.appendChild(style);
@@ -868,12 +863,9 @@ class GameApp {
             this.showDesignPanel(architect);
         });
 
-        // 카드 렌더링 후 첫 번째 카드가 상단에 오도록 스크롤
+        // 페이즈 시작 시 개발 지도가 보이도록 맨 위로 스크롤
         setTimeout(() => {
-            const cardGrid = document.getElementById('card-grid');
-            if (cardGrid) {
-                window.scrollTo({ top: cardGrid.offsetTop - 120, behavior: 'smooth' });
-            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
     }
 
@@ -1422,12 +1414,9 @@ class GameApp {
             this.showConstructionPanel(constructor, originalIndex, building, architect);
         });
 
-        // 카드 렌더링 후 첫 번째 카드가 상단에 오도록 스크롤
+        // 페이즈 시작 시 개발 지도가 보이도록 맨 위로 스크롤
         setTimeout(() => {
-            const cardGrid = document.getElementById('card-grid');
-            if (cardGrid) {
-                window.scrollTo({ top: cardGrid.offsetTop - 120, behavior: 'smooth' });
-            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
     }
 

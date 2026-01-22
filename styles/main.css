@@ -5918,12 +5918,12 @@ body {
 .iso-city-container {
   display: grid;
   grid-template-columns: 1fr 280px;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(500px, auto);
   grid-template-areas:
     "header header"
     "map sidebar";
   gap: 1rem;
-  min-height: 500px;
+  min-height: auto;
   background: linear-gradient(135deg, #1a1a2e, #16213e);
   border-radius: var(--radius-lg);
   padding: 1rem;
@@ -6019,7 +6019,7 @@ body {
 .iso-city-map {
   position: relative;
   width: 100%;
-  min-height: 500px;
+  min-height: auto;
   aspect-ratio: 16 / 9;
   overflow: visible;
 }
@@ -6506,7 +6506,11 @@ body {
 @media (max-width: 900px) {
   .iso-city-container {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "header"
+      "map"
+      "sidebar";
   }
 
   .iso-city-sidebar {
@@ -6514,14 +6518,14 @@ body {
   }
 
   .iso-city-map {
-    min-height: 350px;
+    min-height: auto;
   }
 }
 
 /* city-grid 섹션 표시 */
 #city-grid {
   display: block;
-  min-height: 600px;
+  min-height: auto;
   overflow: visible;
   position: relative;
   z-index: 1;
