@@ -778,11 +778,24 @@ class GameState {
             settings: this.settings,
             usedArchitects: this.usedArchitects,
             usedConstructors: this.usedConstructors,
+            // 덱 상태
             landDeck: this.landDeck,
             architectDeck: this.architectDeck,
             constructorDeck: this.constructorDeck,
             riskDeck: this.riskDeck,
-            log: this.log.slice(-50), // 최근 50개 로그만
+            // 현재 공개된 카드들
+            availableLands: this.availableLands,
+            availableArchitects: this.availableArchitects,
+            availableConstructors: this.availableConstructors,
+            // 선점 상태 (Set을 배열로 변환)
+            selectedArchitects: Array.from(this.selectedArchitects || []),
+            selectedConstructors: Array.from(this.selectedConstructors || []),
+            // 라운드 관련
+            startingPlayerIndex: this.startingPlayerIndex,
+            roundStartingPlayer: this.roundStartingPlayer,
+            premiumLandsAdded: this.premiumLandsAdded,
+            // 로그
+            log: this.log.slice(-50),
             savedAt: new Date().toISOString()
         };
         localStorage.setItem('godmulju_save', JSON.stringify(saveData));
@@ -805,11 +818,25 @@ class GameState {
             this.usedConstructors = data.usedConstructors || [];
             this.log = data.log || [];
 
-            // 덱 복원 (저장된 덱이 있으면 사용, 없으면 새로 생성)
+            // 덱 복원
             this.landDeck = data.landDeck || createLandDeck();
             this.architectDeck = data.architectDeck || createArchitectDeck();
             this.constructorDeck = data.constructorDeck || createConstructorDeck();
             this.riskDeck = data.riskDeck || createRiskDeck();
+
+            // 현재 공개된 카드들 복원
+            this.availableLands = data.availableLands || [];
+            this.availableArchitects = data.availableArchitects || [];
+            this.availableConstructors = data.availableConstructors || [];
+
+            // 선점 상태 복원 (배열을 Set으로 변환)
+            this.selectedArchitects = new Set(data.selectedArchitects || []);
+            this.selectedConstructors = new Set(data.selectedConstructors || []);
+
+            // 라운드 관련 복원
+            this.startingPlayerIndex = data.startingPlayerIndex || 0;
+            this.roundStartingPlayer = data.roundStartingPlayer || 0;
+            this.premiumLandsAdded = data.premiumLandsAdded || false;
 
             return true;
         }

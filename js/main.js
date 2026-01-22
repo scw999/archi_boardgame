@@ -64,6 +64,7 @@ class GameApp {
 
         // 유틸리티 버튼
         document.getElementById('btn-budget-table')?.addEventListener('click', () => this.showBudgetTable());
+        document.getElementById('btn-game-manual')?.addEventListener('click', () => this.showGameManual());
         document.getElementById('btn-save-game')?.addEventListener('click', () => this.saveGame());
     }
 
@@ -71,6 +72,158 @@ class GameApp {
     saveGame() {
         gameState.save();
         showNotification('게임이 저장되었습니다! 💾', 'success');
+    }
+
+    // 게임 규칙 메뉴얼
+    showGameManual() {
+        showResultModal('📖 갓물주 게임 규칙', `
+            <div class="game-manual">
+                <div class="manual-section">
+                    <h3>🎯 게임 목표</h3>
+                    <p>부동산 개발을 통해 가장 많은 자산을 모으는 것이 목표입니다.</p>
+                    <p>최종 자산 = <strong>현금 + 건물 가치 - 대출금</strong></p>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🔄 게임 진행 (4라운드)</h3>
+                    <p>각 라운드는 4단계로 진행됩니다:</p>
+                    <ol>
+                        <li><strong>🏞️ 대지 구매</strong> - 토지 카드를 선택하여 구매</li>
+                        <li><strong>📐 설계 단계</strong> - 건축가와 건물 유형 선택</li>
+                        <li><strong>🏗️ 시공 단계</strong> - 시공사 선택 및 리스크 처리</li>
+                        <li><strong>🏆 평가</strong> - 완성된 건물 평가 및 보너스 획득</li>
+                    </ol>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🏞️ 대지 구매</h3>
+                    <ul>
+                        <li><strong>시세</strong>: 100% 확률로 구매 가능</li>
+                        <li><strong>급매</strong>: 특정 주사위 눈이 나와야 구매 (더 저렴)</li>
+                        <li><strong>경매</strong>: 가장 저렴하지만 확률 낮음</li>
+                    </ul>
+                    <p>💡 지역별로 토지 가치가 다릅니다: 서울 핵심 > 서울 > 경기 주요 > 경기 외곽 > 지방</p>
+                </div>
+
+                <div class="manual-section">
+                    <h3>📐 설계 단계</h3>
+                    <ul>
+                        <li>건축가마다 <strong>대표작</strong>이 있습니다 (보너스 100%)</li>
+                        <li>대표작이 아닌 건물은 설계비 30% 할인, 보너스 50%</li>
+                        <li>건축가의 <strong>특성</strong>이 건물 평가에 영향:</li>
+                        <ul>
+                            <li>예술성: 디자인 평가 보너스</li>
+                            <li>효율성: 시공비 절감</li>
+                            <li>기능성: 실용성 평가 보너스</li>
+                        </ul>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🏗️ 시공 단계</h3>
+                    <ul>
+                        <li>시공사 규모에 따라 <strong>리스크 카드</strong> 수가 다릅니다:</li>
+                        <ul>
+                            <li>대형: 리스크 1장 (안전, 비용 높음)</li>
+                            <li>중견: 리스크 2장</li>
+                            <li>영세: 리스크 3장 (위험, 비용 낮음)</li>
+                        </ul>
+                        <li>리스크 카드는 <strong>공사 지연, 비용 증가, 품질 문제</strong> 등 발생</li>
+                        <li>자금 부족 시 <strong>대출</strong> 또는 <strong>건물/토지 매각</strong> 가능</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🏆 평가 단계</h3>
+                    <ul>
+                        <li>완성된 건물의 가치가 산정됩니다</li>
+                        <li>평가 요소: 건축가 명성, 건물 품질, 시공 상태</li>
+                        <li>수상 시 추가 보너스:
+                            <ul>
+                                <li>🏅 건축상: 우수 건축 평가</li>
+                                <li>🌿 친환경상: 지속가능 건축</li>
+                                <li>💎 랜드마크상: 지역 상징 건물</li>
+                            </ul>
+                        </li>
+                        <li>🃏 <strong>와일드카드</strong> 획득 기회!</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🃏 와일드카드</h3>
+                    <ul>
+                        <li>특별한 효과를 가진 카드</li>
+                        <li>건물 완공 시 확률적으로 획득</li>
+                        <li>종류: 설계비 무료, 시공비 할인, 리스크 무효화 등</li>
+                        <li>적절한 타이밍에 사용하면 큰 이점!</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>💰 자금 관리</h3>
+                    <ul>
+                        <li><strong>대출</strong>: 현금의 최대 233%까지 (이자율 10%)</li>
+                        <li><strong>토지담보대출</strong>: 토지 가치의 70%</li>
+                        <li><strong>PM 컨설팅</strong>: 1억 수입, 해당 라운드 스킵</li>
+                        <li><strong>건물 매각</strong>: 시장 상황에 따라 85%~115% 가격</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🎮 게임 팁</h3>
+                    <ul>
+                        <li>💡 건축가의 대표작을 선택하면 보너스 2배!</li>
+                        <li>💡 대형 시공사는 안전하지만 비용이 높습니다</li>
+                        <li>💡 와일드카드는 위기 상황에 대비해 아껴두세요</li>
+                        <li>💡 무리한 대출은 최종 자산에서 차감됩니다</li>
+                        <li>💡 토지 적합 건물을 선택하면 평가 보너스!</li>
+                    </ul>
+                </div>
+            </div>
+        `, () => {}, 'manual-modal');
+
+        // 메뉴얼 스타일 추가
+        if (!document.getElementById('manual-styles')) {
+            const style = document.createElement('style');
+            style.id = 'manual-styles';
+            style.textContent = \`
+                .game-manual {
+                    max-height: 70vh;
+                    overflow-y: auto;
+                    padding-right: 1rem;
+                }
+                .manual-section {
+                    margin-bottom: 1.5rem;
+                    padding-bottom: 1rem;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                }
+                .manual-section:last-child {
+                    border-bottom: none;
+                }
+                .manual-section h3 {
+                    color: var(--accent-gold);
+                    margin-bottom: 0.75rem;
+                    font-size: 1.1rem;
+                }
+                .manual-section p {
+                    margin-bottom: 0.5rem;
+                    line-height: 1.6;
+                }
+                .manual-section ul, .manual-section ol {
+                    margin-left: 1.5rem;
+                    margin-bottom: 0.5rem;
+                }
+                .manual-section li {
+                    margin-bottom: 0.4rem;
+                    line-height: 1.5;
+                }
+                .manual-section ul ul {
+                    margin-top: 0.3rem;
+                    margin-bottom: 0.3rem;
+                }
+            \`;
+            document.head.appendChild(style);
+        }
     }
 
     // 메인 메뉴 표시
@@ -816,6 +969,14 @@ class GameApp {
 
                 // 선택 정보 표시
                 this.showSelectedBuildingInfo(architect, buildings.find(b => b.name === buildingName));
+
+                // 설계 진행 버튼이 보이도록 모달 하단으로 스크롤
+                setTimeout(() => {
+                    const confirmBtn = document.getElementById('btn-confirm-design');
+                    if (confirmBtn) {
+                        confirmBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
             });
         });
     }
