@@ -6981,6 +6981,12 @@ body {
 .player-buildings-modal {
   max-height: 400px;
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.player-buildings-modal::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .buildings-list {
