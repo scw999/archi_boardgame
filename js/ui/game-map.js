@@ -174,7 +174,7 @@ export function renderCityGrid() {
             <!-- 소유 현황 패널 -->
             <div class="iso-city-sidebar">
                 <div class="sidebar-section">
-                    <h4>📍 내 자산</h4>
+                    <h4>📍 자산</h4>
                     ${renderOwnedAssetsList(ownedPlots)}
                 </div>
 

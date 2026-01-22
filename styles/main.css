@@ -5761,8 +5761,10 @@ body {
   display: grid;
   grid-template-columns: 1fr 280px;
   grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "header header"
+    "map sidebar";
   gap: 1rem;
-  height: 100%;
   min-height: 500px;
   background: linear-gradient(135deg, #1a1a2e, #16213e);
   border-radius: var(--radius-lg);
@@ -5770,7 +5772,7 @@ body {
 }
 
 .iso-city-header {
-  grid-column: 1 / -1;
+  grid-area: header;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -5832,11 +5834,15 @@ body {
 
 /* 맵 래퍼 */
 .iso-city-map-wrapper {
+  grid-area: map;
   position: relative;
   border-radius: var(--radius-md);
   overflow: visible;
   background: transparent;
   box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 맵 컨테이너 */
@@ -6205,13 +6211,16 @@ body {
 
 /* 사이드바 */
 .iso-city-sidebar {
+  grid-area: sidebar;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   background: rgba(0, 0, 0, 0.3);
   border-radius: var(--radius-md);
   padding: 1rem;
-  overflow-y: visible;
+  overflow-y: auto;
+  align-self: start;
+  max-height: 100%;
 }
 
 .sidebar-section h4 {
