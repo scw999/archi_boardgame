@@ -338,14 +338,10 @@ class GameApp {
         }
     }
 
-    // 단계 시작 시 지도로 스크롤
+    // 단계 시작 시 지도로 스크롤 (가장 위로)
     scrollToMapThenCards() {
-        const cityGrid = document.getElementById('city-grid');
-
-        if (cityGrid) {
-            // 지도 영역으로 스크롤 (헤더 아래)
-            window.scrollTo({ top: cityGrid.offsetTop - 180, behavior: 'smooth' });
-        }
+        // 개발 지도가 시작 화면에 보이도록 맨 위로 스크롤
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // 공통 액션 패널 - 더 이상 사용하지 않음 (항상 가능한 액션 박스 제거됨)

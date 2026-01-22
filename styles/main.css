@@ -5799,8 +5799,9 @@ body {
 .iso-city-header {
   grid-area: header;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  position: relative;
   padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
   border-radius: var(--radius-md);
@@ -5819,6 +5820,8 @@ body {
   display: flex;
   gap: 1rem;
   align-items: center;
+  position: absolute;
+  right: 1.5rem;
 }
 
 /* 개발자 모드 버튼 */
