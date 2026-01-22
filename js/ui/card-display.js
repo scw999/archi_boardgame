@@ -44,10 +44,10 @@ export function renderCardGrid(cards, type, onSelect) {
 function setupScrollIndicator(container) {
     const wrapper = container.querySelector('.card-grid-wrapper');
     const indicator = container.querySelector('.scroll-indicator');
-    if (!wrapper || !indicator) return;
+    const cardGrid = container.querySelector('.card-grid');
+    if (!wrapper || !indicator || !cardGrid) return;
 
     const checkScroll = () => {
-        const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const windowHeight = window.innerHeight;
         const wrapperRect = wrapper.getBoundingClientRect();
         const wrapperBottom = wrapperRect.bottom;
@@ -61,6 +61,17 @@ function setupScrollIndicator(container) {
             indicator.classList.add('hidden');
         }
     };
+
+    // 클릭하면 카드 영역으로 스크롤
+    indicator.addEventListener('click', () => {
+        const cardGridRect = cardGrid.getBoundingClientRect();
+        const scrollTarget = window.scrollY + cardGridRect.top - 20; // 카드 상단으로 스크롤 (20px 여유)
+
+        window.scrollTo({
+            top: scrollTarget,
+            behavior: 'smooth'
+        });
+    });
 
     // 초기 체크 및 스크롤 이벤트 등록
     setTimeout(checkScroll, 100);

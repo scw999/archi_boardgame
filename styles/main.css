@@ -798,6 +798,12 @@ body {
   z-index: 100;
   animation: scroll-bounce 1.5s ease-in-out infinite;
   transition: opacity 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+.scroll-indicator:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 1), rgba(245, 158, 11, 1));
+  box-shadow: 0 6px 25px rgba(245, 158, 11, 0.6), 0 0 40px rgba(245, 158, 11, 0.3);
 }
 
 .scroll-indicator.hidden {
