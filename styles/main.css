@@ -241,24 +241,20 @@ body {
 
 /* ===== 게임 컨테이너 ===== */
 #game-container {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "players board"
-    "players map";
-  gap: 1rem;
+  display: block;
   min-height: 100vh;
   padding: 1rem;
-  padding-left: 260px; /* 고정된 왼쪽 플레이어 패널 공간 */
+  padding-left: 250px; /* 고정된 왼쪽 플레이어 패널 공간 */
+  padding-right: 1rem; /* 오른쪽 여백 */
   padding-top: 160px; /* 고정 헤더 공간 확보 (헤더 높이 + 여유) */
   padding-bottom: 140px; /* 하단 고정 로그 공간 확보 */
   position: relative;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* ===== 게임 보드 (중앙) ===== */
 #game-board {
-  grid-area: board;
   background: transparent;
   border-radius: var(--radius-lg);
   padding: 0;
@@ -270,12 +266,12 @@ body {
 .board-header-sticky {
   position: fixed;
   top: 0;
-  left: 240px; /* 왼쪽 플레이어 패널 너비 + gap */
+  left: 240px; /* 왼쪽 플레이어 패널 너비 + 여유 공간 */
   right: 0;
   z-index: 1000;
   background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(15, 23, 42, 0.98) 100%);
   padding: 0.6rem 1.5rem;
-  margin-left: 1rem;
+  margin-left: 0.5rem;
   margin-right: 1rem;
   margin-top: 1rem;
   border-bottom: 2px solid var(--accent-blue);
@@ -516,44 +512,41 @@ body {
 
 /* ===== 플레이어 패널 (좌측) ===== */
 #player-panels {
-  grid-area: players;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  overflow-y: auto;
+  gap: 0.5rem;
   position: fixed;
   top: 1rem;
   left: 1rem;
   width: 220px;
-  max-height: calc(100vh - 2rem);
   z-index: 50;
 }
 
 .player-panel {
   background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
+  border-radius: var(--radius-md);
+  padding: 0.6rem;
   border: 2px solid transparent;
   transition: all var(--transition-normal);
 }
 
 .player-panel.active {
   border-color: var(--accent-gold);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
 }
 
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .player-name {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .turn-indicator {
@@ -638,18 +631,20 @@ body {
 
 /* ===== 카드 그리드 (중앙) ===== */
 #card-grid {
-  grid-column: 2;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ===== 게임 로그 (최하단 고정) ===== */
 #game-log {
-  grid-area: log;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -2296,7 +2291,6 @@ body {
 
 /* ===== 도시 지도 (메인 보드판) ===== */
 #city-grid {
-  grid-area: map;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -2304,6 +2298,8 @@ body {
   justify-content: center;
   align-items: center;
   perspective: 1200px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .city-map-wrapper {
