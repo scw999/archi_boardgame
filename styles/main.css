@@ -514,20 +514,23 @@ body {
 #player-panels {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
   position: fixed;
   top: 1rem;
   left: 1rem;
-  width: 220px;
+  width: 210px;
   z-index: 50;
+  max-height: calc(100vh - 140px); /* 하단 로그 영역 제외 */
+  overflow-y: auto;
 }
 
 .player-panel {
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
-  padding: 0.6rem;
+  padding: 0.5rem;
   border: 2px solid transparent;
   transition: all var(--transition-normal);
+  flex-shrink: 0;
 }
 
 .player-panel.active {
@@ -539,14 +542,14 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.3rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .player-name {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .turn-indicator {
@@ -566,14 +569,14 @@ body {
 }
 
 .money-info {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .money-row {
   display: flex;
   justify-content: space-between;
-  padding: 0.3rem 0;
-  font-size: 0.9rem;
+  padding: 0.2rem 0;
+  font-size: 0.85rem;
 }
 
 .money-row .label {
@@ -6350,11 +6353,12 @@ body {
 
 /* city-grid 섹션 표시 */
 #city-grid {
-  grid-area: map;
+  display: block;
   min-height: 600px;
   overflow: visible;
   position: relative;
   z-index: 1;
+  margin-top: 1rem;
 }
 
 /* 매각된 건물 스타일 */
