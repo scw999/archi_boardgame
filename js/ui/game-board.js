@@ -16,18 +16,15 @@ export function renderGameBoard() {
         <div class="current-phase-large">
           <span class="current-phase-name">${getPhaseDisplayNameOnly(gameState.phase)}</span>
         </div>
+        <div class="current-player-turn">
+          ${renderCurrentPlayerInfo()}
+        </div>
       </div>
 
       <div class="phase-progress-row">
         <div class="phase-progress">
           ${renderPhaseProgress()}
         </div>
-      </div>
-    </div>
-
-    <div class="game-board-content">
-      <div class="current-player-info">
-        ${renderCurrentPlayerInfo()}
       </div>
     </div>
   `;
