@@ -1982,6 +1982,8 @@ class GameApp {
                         }
                     }
                     gameState.addLog(`${player.name}: 와일드카드 리스크 방어권 ${usedWildcardBlocks}개 사용`);
+                    // 플레이어 패널 즉시 업데이트 (카드 개수 반영)
+                    renderPlayerPanels();
                 }
 
                 // 결과 요약 표시
@@ -3713,6 +3715,8 @@ class GameApp {
             showNotification(`🃏 ${card.name} 사용! ${message}`, 'success');
             gameState.addLog(`${player.name}: ${card.name} 사용`);
             this.updateWildcardPanel();
+            // 플레이어 패널 즉시 업데이트 (카드 개수 반영)
+            renderPlayerPanels();
         } else {
             showNotification(message, 'warning');
         }
