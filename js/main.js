@@ -186,7 +186,7 @@ class GameApp {
         if (!document.getElementById('manual-styles')) {
             const style = document.createElement('style');
             style.id = 'manual-styles';
-            style.textContent = \`
+            style.textContent = `
                 .game-manual {
                     max-height: 70vh;
                     overflow-y: auto;
@@ -221,7 +221,7 @@ class GameApp {
                     margin-top: 0.3rem;
                     margin-bottom: 0.3rem;
                 }
-            \`;
+            `;
             document.head.appendChild(style);
         }
     }
