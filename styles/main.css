@@ -2280,6 +2280,11 @@ body {
   color: white;
 }
 
+.action-btn.loan {
+  background: var(--gradient-blue);
+  color: white;
+}
+
 /* ===== 도시 지도 (메인 보드판) ===== */
 #city-grid {
   background: var(--bg-secondary);

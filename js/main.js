@@ -1218,11 +1218,32 @@ class GameApp {
 
         const pmIncome = 100000000; // 고정 1억
 
+        // 대출 관련 계산
+        const maxLoan = gameState.getMaxLoan(player);
+        const availableLoan = maxLoan - player.loan;
+        const shortfall = neededCost - player.money;
+        const suggestedLoan = Math.min(availableLoan, Math.max(shortfall, 100000000)); // 최소 1억 단위
+
+        // 토지 담보대출 가능 금액 (현재 토지 가치의 70%)
+        const landValue = player.currentProject?.landPrice || 0;
+        const landMortgage = Math.floor(landValue * 0.7);
+
         const moneyOptionsHtml = `
             <div class="money-options-panel">
                 <h4>💰 자금이 부족합니다</h4>
                 <p>필요 시공비: 약 ${gameState.formatMoney(neededCost)} / 보유: ${gameState.formatMoney(player.money)}</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">대출 한도: ${gameState.formatMoney(maxLoan)} / 현재 대출: ${gameState.formatMoney(player.loan)}</p>
                 <div class="money-action-buttons">
+                    ${availableLoan > 0 ? `
+                        <button class="action-btn loan" id="btn-loan-construction">
+                            🏦 건설자금대출 (+${gameState.formatMoney(suggestedLoan)})
+                        </button>
+                    ` : ''}
+                    ${landMortgage > 0 && availableLoan > 0 ? `
+                        <button class="action-btn loan" id="btn-land-mortgage">
+                            🏠 토지담보대출 (+${gameState.formatMoney(Math.min(landMortgage, availableLoan))})
+                        </button>
+                    ` : ''}
                     <button class="action-btn pm" id="btn-pm-construction">
                         💼 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})
                     </button>
@@ -1245,6 +1266,56 @@ class GameApp {
 
         // 공통 액션 패널 다시 표시
         this.showCommonActionPanel();
+
+        // 건설자금대출 버튼
+        const loanBtn = document.getElementById('btn-loan-construction');
+        if (loanBtn) {
+            loanBtn.onclick = () => {
+                const maxLoan = gameState.getMaxLoan(player);
+                const availableLoan = maxLoan - player.loan;
+                const shortfall = neededCost - player.money;
+                const loanAmount = Math.min(availableLoan, Math.max(shortfall, 100000000));
+
+                if (loanAmount <= 0) {
+                    showNotification('추가 대출이 불가능합니다.', 'error');
+                    return;
+                }
+
+                const result = gameState.takeLoan(gameState.currentPlayerIndex, loanAmount);
+                if (result.success) {
+                    showNotification(`건설자금대출 ${gameState.formatMoney(loanAmount)} 실행!`, 'success');
+                    this.updateUI();
+                    this.runConstructionPhase();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            };
+        }
+
+        // 토지담보대출 버튼
+        const mortgageBtn = document.getElementById('btn-land-mortgage');
+        if (mortgageBtn) {
+            mortgageBtn.onclick = () => {
+                const landValue = player.currentProject?.landPrice || 0;
+                const maxLoan = gameState.getMaxLoan(player);
+                const availableLoan = maxLoan - player.loan;
+                const mortgageAmount = Math.min(Math.floor(landValue * 0.7), availableLoan);
+
+                if (mortgageAmount <= 0) {
+                    showNotification('토지담보대출이 불가능합니다.', 'error');
+                    return;
+                }
+
+                const result = gameState.takeLoan(gameState.currentPlayerIndex, mortgageAmount);
+                if (result.success) {
+                    showNotification(`토지담보대출 ${gameState.formatMoney(mortgageAmount)} 실행! (토지 가치의 70%)`, 'success');
+                    this.updateUI();
+                    this.runConstructionPhase();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            };
+        }
 
         // PM 활동 버튼
         const pmBtn = document.getElementById('btn-pm-construction');
@@ -1872,6 +1943,13 @@ class GameApp {
             return;
         }
 
+        // 시공 단계에서 자금 부족으로 스킵한 경우
+        if (project?.constructionSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 시공을 진행하지 못해 평가를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('salePrice');
+            return;
+        }
+
         // 평가할 프로젝트가 없는 경우 스킵 (토지, 건물, 시공사 모두 필요)
         if (!project || !project.land || !project.building) {
             showNotification(`${player.name}님은 평가할 건물이 없어 스킵합니다.`, 'info');
@@ -2204,6 +2282,9 @@ class GameApp {
             const cityGridSection = document.getElementById('city-grid');
             if (cityGridSection) {
                 finalCityGrid.innerHTML = cityGridSection.innerHTML;
+
+                // 최종 지도에서 건물 클릭 이벤트 바인딩
+                this.bindFinalMapPlotEvents(finalCityGrid);
             }
         }
 
@@ -2275,9 +2356,217 @@ class GameApp {
                 #final-map-view.hidden {
                     display: none;
                 }
+                .final-map-content .plot-marker {
+                    cursor: pointer;
+                }
+                .final-map-content .plot-marker:hover {
+                    transform: scale(1.1);
+                    z-index: 100;
+                }
             `;
             document.head.appendChild(style);
         }
+    }
+
+    // 최종 지도 건물 클릭 이벤트 바인딩
+    bindFinalMapPlotEvents(container) {
+        const plotMarkers = container.querySelectorAll('.plot-marker.owned');
+
+        plotMarkers.forEach(marker => {
+            marker.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const plotIndex = parseInt(marker.dataset.plotIndex);
+                this.showFinalMapBuildingDetail(plotIndex, marker);
+            });
+        });
+    }
+
+    // 최종 지도 건물 상세 정보 표시
+    showFinalMapBuildingDetail(plotIndex, marker) {
+        // 기존 모달 제거
+        document.querySelectorAll('.final-building-modal').forEach(m => m.remove());
+
+        // 소유 정보 수집
+        const ownedPlots = [];
+        gameState.players.forEach((player, playerIndex) => {
+            // 완성된 건물
+            player.buildings.forEach(building => {
+                ownedPlots.push({
+                    type: 'completed',
+                    playerIndex,
+                    playerName: player.name,
+                    land: building.land,
+                    building: building.building,
+                    architect: building.architect,
+                    constructor: building.constructor,
+                    salePrice: building.salePrice,
+                    plotIndex: building.plotIndex
+                });
+            });
+
+            // 매각 이력
+            player.soldHistory.forEach(sold => {
+                if (sold.type === 'building' && sold.originalProject) {
+                    ownedPlots.push({
+                        type: 'sold',
+                        playerIndex,
+                        playerName: player.name,
+                        land: sold.land,
+                        building: sold.building,
+                        architect: sold.architect,
+                        sellPrice: sold.sellPrice,
+                        soldAt: sold.soldAt,
+                        plotIndex: sold.originalProject.plotIndex
+                    });
+                }
+            });
+        });
+
+        const owned = ownedPlots.find(o => o.plotIndex === plotIndex);
+        if (!owned) return;
+
+        const playerColors = [
+            { bg: '#ef4444', border: '#f87171' },
+            { bg: '#3b82f6', border: '#60a5fa' },
+            { bg: '#22c55e', border: '#4ade80' },
+            { bg: '#f59e0b', border: '#fbbf24' }
+        ];
+        const playerColor = playerColors[owned.playerIndex] || playerColors[0];
+
+        const isSold = owned.type === 'sold';
+        const statusText = isSold ? '매각됨' : '완공';
+        const statusClass = isSold ? 'status-sold' : 'status-completed';
+
+        const modal = document.createElement('div');
+        modal.className = 'final-building-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <button class="modal-close">✕</button>
+                <div class="modal-header" style="border-left: 4px solid ${playerColor.border}">
+                    <span class="modal-status ${statusClass}">${statusText}</span>
+                    <span class="modal-owner">${owned.playerName}</span>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-land">
+                        <strong>📍 ${owned.land?.name || '알 수 없음'}</strong>
+                        <span>${owned.land?.area || '-'}평</span>
+                    </div>
+                    ${owned.building ? `
+                        <div class="modal-building">
+                            <strong>🏢 ${owned.building.name}</strong>
+                        </div>
+                    ` : ''}
+                    ${owned.architect ? `
+                        <div class="modal-architect">
+                            <span>${owned.architect.portrait || '👤'} ${owned.architect.name}</span>
+                        </div>
+                    ` : ''}
+                    ${owned.constructor ? `
+                        <div class="modal-constructor">
+                            <span>${owned.constructor.emoji || '🏗️'} ${owned.constructor.name}</span>
+                        </div>
+                    ` : ''}
+                    <div class="modal-price">
+                        ${isSold
+                            ? `<span class="sold">💰 매각가: ${gameState.formatMoney(owned.sellPrice)} (라운드 ${owned.soldAt})</span>`
+                            : `<span>💎 건물 가치: ${gameState.formatMoney(owned.salePrice || 0)}</span>`
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 스타일 추가
+        if (!document.getElementById('final-modal-styles')) {
+            const style = document.createElement('style');
+            style.id = 'final-modal-styles';
+            style.textContent = `
+                .final-building-modal {
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: var(--bg-secondary);
+                    border-radius: var(--radius-lg);
+                    padding: 1.5rem;
+                    z-index: 2000;
+                    min-width: 300px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                    border: 1px solid rgba(255,255,255,0.1);
+                }
+                .final-building-modal .modal-content {
+                    position: relative;
+                }
+                .final-building-modal .modal-close {
+                    position: absolute;
+                    top: -0.5rem;
+                    right: -0.5rem;
+                    background: var(--bg-tertiary);
+                    border: none;
+                    color: var(--text-secondary);
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-size: 1rem;
+                }
+                .final-building-modal .modal-close:hover {
+                    background: var(--accent-red);
+                    color: white;
+                }
+                .final-building-modal .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0.5rem;
+                    margin-bottom: 1rem;
+                    background: rgba(255,255,255,0.05);
+                    border-radius: var(--radius-sm);
+                }
+                .final-building-modal .modal-status {
+                    padding: 0.25rem 0.5rem;
+                    border-radius: var(--radius-sm);
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                }
+                .final-building-modal .status-completed {
+                    background: var(--accent-green);
+                    color: white;
+                }
+                .final-building-modal .status-sold {
+                    background: var(--accent-purple);
+                    color: white;
+                }
+                .final-building-modal .modal-owner {
+                    font-weight: 600;
+                }
+                .final-building-modal .modal-body > div {
+                    padding: 0.5rem 0;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                }
+                .final-building-modal .modal-body > div:last-child {
+                    border-bottom: none;
+                }
+                .final-building-modal .modal-price .sold {
+                    color: var(--accent-purple);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(modal);
+
+        // 닫기 버튼 이벤트
+        modal.querySelector('.modal-close').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        // 모달 외부 클릭 시 닫기
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
     }
 
     // UI 업데이트
