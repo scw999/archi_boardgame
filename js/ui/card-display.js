@@ -9,9 +9,22 @@ export function renderCardGrid(cards, type, onSelect) {
     const container = document.getElementById('card-grid');
     if (!container) return;
 
+    // 카드 타입별 라벨
+    const typeLabels = {
+        land: '대지 카드',
+        architect: '건축가 카드',
+        constructor: '시공사 카드',
+        risk: '리스크 카드'
+    };
+
     container.innerHTML = `
-    <div class="card-grid ${type}-cards">
-      ${cards.map((card, index) => renderCard(card, type, index)).join('')}
+    <div class="card-grid-wrapper">
+      <div class="card-grid ${type}-cards">
+        ${cards.map((card, index) => renderCard(card, type, index)).join('')}
+      </div>
+      <div class="scroll-indicator hidden">
+        <span class="scroll-indicator-text">↓ 아래에 더 많은 ${typeLabels[type] || '카드'}가 있습니다</span>
+      </div>
     </div>
   `;
 
@@ -22,6 +35,47 @@ export function renderCardGrid(cards, type, onSelect) {
             if (onSelect) onSelect(index, cards[index]);
         });
     });
+
+    // 스크롤 안내 표시 로직
+    setupScrollIndicator(container);
+}
+
+// 스크롤 안내 표시 설정
+function setupScrollIndicator(container) {
+    const wrapper = container.querySelector('.card-grid-wrapper');
+    const indicator = container.querySelector('.scroll-indicator');
+    if (!wrapper || !indicator) return;
+
+    const checkScroll = () => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const wrapperBottom = wrapperRect.bottom;
+
+        // 카드 그리드의 하단이 뷰포트 아래에 있으면 안내 표시
+        const hasMoreBelow = wrapperBottom > windowHeight + 50;
+
+        if (hasMoreBelow) {
+            indicator.classList.remove('hidden');
+        } else {
+            indicator.classList.add('hidden');
+        }
+    };
+
+    // 초기 체크 및 스크롤 이벤트 등록
+    setTimeout(checkScroll, 100);
+    window.addEventListener('scroll', checkScroll);
+    window.addEventListener('resize', checkScroll);
+
+    // 컴포넌트가 사라지면 이벤트 제거
+    const observer = new MutationObserver((mutations) => {
+        if (!container.contains(wrapper)) {
+            window.removeEventListener('scroll', checkScroll);
+            window.removeEventListener('resize', checkScroll);
+            observer.disconnect();
+        }
+    });
+    observer.observe(container, { childList: true, subtree: true });
 }
 
 // 개별 카드 렌더링
