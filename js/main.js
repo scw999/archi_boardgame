@@ -64,6 +64,13 @@ class GameApp {
 
         // 유틸리티 버튼
         document.getElementById('btn-budget-table')?.addEventListener('click', () => this.showBudgetTable());
+        document.getElementById('btn-save-game')?.addEventListener('click', () => this.saveGame());
+    }
+
+    // 게임 저장
+    saveGame() {
+        gameState.save();
+        showNotification('게임이 저장되었습니다! 💾', 'success');
     }
 
     // 메인 메뉴 표시
@@ -3365,13 +3372,38 @@ class GameApp {
 
     // 게임 불러오기
     loadGame() {
-        if (gameState.load()) {
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('game-container').classList.remove('hidden');
-            this.updateUI();
-            this.runPhase();
-        } else {
+        const saveInfo = gameState.getSaveInfo();
+
+        if (!saveInfo) {
             showNotification('저장된 게임이 없습니다.', 'error');
+            return;
+        }
+
+        // 저장된 게임 정보 표시
+        const phaseNames = {
+            'land': '대지 구매',
+            'architect': '설계 단계',
+            'constructor': '시공 단계',
+            'evaluation': '평가'
+        };
+
+        const savedDate = saveInfo.savedAt ? new Date(saveInfo.savedAt).toLocaleString('ko-KR') : '알 수 없음';
+        const confirmMsg = `저장된 게임을 불러올까요?\n\n` +
+            `📅 저장 시간: ${savedDate}\n` +
+            `🎮 라운드: ${saveInfo.round}/${saveInfo.maxRounds}\n` +
+            `📍 단계: ${phaseNames[saveInfo.phase] || saveInfo.phase}\n` +
+            `👥 플레이어: ${saveInfo.playerNames.join(', ')}`;
+
+        if (confirm(confirmMsg)) {
+            if (gameState.load()) {
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('game-container').classList.remove('hidden');
+                this.updateUI();
+                this.runPhase();
+                showNotification('게임을 불러왔습니다! 🎮', 'success');
+            } else {
+                showNotification('게임 불러오기에 실패했습니다.', 'error');
+            }
         }
     }
 

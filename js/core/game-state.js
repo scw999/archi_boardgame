@@ -773,9 +773,17 @@ class GameState {
             players: this.players,
             currentPlayerIndex: this.currentPlayerIndex,
             currentRound: this.currentRound,
+            maxRounds: this.maxRounds,
             phase: this.phase,
             settings: this.settings,
-            log: this.log.slice(-50) // 최근 50개 로그만
+            usedArchitects: this.usedArchitects,
+            usedConstructors: this.usedConstructors,
+            landDeck: this.landDeck,
+            architectDeck: this.architectDeck,
+            constructorDeck: this.constructorDeck,
+            riskDeck: this.riskDeck,
+            log: this.log.slice(-50), // 최근 50개 로그만
+            savedAt: new Date().toISOString()
         };
         localStorage.setItem('godmulju_save', JSON.stringify(saveData));
     }
@@ -785,15 +793,54 @@ class GameState {
         const saveData = localStorage.getItem('godmulju_save');
         if (saveData) {
             const data = JSON.parse(saveData);
-            Object.assign(this, data);
-            // 덱은 다시 생성 (셔플 상태 유지 어려움)
-            this.landDeck = createLandDeck();
-            this.architectDeck = createArchitectDeck();
-            this.constructorDeck = createConstructorDeck();
-            this.riskDeck = createRiskDeck();
+
+            // 기본 상태 복원
+            this.players = data.players || [];
+            this.currentPlayerIndex = data.currentPlayerIndex || 0;
+            this.currentRound = data.currentRound || 1;
+            this.maxRounds = data.maxRounds || 4;
+            this.phase = data.phase || 'land';
+            this.settings = data.settings || {};
+            this.usedArchitects = data.usedArchitects || [];
+            this.usedConstructors = data.usedConstructors || [];
+            this.log = data.log || [];
+
+            // 덱 복원 (저장된 덱이 있으면 사용, 없으면 새로 생성)
+            this.landDeck = data.landDeck || createLandDeck();
+            this.architectDeck = data.architectDeck || createArchitectDeck();
+            this.constructorDeck = data.constructorDeck || createConstructorDeck();
+            this.riskDeck = data.riskDeck || createRiskDeck();
+
             return true;
         }
         return false;
+    }
+
+    // 저장된 게임 확인
+    hasSavedGame() {
+        return localStorage.getItem('godmulju_save') !== null;
+    }
+
+    // 저장된 게임 정보 가져오기
+    getSaveInfo() {
+        const saveData = localStorage.getItem('godmulju_save');
+        if (saveData) {
+            const data = JSON.parse(saveData);
+            return {
+                savedAt: data.savedAt,
+                round: data.currentRound,
+                maxRounds: data.maxRounds,
+                phase: data.phase,
+                playerCount: data.players?.length || 0,
+                playerNames: data.players?.map(p => p.name) || []
+            };
+        }
+        return null;
+    }
+
+    // 저장된 게임 삭제
+    deleteSave() {
+        localStorage.removeItem('godmulju_save');
     }
 }
 
