@@ -564,13 +564,13 @@ class GameState {
         const maxLoan = this.getMaxLoan(player);
 
         if (player.loan + amount > maxLoan) {
-            return false;
+            return { success: false, message: '대출 한도를 초과했습니다.' };
         }
 
         player.loan += amount;
         player.money += amount;
         this.addLog(`${player.name}: ${this.formatMoney(amount)} 대출 실행`);
-        return true;
+        return { success: true, message: `${this.formatMoney(amount)} 대출이 실행되었습니다.` };
     }
 
     // 이자 계산 (월 단위)
@@ -588,11 +588,11 @@ class GameState {
         return false;
     }
 
-    // PM 활동 (라운드 스킵하고 3억 벌기)
+    // PM 활동 (라운드 스킵하고 2억 벌기)
     doPMActivity(playerIndex) {
         const player = this.players[playerIndex];
-        // PM 활동 수익: 고정 3억
-        const totalIncome = 300000000;
+        // PM 활동 수익: 고정 2억
+        const totalIncome = 200000000;
 
         player.money += totalIncome;
         // 라운드 스킵 플래그 설정

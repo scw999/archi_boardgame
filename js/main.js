@@ -211,7 +211,7 @@ class GameApp {
                     <ul>
                         <li><strong>대출</strong>: 현금의 최대 233%까지 (이자율 10%)</li>
                         <li><strong>토지담보대출</strong>: 토지 가치의 70%</li>
-                        <li><strong>PM 컨설팅</strong>: 1억 수입, 해당 라운드 스킵</li>
+                        <li><strong>PM 컨설팅</strong>: 2억 수입, 해당 라운드 스킵</li>
                         <li><strong>건물 매각</strong>: 시장 상황에 따라 85%~115% 가격</li>
                     </ul>
                 </div>
@@ -397,7 +397,7 @@ class GameApp {
 
         // 액션 버튼 - PM활동, 매각 옵션 추가
         const actions = [
-            { id: 'pm-activity', label: 'PM 컨설팅 (+1억)', icon: '👷' },
+            { id: 'pm-activity', label: 'PM 컨설팅 (+2억)', icon: '👷' },
             { id: 'sell-land', label: '대지 매각', icon: '💰' },
             { id: 'skip-land', label: '이번 턴 패스', icon: '⏭️' }
         ];
@@ -417,6 +417,8 @@ class GameApp {
 
         // PM 활동
         document.querySelector('[data-action="pm-activity"]')?.addEventListener('click', () => {
+            if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
+
             const result = gameState.doPMActivity(gameState.currentPlayerIndex);
             showNotification(result.message, 'success');
             this.updateUI();
@@ -846,7 +848,7 @@ class GameApp {
         const player = gameState.getCurrentPlayer();
         const land = player.currentProject.land;
         const buildings = getAvailableBuildings(land);
-        const pmIncome = 50000000 + (player.buildings.length * 20000000);
+        const pmIncome = 200000000; // 고정 2억
 
         // 기존 모달 제거
         document.getElementById('design-modal-overlay')?.remove();
@@ -910,7 +912,7 @@ class GameApp {
                 </div>
 
                 <div class="design-action-buttons">
-                    <button class="action-btn pm-consulting" id="design-pm">👷 PM 컨설팅 (+3억, 라운드 스킵)</button>
+                    <button class="action-btn pm-consulting" id="design-pm">👷 PM 컨설팅 (+2억, 라운드 스킵)</button>
                     <button class="action-btn" id="design-sell-land">🏞️ 대지 매각</button>
                     ${player.buildings.length > 0 ? '<button class="action-btn" id="design-sell-building">🏢 건물 매각</button>' : ''}
                     <button class="action-btn" id="design-skip">⏭️ 턴 넘기기</button>
@@ -931,7 +933,7 @@ class GameApp {
 
         // 액션 버튼 이벤트 바인딩
         document.getElementById('design-pm')?.addEventListener('click', () => {
-            if (!confirm('PM 컨설팅을 진행하면 3억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
+            if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
 
             // 모달 닫기
             this.hideDesignPanel();
@@ -1412,7 +1414,7 @@ class GameApp {
         // 기존 돈벌기 옵션 패널이 있으면 제거
         document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
 
-        const pmIncome = 100000000; // 고정 1억
+        const pmIncome = 200000000; // 고정 2억
 
         // 대출 관련 계산
         const maxLoan = gameState.getMaxLoan(player);
@@ -1516,12 +1518,23 @@ class GameApp {
         // PM 활동 버튼
         const pmBtn = document.getElementById('btn-pm-construction');
         if (pmBtn) {
+            // 현재 플레이어 인덱스를 클로저로 저장
+            const currentPlayerIdx = gameState.currentPlayerIndex;
             pmBtn.onclick = () => {
+                // 현재 턴인 플레이어만 PM 컨설팅 실행 가능
+                if (gameState.currentPlayerIndex !== currentPlayerIdx) {
+                    showNotification('현재 턴이 아닙니다.', 'error');
+                    return;
+                }
+
+                if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
+
                 const result = gameState.doPMActivity(gameState.currentPlayerIndex);
                 if (result.success) {
                     showNotification(result.message, 'success');
                     this.updateUI();
-                    this.runConstructionPhase();
+                    // PM 컨설팅 후 다음 플레이어로 이동
+                    this.nextPlayerOrPhase('constructor');
                 }
             };
         }
