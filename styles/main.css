@@ -6576,7 +6576,7 @@ body {
   overflow: visible;
   position: relative;
   z-index: 1;
-  margin-top: 1rem;
+  margin-top: 130px; /* 고정 헤더 높이 고려 */
 }
 
 /* 매각된 건물 스타일 */
