@@ -377,7 +377,7 @@ class GameApp {
     }
 
     // 건물 매각 모달 표시
-    showBuildingSellModal() {
+    showBuildingSellModal(onSellCallback) {
         const player = gameState.getCurrentPlayer();
 
         if (player.buildings.length === 0) {
@@ -409,6 +409,10 @@ class GameApp {
                     showNotification(result.message, 'success');
                     document.querySelector('.modal-overlay')?.remove();
                     this.updateUI();
+                    // 콜백이 있으면 실행 (설계 패널 갱신 등)
+                    if (onSellCallback && typeof onSellCallback === 'function') {
+                        onSellCallback();
+                    }
                 } else {
                     showNotification(result.message, 'error');
                 }
@@ -763,7 +767,10 @@ class GameApp {
         });
 
         document.getElementById('design-sell-building')?.addEventListener('click', () => {
-            this.showBuildingSellModal(() => this.updateUI());
+            this.showBuildingSellModal(() => {
+                // 매각 후 설계 패널 갱신 (건물 목록의 자금 부족 상태 업데이트)
+                this.showDesignPanel(architect);
+            });
         });
 
         document.getElementById('design-skip')?.addEventListener('click', () => {
