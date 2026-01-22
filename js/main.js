@@ -228,13 +228,19 @@ class GameApp {
             </div>
         `, () => {});
 
-        // 메뉴얼 모달 너비 조정 및 오버레이 강화
+        // 메뉴얼 모달 너비 조정 및 버튼 변경
         const overlay = document.querySelector('.modal-overlay:last-child');
         const modal = overlay?.querySelector('.result-modal');
         if (overlay && modal) {
             overlay.style.background = 'rgba(0, 0, 0, 0.95)';
             modal.style.maxWidth = '700px';
             modal.style.width = '95%';
+
+            // 닫기 버튼 텍스트를 "이어하기"로 변경
+            const closeBtn = modal.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.textContent = '게임 이어하기';
+            }
         }
     }
 
@@ -949,8 +955,20 @@ class GameApp {
 
             const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
             if (result.success) {
-                showNotification(result.message, 'success');
-                this.nextPlayerOrPhase('architect');
+                // 설계 모달 먼저 닫기
+                modalOverlay.classList.add('closing');
+                setTimeout(() => modalOverlay.remove(), 300);
+
+                // 쉬어야 합니다 알림 표시
+                showResultModal('😴 휴식 알림', `
+                    <div style="text-align: center; padding: 1rem;">
+                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">대지를 매각하여 이번 라운드는 쉬어야 합니다.</p>
+                        <p style="color: var(--text-muted);">평가 단계까지 자동으로 진행됩니다.</p>
+                    </div>
+                `, () => {
+                    showNotification(result.message, 'success');
+                    this.nextPlayerOrPhase('architect');
+                });
             }
         });
 
