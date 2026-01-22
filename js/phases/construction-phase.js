@@ -167,24 +167,17 @@ export function processRisks(playerIndex) {
             return;
         }
 
-        const effect = applyRiskEffect(risk, gameState, {
-            ...constructor,
-            riskBlocks: remainingBlocks
-        });
+        // UI에서 방어되지 않은 리스크는 효과 적용
+        const effect = applyRiskEffect(risk, gameState, constructor);
 
-        if (effect.isBlocked && remainingBlocks > 0) {
-            remainingBlocks--;
-            blockedCount++;
-            effect.message = `🛡️ ${constructor.name}이(가) "${risk.name}"을(를) 방어!`;
-        } else {
-            totalCostIncrease += effect.costIncrease;
-            totalDelayMonths += effect.delayMonths;
-            if (effect.interestMultiplier > 1) {
-                interestMultiplier *= effect.interestMultiplier;
-            }
-            if (effect.isTotalLoss) {
-                isTotalLoss = true;
-            }
+        // 효과 누적 (방어되지 않은 부정적 리스크만)
+        totalCostIncrease += effect.costIncrease;
+        totalDelayMonths += effect.delayMonths;
+        if (effect.interestMultiplier > 1) {
+            interestMultiplier *= effect.interestMultiplier;
+        }
+        if (effect.isTotalLoss) {
+            isTotalLoss = true;
         }
 
         results.push({
