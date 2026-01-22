@@ -143,38 +143,55 @@ export async function showStartingDiceRoll(playerName, onComplete) {
 }
 
 // 토지 구매 주사위
-export async function showLandPurchaseDice(landName, priceType, requiredDice, onComplete) {
+export async function showLandPurchaseDice(landName, priceType, requiredDice, onComplete, canReroll = false) {
     const container = createDiceContainer();
 
     const probability = ((requiredDice.length / 6) * 100).toFixed(0);
+    let rerollUsed = false;
 
     return new Promise((resolve) => {
-        container.innerHTML = `
-      <div class="dice-overlay">
-        <div class="dice-modal">
-          <div class="dice-title">🗺️ 토지 구매 도전</div>
-          <div class="dice-subtitle">${landName} (${priceType === 'urgent' ? '급매' : priceType === 'auction' ? '경매' : '시세'})</div>
-          <div class="dice-info">
-            <div>필요한 눈: ${requiredDice.join(', ')}</div>
-            <div>성공 확률: ${probability}%</div>
+        const renderDiceModal = () => {
+            container.innerHTML = `
+          <div class="dice-overlay">
+            <div class="dice-modal">
+              <div class="dice-title">🗺️ 토지 구매 도전</div>
+              <div class="dice-subtitle">${landName} (${priceType === 'urgent' ? '급매' : priceType === 'auction' ? '경매' : '시세'})</div>
+              <div class="dice-info">
+                <div>필요한 눈: ${requiredDice.join(', ')}</div>
+                <div>성공 확률: ${probability}%</div>
+                ${canReroll && !rerollUsed ? '<div class="reroll-info">🎲 재굴림 기회 1회</div>' : ''}
+              </div>
+              <div class="dice-display">
+                <div class="dice rolling">🎲</div>
+              </div>
+              <div class="dice-result"></div>
+              <div class="dice-buttons">
+                <button class="roll-button">도전!</button>
+              </div>
+            </div>
           </div>
-          <div class="dice-display">
-            <div class="dice rolling">🎲</div>
-          </div>
-          <div class="dice-result"></div>
-          <button class="roll-button">도전!</button>
-        </div>
-      </div>
-    `;
+        `;
+        };
 
+        renderDiceModal();
         container.classList.add('active');
 
-        const rollBtn = container.querySelector('.roll-button');
-        const diceEl = container.querySelector('.dice');
-        const resultEl = container.querySelector('.dice-result');
+        const handleRoll = async (isReroll = false) => {
+            const rollBtn = container.querySelector('.roll-button');
+            const rerollBtn = container.querySelector('.reroll-button');
+            const diceEl = container.querySelector('.dice');
+            const resultEl = container.querySelector('.dice-result');
 
-        rollBtn.addEventListener('click', async () => {
             rollBtn.disabled = true;
+            if (rerollBtn) rerollBtn.disabled = true;
+
+            // 재굴림 시 초기화
+            if (isReroll) {
+                diceEl.classList.remove('result', 'fail', 'success');
+                diceEl.classList.add('rolling');
+                resultEl.innerHTML = '';
+                rerollUsed = true;
+            }
 
             const finalValue = rollDice();
             const sequence = generateRollSequence(finalValue, 20);
@@ -193,26 +210,64 @@ export async function showLandPurchaseDice(landName, priceType, requiredDice, on
             if (isSuccess) {
                 diceEl.classList.add('success');
                 resultEl.innerHTML = `
-          <div class="result-success">🎉 낙찰 성공!</div>
-          <div class="result-value">${getDiceEmoji(finalValue)} = ${finalValue}</div>
-        `;
+                  <div class="result-success">🎉 낙찰 성공!</div>
+                  <div class="result-value">${getDiceEmoji(finalValue)} = ${finalValue}</div>
+                `;
+                // 성공 시 바로 종료
+                await delay(2000);
+                container.classList.remove('active');
+                container.innerHTML = '';
+                const result = { value: finalValue, isSuccess, rerollUsed };
+                if (onComplete) onComplete(result);
+                resolve(result);
             } else {
                 diceEl.classList.add('fail');
-                resultEl.innerHTML = `
-          <div class="result-fail">😢 매매 불발</div>
-          <div class="result-value">${getDiceEmoji(finalValue)} = ${finalValue}</div>
-        `;
+
+                // 재굴림 가능 여부 확인
+                if (canReroll && !rerollUsed) {
+                    resultEl.innerHTML = `
+                      <div class="result-fail">😢 매매 불발</div>
+                      <div class="result-value">${getDiceEmoji(finalValue)} = ${finalValue}</div>
+                      <div class="reroll-notice">🎲 재굴림 기회가 있습니다!</div>
+                    `;
+                    // 버튼 영역 업데이트
+                    const buttonsEl = container.querySelector('.dice-buttons');
+                    buttonsEl.innerHTML = `
+                      <button class="reroll-button">🎲 재굴림!</button>
+                      <button class="skip-button">포기하기</button>
+                    `;
+
+                    // 재굴림 버튼 이벤트
+                    container.querySelector('.reroll-button').addEventListener('click', () => {
+                        handleRoll(true);
+                    });
+
+                    // 포기 버튼 이벤트
+                    container.querySelector('.skip-button').addEventListener('click', async () => {
+                        await delay(500);
+                        container.classList.remove('active');
+                        container.innerHTML = '';
+                        const result = { value: finalValue, isSuccess: false, rerollUsed: false };
+                        if (onComplete) onComplete(result);
+                        resolve(result);
+                    });
+                } else {
+                    resultEl.innerHTML = `
+                      <div class="result-fail">😢 매매 불발</div>
+                      <div class="result-value">${getDiceEmoji(finalValue)} = ${finalValue}</div>
+                    `;
+                    // 실패 시 종료
+                    await delay(2000);
+                    container.classList.remove('active');
+                    container.innerHTML = '';
+                    const result = { value: finalValue, isSuccess, rerollUsed };
+                    if (onComplete) onComplete(result);
+                    resolve(result);
+                }
             }
+        };
 
-            await delay(2000);
-
-            container.classList.remove('active');
-            container.innerHTML = '';
-
-            const result = { value: finalValue, isSuccess };
-            if (onComplete) onComplete(result);
-            resolve(result);
-        });
+        container.querySelector('.roll-button').addEventListener('click', () => handleRoll(false));
     });
 }
 

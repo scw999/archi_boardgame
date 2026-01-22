@@ -571,6 +571,68 @@
     cursor: wait;
 }
 
+/* ===== 재굴림 버튼 스타일 ===== */
+.dice-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.reroll-button {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border: none;
+    border-radius: var(--radius-md);
+    color: white;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    animation: rerollPulse 1s ease-in-out infinite;
+}
+
+.reroll-button:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+@keyframes rerollPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.6); }
+}
+
+.skip-button {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--text-secondary);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.skip-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.reroll-info {
+    color: #8b5cf6;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.reroll-notice {
+    color: #8b5cf6;
+    font-weight: 700;
+    margin-top: 1rem;
+    animation: rerollPulse 1s ease-in-out infinite;
+}
+
 /* ===== 리스크 카드 공개 ===== */
 .risk-cards-container {
     display: flex;

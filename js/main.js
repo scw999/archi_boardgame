@@ -777,11 +777,22 @@ class GameApp {
             }
         } else {
             // 급매/경매는 주사위
+            const currentPlayer = gameState.getCurrentPlayer();
+            const canReroll = currentPlayer.bonusDiceActive || false;
+
             const diceResult = await showLandPurchaseDice(
                 savedLand.name,
                 priceType,
-                savedLand.diceRequired[priceType]
+                savedLand.diceRequired[priceType],
+                null,
+                canReroll
             );
+
+            // 재굴림 사용 시 플래그 리셋
+            if (diceResult.rerollUsed) {
+                currentPlayer.bonusDiceActive = false;
+                renderPlayerPanels();
+            }
 
             // 토지 객체를 직접 전달하는 새 함수 사용 (인덱스 문제 완전 우회)
             const result = attemptLandPurchaseByLand(
