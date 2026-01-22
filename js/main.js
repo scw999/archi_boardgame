@@ -338,21 +338,13 @@ class GameApp {
         }
     }
 
-    // 단계 시작 시 지도를 먼저 보여주고 카드로 스크롤
+    // 단계 시작 시 지도로 스크롤
     scrollToMapThenCards() {
         const cityGrid = document.getElementById('city-grid');
-        const cardGrid = document.getElementById('card-grid');
 
         if (cityGrid) {
-            // 먼저 지도로 스크롤
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            // 1.5초 후 카드 영역으로 스크롤
-            setTimeout(() => {
-                if (cardGrid) {
-                    window.scrollTo({ top: cardGrid.offsetTop - 120, behavior: 'smooth' });
-                }
-            }, 1500);
+            // 지도 영역으로 스크롤 (헤더 아래)
+            window.scrollTo({ top: cityGrid.offsetTop - 180, behavior: 'smooth' });
         }
     }
 

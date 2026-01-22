@@ -2290,12 +2290,32 @@ body {
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  perspective: 1200px;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* 개발 지도 제목 */
+.city-grid-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(245, 158, 11, 0.4);
+}
+
+.city-grid-title h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+.city-grid-title .title-subtitle {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .city-map-wrapper {

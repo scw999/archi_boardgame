@@ -136,9 +136,12 @@ export function renderCityGrid() {
     });
 
     let html = `
+        <div class="city-grid-title">
+            <h2>🗺️ 개발 지도</h2>
+            <span class="title-subtitle">플레이어들의 부동산 개발 현황</span>
+        </div>
         <div class="iso-city-container">
             <div class="iso-city-header">
-                <h3>🗺️ 개발 지도</h3>
                 <div class="iso-city-legend">
                     ${gameState.players.map((p, i) => `
                         <span class="legend-player" style="--player-color: ${PLAYER_COLORS[i].border}">
