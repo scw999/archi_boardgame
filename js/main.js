@@ -11,6 +11,7 @@ import { canSelectConstructor, selectConstructor, processRisks, checkConstructio
 import { calculateSalePrice, completeEvaluation, checkEvaluationPhaseComplete, getRoundSummary, getFinalResults } from './phases/evaluation-phase.js';
 import { buildings, BUILDING_IMAGES } from './data/buildings.js';
 import { constructors } from './data/constructors.js';
+import { architects } from './data/architects.js';
 
 // 건물 이미지 HTML 생성 헬퍼 함수
 function getBuildingImage(buildingName, size = '48px') {
@@ -3081,14 +3082,40 @@ class GameApp {
             </tr>
         `).join('');
 
+        const sizeLabels = {
+            'large': '대형',
+            'medium': '중견',
+            'small': '영세',
+            'atelier': '아뜰리에',
+            'direct': '직영'
+        };
+
         const constructorRows = constructors.map(c => `
             <tr>
                 <td class="constructor-cell">${c.emoji} ${c.name}</td>
-                <td class="type-cell">${c.type === 'small' ? '영세' : c.type === 'medium' ? '중견' : '대형'}</td>
+                <td class="type-cell">${sizeLabels[c.size] || c.size}</td>
                 <td class="number-cell">${(c.costMultiplier * 100).toFixed(0)}%</td>
                 <td class="number-cell">${c.paymentStages}단계</td>
                 <td class="number-cell">${c.riskBlocks}개</td>
                 <td class="desc-cell">${c.description}</td>
+            </tr>
+        `).join('');
+
+        const traitLabels = {
+            'artistry': '예술성',
+            'efficiency': '효율성',
+            'functionality': '기능성',
+            'fame': '유명도'
+        };
+
+        const architectRows = architects.map(a => `
+            <tr>
+                <td class="architect-cell">${a.portrait} ${a.name}</td>
+                <td class="type-cell">${traitLabels[a.trait] || a.trait}</td>
+                <td class="number-cell">+${((a.traitBonus - 1) * 100).toFixed(0)}%</td>
+                <td class="number-cell">${(a.feeMultiplier * 100).toFixed(0)}%</td>
+                <td class="number-cell">${(a.constructionMultiplier * 100).toFixed(0)}%</td>
+                <td class="desc-cell">${a.masterpieces.join(', ')}</td>
             </tr>
         `).join('');
 
@@ -3109,6 +3136,25 @@ class GameApp {
                         </thead>
                         <tbody>
                             ${buildingRows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-section">
+                    <h3>🎨 건축가 정보</h3>
+                    <table class="budget-table architect-table">
+                        <thead>
+                            <tr>
+                                <th>건축가</th>
+                                <th>특성</th>
+                                <th>보너스</th>
+                                <th>설계비</th>
+                                <th>시공비</th>
+                                <th>대표작</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${architectRows}
                         </tbody>
                     </table>
                 </div>
