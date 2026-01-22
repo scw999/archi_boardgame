@@ -1378,9 +1378,15 @@ class GameApp {
 
         const needsMoney = cheapestConstructor && player.money < cheapestConstructor.cost * 0.3;
 
-        // 액션 영역에 돈벌기 옵션 표시
+        // 액션 영역에 돈벌기 옵션 표시 (자금 부족 시에만)
         if (needsMoney) {
             this.showConstructionMoneyOptions(player, cheapestConstructor.cost);
+        } else {
+            // 자금이 충분하면 액션 영역 초기화
+            const actionArea = document.getElementById('action-area');
+            if (actionArea) {
+                actionArea.innerHTML = '';
+            }
         }
 
         // 카드 그리드에 선점된 카드 표시 포함
