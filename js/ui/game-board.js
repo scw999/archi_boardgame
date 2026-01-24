@@ -7,34 +7,64 @@ export function renderGameBoard() {
     if (!board) return;
 
     board.innerHTML = `
-    <div class="board-header">
-      <div class="round-info">
-        <span class="round-label">라운드</span>
-        <span class="round-number">${gameState.currentRound} / ${gameState.maxRounds}</span>
+    <div class="board-header-sticky">
+      <div class="header-top-row">
+        <div class="round-badge">
+          <span class="round-label">라운드</span>
+          <span class="round-number">${gameState.currentRound} / ${gameState.maxRounds}</span>
+        </div>
+        <div class="current-phase-large">
+          <span class="current-phase-name">${getPhaseDisplayNameOnly(gameState.phase)}</span>
+        </div>
+        <div class="current-player-turn">
+          ${renderCurrentPlayerInfo()}
+        </div>
       </div>
-      <div class="phase-info">
-        <span class="phase-label">현재 단계</span>
-        <span class="phase-name">${getPhaseDisplayName(gameState.phase)}</span>
+
+      <div class="phase-progress-row">
+        <div class="phase-progress">
+          ${renderPhaseProgress()}
+        </div>
       </div>
-    </div>
-    
-    <div class="phase-progress">
-      ${renderPhaseProgress()}
-    </div>
-    
-    <div class="current-player-info">
-      ${renderCurrentPlayerInfo()}
     </div>
   `;
 }
 
-// 페이즈 이름 반환
+// 페이즈 아이콘 반환
+function getPhaseIcon(phase) {
+    const icons = {
+        [GAME_PHASES.SETUP]: '🎮',
+        [GAME_PHASES.LAND_PURCHASE]: '🗺️',
+        [GAME_PHASES.DESIGN]: '📏',
+        [GAME_PHASES.CONSTRUCTION]: '🏗️',
+        [GAME_PHASES.EVALUATION]: '☑️',
+        [GAME_PHASES.ROUND_END]: '📊',
+        [GAME_PHASES.GAME_END]: '🏆'
+    };
+    return icons[phase] || '🎮';
+}
+
+// 페이즈 이름 반환 (아이콘 포함)
 function getPhaseDisplayName(phase) {
     const names = {
         [GAME_PHASES.SETUP]: '🎮 게임 설정',
         [GAME_PHASES.LAND_PURCHASE]: '🗺️ 대지 구매',
-        [GAME_PHASES.DESIGN]: '📏 설계',
-        [GAME_PHASES.CONSTRUCTION]: '🏗️ 시공',
+        [GAME_PHASES.DESIGN]: '📏 건축가 선정',
+        [GAME_PHASES.CONSTRUCTION]: '🏗️ 시공사 선정',
+        [GAME_PHASES.EVALUATION]: '☑️ 평가',
+        [GAME_PHASES.ROUND_END]: '📊 라운드 종료',
+        [GAME_PHASES.GAME_END]: '🏆 게임 종료'
+    };
+    return names[phase] || phase;
+}
+
+// 페이즈 이름만 반환 (이모지 포함)
+function getPhaseDisplayNameOnly(phase) {
+    const names = {
+        [GAME_PHASES.SETUP]: '🎮 게임 설정',
+        [GAME_PHASES.LAND_PURCHASE]: '🗺️ 대지 구매',
+        [GAME_PHASES.DESIGN]: '📏 건축가 선정',
+        [GAME_PHASES.CONSTRUCTION]: '🏗️ 시공사 선정',
         [GAME_PHASES.EVALUATION]: '☑️ 평가',
         [GAME_PHASES.ROUND_END]: '📊 라운드 종료',
         [GAME_PHASES.GAME_END]: '🏆 게임 종료'
@@ -45,10 +75,10 @@ function getPhaseDisplayName(phase) {
 // 페이즈 진행 표시
 function renderPhaseProgress() {
     const phases = [
-        { key: GAME_PHASES.LAND_PURCHASE, icon: '🗺️', name: '대지' },
-        { key: GAME_PHASES.DESIGN, icon: '📏', name: '설계' },
-        { key: GAME_PHASES.CONSTRUCTION, icon: '🏗️', name: '시공' },
-        { key: GAME_PHASES.EVALUATION, icon: '☑️', name: '평가' }
+        { key: GAME_PHASES.LAND_PURCHASE, icon: '🗺️', name: '대지 구매', type: 'land' },
+        { key: GAME_PHASES.DESIGN, icon: '📏', name: '설계 단계', type: 'design' },
+        { key: GAME_PHASES.CONSTRUCTION, icon: '🏗️', name: '시공 단계', type: 'construction' },
+        { key: GAME_PHASES.EVALUATION, icon: '☑️', name: '평가', type: 'evaluation' }
     ];
 
     const currentIndex = phases.findIndex(p => p.key === gameState.phase);
@@ -59,7 +89,7 @@ function renderPhaseProgress() {
         else if (index === currentIndex) status = 'active';
 
         return `
-      <div class="phase-step ${status}">
+      <div class="phase-step ${status} phase-${phase.type}">
         <div class="phase-icon">${phase.icon}</div>
         <div class="phase-name">${phase.name}</div>
       </div>

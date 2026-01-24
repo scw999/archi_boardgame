@@ -43,6 +43,139 @@
   --transition-slow: 0.5s ease;
 }
 
+/* ===== 프리로더 ===== */
+#preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+#preloader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.preloader-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.preloader-logo {
+  font-size: 5rem;
+  animation: preloader-bounce 1s ease-in-out infinite;
+}
+
+@keyframes preloader-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.1);
+  }
+}
+
+.preloader-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.preloader-spinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  animation: spinner-rotate 1.5s linear infinite;
+}
+
+.spinner-ring:nth-child(1) {
+  border-top-color: #f59e0b;
+  animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+  border-right-color: #3b82f6;
+  animation-delay: 0.15s;
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+}
+
+.spinner-ring:nth-child(3) {
+  border-bottom-color: #10b981;
+  animation-delay: 0.3s;
+  width: 40%;
+  height: 40%;
+  top: 30%;
+  left: 30%;
+}
+
+@keyframes spinner-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.preloader-text {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+}
+
+.preloader-progress {
+  width: 200px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #f59e0b, #3b82f6, #10b981);
+  background-size: 200% 100%;
+  animation: progress-gradient 2s linear infinite;
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+@keyframes progress-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
 /* ===== 리셋 & 기본 ===== */
 *,
 *::before,
@@ -241,26 +374,138 @@ body {
 
 /* ===== 게임 컨테이너 ===== */
 #game-container {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "players board"
-    "players map";
-  gap: 1rem;
+  display: block;
   min-height: 100vh;
   padding: 1rem;
-  padding-bottom: 140px; /* 하단 고정 로그 공간 확보 */
+  padding-left: 250px; /* 고정된 왼쪽 플레이어 패널 공간 */
+  padding-right: 1rem; /* 오른쪽 여백 */
+  padding-top: 160px; /* 고정 헤더 공간 확보 (헤더 높이 + 여유) */
+  padding-bottom: 1rem; /* 하단 여백 */
   position: relative;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* ===== 게임 보드 (중앙) ===== */
 #game-board {
-  grid-area: board;
-  background: var(--bg-secondary);
+  background: transparent;
   border-radius: var(--radius-lg);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 고정 보드 헤더 (뷰포트 고정) */
+.board-header-sticky {
+  position: fixed;
+  top: 0;
+  left: 240px; /* 왼쪽 플레이어 패널 너비 + 여유 공간 */
+  right: 0;
+  z-index: 1000;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(15, 23, 42, 0.98) 100%);
+  padding: 0.6rem 1.5rem;
+  margin-left: 0.5rem;
+  margin-right: 1rem;
+  margin-top: 1rem;
+  border-bottom: 2px solid var(--accent-blue);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* 게임 보드 컨텐츠 영역 */
+.game-board-content {
   padding: 1.5rem;
-  overflow-y: auto;
+  flex: 1;
+}
+
+/* 상단 줄: 라운드 + 현재 페이즈 */
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* 라운드 배지 */
+.round-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--gradient-gold);
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+}
+
+.round-badge .round-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--bg-primary);
+}
+
+.round-badge .round-number {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--bg-primary);
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+}
+
+/* 현재 단계 크게 표시 */
+.current-phase-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--gradient-blue);
+  padding: 0.8rem 2.4rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.current-phase-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* 현재 플레이어 턴 표시 (헤더 내) */
+.current-player-turn {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid var(--accent-gold);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 1rem;
+}
+
+.current-player-turn .current-player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.current-player-turn .player-turn {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+/* 헤더 스페이서 (레이아웃 균형용) */
+.header-spacer {
+  width: 100px;
+}
+
+/* 페이즈 진행 줄 */
+.phase-progress-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem 0;
 }
 
 .board-header {
@@ -298,6 +543,26 @@ body {
   color: var(--accent-blue);
 }
 
+/* 고정 헤더 내 페이즈 진행 표시 */
+.board-header-sticky .phase-progress {
+  margin-bottom: 0;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.board-header-sticky .phase-step {
+  padding: 0.6rem 1.2rem;
+}
+
+.board-header-sticky .phase-step .phase-icon {
+  font-size: 1.8rem;
+}
+
+.board-header-sticky .phase-step .phase-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .phase-progress {
   display: flex;
   align-items: center;
@@ -319,13 +584,35 @@ body {
 
 .phase-step.active {
   opacity: 1;
-  background: var(--gradient-blue);
   box-shadow: var(--shadow-md);
 }
 
 .phase-step.completed {
   opacity: 0.8;
-  background: var(--accent-emerald);
+}
+
+/* 페이즈별 색상 - 대지 구매 (초록색) */
+.phase-step.phase-land.active,
+.phase-step.phase-land.completed {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* 페이즈별 색상 - 건축가 선정 (보라색) */
+.phase-step.phase-design.active,
+.phase-step.phase-design.completed {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+/* 페이즈별 색상 - 시공사 선정 (오렌지색) */
+.phase-step.phase-construction.active,
+.phase-step.phase-construction.completed {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+/* 페이즈별 색상 - 평가 (파란색) */
+.phase-step.phase-evaluation.active,
+.phase-step.phase-evaluation.completed {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
 .phase-step .phase-icon {
@@ -358,40 +645,58 @@ body {
 
 /* ===== 플레이어 패널 (좌측) ===== */
 #player-panels {
-  grid-area: players;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.3rem;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: 210px;
+  z-index: 50;
+  max-height: calc(100vh - 2rem);
   overflow-y: auto;
-  position: relative;
-  z-index: 10;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-gold) transparent;
+}
+
+#player-panels::-webkit-scrollbar {
+  width: 6px;
+}
+
+#player-panels::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#player-panels::-webkit-scrollbar-thumb {
+  background: var(--accent-gold);
+  border-radius: 3px;
 }
 
 .player-panel {
   background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
   border: 2px solid transparent;
-  transition: all var(--transition-normal);
+  flex-shrink: 0;
 }
 
 .player-panel.active {
   border-color: var(--accent-gold);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
 }
 
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .player-name {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
 }
 
 .turn-indicator {
@@ -411,14 +716,14 @@ body {
 }
 
 .money-info {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .money-row {
   display: flex;
   justify-content: space-between;
-  padding: 0.3rem 0;
-  font-size: 0.9rem;
+  padding: 0.2rem 0;
+  font-size: 0.85rem;
 }
 
 .money-row .label {
@@ -437,26 +742,26 @@ body {
 .project-status {
   background: var(--bg-tertiary);
   border-radius: var(--radius-md);
-  padding: 0.8rem;
-  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .project-header {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .project-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0;
-  font-size: 0.85rem;
+  gap: 0.4rem;
+  padding: 0.2rem 0;
+  font-size: 0.8rem;
 }
 
 .project-item .icon {
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .buildings-count {
@@ -476,31 +781,73 @@ body {
 
 /* ===== 카드 그리드 (중앙) ===== */
 #card-grid {
-  grid-column: 2;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* ===== 게임 로그 (최하단 고정) ===== */
-#game-log {
-  grid-area: log;
+/* 카드 그리드 래퍼 */
+.card-grid-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* 스크롤 안내 인디케이터 */
+.scroll-indicator {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  padding: 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  max-height: 120px;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95));
+  border-radius: 30px;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4), 0 0 30px rgba(245, 158, 11, 0.2);
   z-index: 100;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: scroll-bounce 1.5s ease-in-out infinite;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+.scroll-indicator:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 1), rgba(245, 158, 11, 1));
+  box-shadow: 0 6px 25px rgba(245, 158, 11, 0.6), 0 0 40px rgba(245, 158, 11, 0.3);
+}
+
+.scroll-indicator.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(20px);
+}
+
+.scroll-indicator-text {
+  color: #1a1a2e;
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@keyframes scroll-bounce {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+/* ===== 게임 로그 (삭제됨 - 숨김 처리) ===== */
+#game-log {
+  display: none !important;
 }
 
 .log-header {
@@ -831,6 +1178,80 @@ body {
   cursor: pointer;
 }
 
+/* ===== 게임 규칙 메뉴얼 모달 ===== */
+.game-manual {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-gold) transparent;
+}
+
+.game-manual::-webkit-scrollbar {
+  width: 6px;
+}
+
+.game-manual::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.game-manual::-webkit-scrollbar-thumb {
+  background: var(--accent-gold);
+  border-radius: 3px;
+}
+
+/* 결과 모달 스크롤바 (숨김 처리) */
+.result-modal {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.result-modal::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.manual-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.manual-section:last-child {
+  border-bottom: none;
+}
+
+.manual-section h3 {
+  color: var(--accent-gold);
+  margin-bottom: 0.75rem;
+  font-size: 1.15rem;
+}
+
+.manual-section p {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.manual-section ul, .manual-section ol {
+  margin-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.manual-section li {
+  margin-bottom: 0.4rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.manual-section ul ul {
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
+.manual-section strong {
+  color: var(--text-primary);
+}
+
 /* ===== 알림 ===== */
 #notifications {
   position: fixed;
@@ -879,6 +1300,7 @@ body {
 @media (max-width: 1024px) {
   #game-container {
     grid-template-columns: 1fr;
+    padding-top: 180px; /* 모바일에서 고정 헤더 공간 */
   }
 
   #player-panels,
@@ -892,6 +1314,14 @@ body {
   .player-panel {
     min-width: 250px;
   }
+
+  /* 모바일에서 고정 헤더 전체 너비 */
+  .board-header-sticky {
+    left: 0;
+    margin-left: 1rem;
+    right: 0;
+    margin-right: 1rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -904,7 +1334,207 @@ body {
   }
 }
 
-/* ===== 설계 패널 ===== */
+/* ===== 설계/시공 모달 오버레이 ===== */
+.design-modal-overlay,
+.construction-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: modalFadeIn 0.3s ease;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.design-modal-content,
+.construction-modal-content {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideUp 0.3s ease;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-orange) transparent;
+}
+
+.design-modal-content::-webkit-scrollbar,
+.construction-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.design-modal-content::-webkit-scrollbar-track,
+.construction-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.design-modal-content::-webkit-scrollbar-thumb,
+.construction-modal-content::-webkit-scrollbar-thumb {
+  background: var(--accent-orange);
+  border-radius: 4px;
+}
+
+.design-modal-content::-webkit-scrollbar-thumb:hover,
+.construction-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+}
+
+.design-modal-content h3,
+.construction-modal-content h3 {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: var(--accent-gold);
+}
+
+.design-modal-content h4,
+.construction-modal-content h4 {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* 모달 내 건물 그리드 */
+.design-modal-content .building-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.design-modal-content .building-option {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.design-modal-content .building-option:hover {
+  border-color: var(--accent-blue);
+}
+
+.design-modal-content .building-option.selected {
+  border-color: var(--accent-gold);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+/* 토지에 적합하지 않은 건물 */
+.design-modal-content .building-option.not-suitable {
+  opacity: 0.4;
+  background: rgba(100, 100, 100, 0.2);
+  border-color: rgba(150, 150, 150, 0.3);
+  cursor: not-allowed;
+}
+
+.design-modal-content .building-option.not-suitable:hover {
+  border-color: rgba(150, 150, 150, 0.3);
+  transform: none;
+}
+
+.design-modal-content .building-option.not-suitable .building-name::after {
+  content: ' (부적합)';
+  color: var(--accent-red);
+  font-size: 0.75rem;
+}
+
+/* 자금 부족으로 비활성화된 건물 */
+.design-modal-content .building-option.building-disabled {
+  opacity: 0.4;
+  background: rgba(80, 80, 80, 0.3);
+  border-color: rgba(100, 100, 100, 0.4);
+  cursor: not-allowed;
+  filter: grayscale(60%);
+}
+
+.design-modal-content .building-option.building-disabled:hover {
+  border-color: rgba(100, 100, 100, 0.4);
+  transform: none;
+}
+
+.unaffordable-badge {
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 4px;
+}
+
+/* 모달 닫기 버튼 */
+.modal-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: bold;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--accent-red);
+  transform: scale(1.1);
+}
+
+/* 모달 컨텐츠 상대 위치 설정 */
+.design-modal-content,
+.construction-modal-content {
+  position: relative;
+}
+
+.design-modal-content .architect-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.design-modal-content .architect-info .portrait {
+  font-size: 2.5rem;
+}
+
+.design-modal-content .architect-info .name {
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+/* 모달 내 액션 버튼 */
+.design-modal-content .design-action-buttons,
+.construction-modal-content .action-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== 설계 패널 (기존 호환) ===== */
 .design-panel {
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
@@ -1946,16 +2576,42 @@ body {
   color: white;
 }
 
+.action-btn.loan {
+  background: var(--gradient-blue);
+  color: white;
+}
+
 /* ===== 도시 지도 (메인 보드판) ===== */
 #city-grid {
-  grid-area: map;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  perspective: 1200px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 개발 지도 제목 */
+.city-grid-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(245, 158, 11, 0.4);
+}
+
+.city-grid-title h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+.city-grid-title .title-subtitle {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .city-map-wrapper {
@@ -2517,6 +3173,79 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
+/* 와일드카드 획득 섹션 */
+.wildcard-grant-section {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.1));
+  border: 2px solid var(--accent-purple);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.wildcard-grant-section h3 {
+  color: var(--accent-purple);
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.wildcard-grant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wildcard-grant-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-tertiary);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-purple);
+  opacity: 0;
+  transform: translateX(-50px);
+}
+
+.wildcard-grant-item.animate-wildcard {
+  animation: wildcardSlideIn 0.6s ease forwards;
+}
+
+.wildcard-grant-icon {
+  font-size: 2rem;
+  min-width: 50px;
+  text-align: center;
+}
+
+.wildcard-grant-info {
+  flex: 1;
+}
+
+.wildcard-grant-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.wildcard-grant-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+@keyframes wildcardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px) scale(0.8);
+  }
+  50% {
+    transform: translateX(10px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
 /* 평가 상세 */
 .eval-breakdown {
   background: var(--bg-tertiary);
@@ -2792,8 +3521,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-height: 200px;
-  overflow-y: auto;
 }
 
 .wildcard-item {
@@ -3168,8 +3895,8 @@ body {
 
 .stats-row {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
 }
 
 .stat-item {
@@ -3177,23 +3904,23 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.3rem;
   background: var(--bg-tertiary);
   border-radius: var(--radius-sm);
 }
 
 .stat-item .stat-icon {
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .stat-item .stat-value {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .stat-item .stat-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
 }
 
@@ -4142,9 +4869,9 @@ body {
 /* ===== 유틸리티 버튼 ===== */
 #game-utility-buttons {
   position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 200;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1001;
   display: flex;
   gap: 0.5rem;
 }
@@ -4398,6 +5125,27 @@ body {
   border-radius: var(--radius-sm);
 }
 
+/* 컴팩트 버전 blueprint frame (설계 진행 창용) */
+#design-preview-modal .blueprint-frame.compact {
+  width: auto;
+  height: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#design-preview-modal .blueprint-frame.compact .blueprint-grid {
+  margin-bottom: 0;
+}
+
+#design-preview-modal .blueprint-frame.compact .blueprint-label {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+}
+
 #design-preview-modal .design-details {
   background: rgba(0, 0, 0, 0.2);
   border-radius: var(--radius-md);
@@ -4608,8 +5356,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-height: 200px;
-  overflow-y: auto;
 }
 
 .wildcard-item {
@@ -4718,14 +5464,14 @@ body {
   display: none;
 }
 
-/* 와일드카드 패널 위치 조정 - 우측 하단 */
+/* 와일드카드 패널 위치 조정 - 토글 버튼 바로 위 */
 #wildcard-panel {
-  bottom: auto;
-  top: 50%;
+  bottom: 5.5rem;
+  top: auto;
   right: 1.5rem;
   left: auto;
-  transform: translateY(-50%);
-  max-height: 70vh;
+  transform: none;
+  max-height: none;
   width: 320px;
 }
 
@@ -5030,9 +5776,8 @@ body {
 
 /* 매각 완료 셀 */
 .city-cell.region-cell.sold {
-  opacity: 0.7;
-  filter: grayscale(0.3);
-  background: linear-gradient(135deg, rgba(100, 100, 100, 0.3), rgba(80, 80, 80, 0.2));
+  opacity: 1;
+  filter: none;
 }
 
 .city-cell.region-cell.sold .cell-sold {
@@ -5045,7 +5790,7 @@ body {
 
 .city-cell.region-cell.sold .sold-icon {
   font-size: 1.6rem;
-  opacity: 0.8;
+  opacity: 1;
 }
 
 /* 지역 셀 - 빈 상태 */
@@ -5336,35 +6081,50 @@ body {
 .iso-city-container {
   display: grid;
   grid-template-columns: 1fr 280px;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(500px, auto);
+  grid-template-areas:
+    "header header"
+    "map sidebar";
   gap: 1rem;
-  height: 100%;
-  min-height: 500px;
+  min-height: auto;
   background: linear-gradient(135deg, #1a1a2e, #16213e);
   border-radius: var(--radius-lg);
   padding: 1rem;
 }
 
 .iso-city-header {
-  grid-column: 1 / -1;
+  grid-area: header;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  z-index: 10;
+  min-height: 60px;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(26, 26, 46, 1));
   border-radius: var(--radius-md);
+  border: 3px solid rgba(245, 158, 11, 0.7);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3), 0 0 30px rgba(245, 158, 11, 0.15);
+  backdrop-filter: blur(8px);
+  margin-bottom: 0.5rem;
 }
 
 .iso-city-header h3 {
   margin: 0;
-  font-size: 1.2rem;
-  color: var(--text-primary);
+  font-size: 1.6rem;
+  color: #f59e0b;
+  font-weight: 800;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.5);
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .iso-city-legend {
   display: flex;
   gap: 1rem;
   align-items: center;
+  position: absolute;
+  right: 1.5rem;
 }
 
 /* 개발자 모드 버튼 */
@@ -5408,20 +6168,24 @@ body {
 
 /* 맵 래퍼 */
 .iso-city-map-wrapper {
+  grid-area: map;
   position: relative;
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow: visible;
   background: transparent;
   box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 맵 컨테이너 */
 .iso-city-map {
   position: relative;
   width: 100%;
-  min-height: 500px;
+  min-height: auto;
   aspect-ratio: 16 / 9;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* 맵 배경 이미지 */
@@ -5534,6 +6298,22 @@ body {
 
 .plot-marker.has-building-img:hover .plot-building-img {
   transform: scale(1.1);
+}
+
+/* 설계/시공 단계 건물 반투명 */
+.building-transparent {
+  opacity: 0.6;
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+  border: 3px dashed rgba(59, 130, 246, 0.8);
+  border-radius: 8px;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.7);
+  animation: design-pulse 2s ease-in-out infinite;
+}
+
+@keyframes design-pulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)); }
+  50% { filter: drop-shadow(0 0 15px rgba(59, 130, 246, 1)); }
 }
 
 .plot-building-emoji {
@@ -5765,6 +6545,7 @@ body {
 
 /* 사이드바 */
 .iso-city-sidebar {
+  grid-area: sidebar;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -5772,7 +6553,8 @@ body {
   border-radius: var(--radius-md);
   padding: 1rem;
   overflow-y: auto;
-  max-height: 500px;
+  align-self: start;
+  max-height: 100%;
 }
 
 .sidebar-section h4 {
@@ -5888,7 +6670,11 @@ body {
 @media (max-width: 900px) {
   .iso-city-container {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "header"
+      "map"
+      "sidebar";
   }
 
   .iso-city-sidebar {
@@ -5896,31 +6682,32 @@ body {
   }
 
   .iso-city-map {
-    min-height: 350px;
+    min-height: auto;
   }
 }
 
 /* city-grid 섹션 표시 */
 #city-grid {
-  grid-area: map;
-  min-height: 600px;
-  overflow: hidden;
+  display: block;
+  min-height: auto;
+  overflow: visible;
   position: relative;
   z-index: 1;
+  margin-top: 130px; /* 고정 헤더 높이 고려 */
 }
 
 /* 매각된 건물 스타일 */
 .plot-marker.sold .plot-marker-inner {
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .plot-marker.sold .plot-building-img,
 .plot-marker.sold .plot-building-emoji {
-  filter: grayscale(50%) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
 .sold-building {
-  filter: grayscale(30%) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) !important;
 }
 
 .plot-marker.sold::before {

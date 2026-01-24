@@ -1,5 +1,16 @@
 // 플레이어 정보 패널 UI
 import { gameState } from '../core/game-state.js';
+import { buildings, BUILDING_IMAGES } from '../data/buildings.js';
+
+// 건물 이미지 HTML 생성 헬퍼 함수
+function getBuildingImage(buildingName, size = '32px') {
+    const imagePath = BUILDING_IMAGES[buildingName];
+    if (imagePath) {
+        return `<img src="${imagePath}" alt="${buildingName}" class="building-img" style="width: ${size}; height: ${size}; object-fit: contain;">`;
+    }
+    const building = buildings[buildingName];
+    return building ? building.emoji : '🏢';
+}
 
 // 모든 플레이어 패널 렌더링
 export function renderPlayerPanels() {
@@ -56,13 +67,21 @@ function renderPlayerPanel(player, isActive) {
         ${project ? renderProjectStatus(project) : ''}
 
         <div class="stats-row">
+          ${player.buildings.length > 0 ? `
+          <div class="stat-item building clickable-building" data-action="show-buildings" data-player-index="${player.id}" title="클릭하여 건물 보기">
+            <span class="stat-icon">🏢</span>
+            <span class="stat-value">${player.buildings.length}</span>
+            <span class="stat-label">건물</span>
+          </div>
+          ` : `
           <div class="stat-item">
             <span class="stat-icon">🏢</span>
             <span class="stat-value">${player.buildings.length}</span>
             <span class="stat-label">건물</span>
           </div>
+          `}
           ${wildcardCount > 0 ? `
-          <div class="stat-item wildcard clickable-wildcard" data-action="toggle-wildcard" title="클릭하여 와일드카드 보기">
+          <div class="stat-item wildcard clickable-wildcard" data-action="toggle-wildcard" data-player-index="${player.id}" title="클릭하여 와일드카드 보기">
             <span class="stat-icon">🃏</span>
             <span class="stat-value">${wildcardCount}</span>
             <span class="stat-label">카드</span>
@@ -91,7 +110,7 @@ function renderProjectStatus(project) {
     if (project.building) {
         items.push(`
       <div class="project-item building">
-        <span class="icon">${project.building.emoji}</span>
+        <span class="icon">${getBuildingImage(project.building.name, '28px')}</span>
         <span class="name">${project.building.name}</span>
       </div>
     `);
@@ -175,7 +194,7 @@ export function showPlayerDetail(playerIndex) {
         <h3>🏢 완성된 건물 (${player.buildings.length}개)</h3>
         ${player.buildings.length > 0 ? player.buildings.map(project => `
           <div class="building-item">
-            <span>${project.building.emoji} ${project.building.name}</span>
+            <span>${getBuildingImage(project.building.name, '24px')} ${project.building.name}</span>
             <span>@ ${project.land.name}</span>
             <span>매각: ${gameState.formatMoney(project.salePrice)}</span>
           </div>

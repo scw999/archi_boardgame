@@ -1,7 +1,17 @@
 // 아이소메트릭 개발 지도 UI
 import { gameState } from '../core/game-state.js';
 import { REGIONS } from '../data/lands.js';
-import { BUILDING_IMAGES } from '../data/buildings.js';
+import { buildings, BUILDING_IMAGES } from '../data/buildings.js';
+
+// 건물 이미지 HTML 생성 헬퍼 함수
+function getBuildingImageHTML(buildingName, size = '32px') {
+    const imagePath = BUILDING_IMAGES[buildingName];
+    if (imagePath) {
+        return `<img src="${imagePath}" alt="${buildingName}" class="building-img" style="width: ${size}; height: ${size}; object-fit: contain;">`;
+    }
+    const building = buildings[buildingName];
+    return building ? building.emoji : '🏢';
+}
 
 let is3DView = false;
 let selectedPlotIndex = null;
@@ -128,7 +138,7 @@ export function renderCityGrid() {
     let html = `
         <div class="iso-city-container">
             <div class="iso-city-header">
-                <h3>🗺️ 개발 지도</h3>
+                <h3>🗺️ 부동산 개발 현황판</h3>
                 <div class="iso-city-legend">
                     ${gameState.players.map((p, i) => `
                         <span class="legend-player" style="--player-color: ${PLAYER_COLORS[i].border}">
@@ -164,7 +174,7 @@ export function renderCityGrid() {
             <!-- 소유 현황 패널 -->
             <div class="iso-city-sidebar">
                 <div class="sidebar-section">
-                    <h4>📍 내 자산</h4>
+                    <h4>📍 자산</h4>
                     ${renderOwnedAssetsList(ownedPlots)}
                 </div>
 
@@ -402,12 +412,15 @@ function renderPlotMarker(plot, index, owned) {
         if (hasBuilding) {
             // 건물 이미지가 있으면 이미지 사용, 없으면 이모지 폴백
             const buildingImage = BUILDING_IMAGES[owned.building.name];
+            // 설계/시공 단계에서는 반투명, 완료/매각 시 선명
+            const isTransparent = owned.status === 'design' || owned.status === 'construction';
+            const transparentClass = isTransparent ? ' building-transparent' : '';
             if (buildingImage) {
-                content = `<img src="${buildingImage}" alt="${owned.building.name}" class="plot-building-img${isSold ? ' sold-building' : ''}"
+                content = `<img src="${buildingImage}" alt="${owned.building.name}" class="plot-building-img${isSold ? ' sold-building' : ''}${transparentClass}"
                            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                           <span class="plot-building-emoji" style="display:none;">${owned.building.emoji}</span>`;
             } else {
-                content = `<span class="plot-building-emoji${isSold ? ' sold-building' : ''}">${owned.building.emoji}</span>`;
+                content = `<span class="plot-building-emoji${isSold ? ' sold-building' : ''}${transparentClass}">${owned.building.emoji}</span>`;
             }
         } else {
             content = `<span class="plot-land">🏞️</span>`;
@@ -463,7 +476,7 @@ function renderPlotMarker(plot, index, owned) {
                 ${isOwned ? `
                     <div class="tooltip-owner">${isSold ? '(매각됨) ' : ''}${owned.playerName}</div>
                     <div class="tooltip-land">${owned.land.name}</div>
-                    ${owned.building ? `<div class="tooltip-building">${owned.building.emoji} ${owned.building.name}</div>` : ''}
+                    ${owned.building ? `<div class="tooltip-building">${getBuildingImageHTML(owned.building.name, '20px')} ${owned.building.name}</div>` : ''}
                     ${clickHint ? `<div class="tooltip-hint">${clickHint}</div>` : ''}
                 ` : `
                     <div class="tooltip-zone">${getZoneName(plot.zone)}</div>
@@ -531,7 +544,7 @@ function renderOwnedAssetsList(ownedPlots) {
                         const assetName = hasCompletedBuilding ? `${plot.building.name} 건물` : `${plot.land.name.replace(' 필지', '')} 택지`;
                         return `
                         <div class="asset-item ${plot.status}">
-                            <span class="asset-icon">${plot.building ? plot.building.emoji : '🏞️'}</span>
+                            <span class="asset-icon">${plot.building ? getBuildingImageHTML(plot.building.name, '24px') : '🏞️'}</span>
                             <span class="asset-name">${assetName}</span>
                             <span class="asset-status">${getStatusLabel(plot.status)}</span>
                         </div>
@@ -888,7 +901,7 @@ function showBuildingDetailModal(plotIndex) {
                     }
                 </div>
                 <div class="modal-building-info">
-                    <div class="modal-building-name">${owned.building.emoji} ${owned.building.name}</div>
+                    <div class="modal-building-name">${getBuildingImageHTML(owned.building.name, '24px')} ${owned.building.name}</div>
                     <div class="modal-building-stat">면적: ${owned.building.area || '-'}평</div>
                     <div class="modal-building-stat">설계비: ${gameState.formatMoney(owned.building.designFee || 0)}</div>
                     <div class="modal-building-stat">시공비: ${gameState.formatMoney(owned.building.constructionCost || 0)}</div>
@@ -975,7 +988,7 @@ function renderProjectTile(player, playerIndex) {
 
             <div class="tile-info">
                 ${project.land ? `<div class="tile-land-name">${project.land.name}</div>` : ''}
-                ${project.building ? `<div class="tile-building-name">${project.building.emoji} ${project.building.name}</div>` : ''}
+                ${project.building ? `<div class="tile-building-name">${getBuildingImageHTML(project.building.name, '20px')} ${project.building.name}</div>` : ''}
                 ${project.architect ? `<div class="tile-architect">${project.architect.portrait} ${project.architect.name}</div>` : ''}
                 ${project.constructor ? `<div class="tile-cost">시공: ${gameState.formatMoney(project.constructionCost)}</div>` : ''}
             </div>
@@ -1000,7 +1013,7 @@ function renderLandVisual(project, phase) {
 
         buildingHtml = `
             <div class="building-3d ${sizeClass} ${constructClass}">
-                <span class="building-icon">${project.building.emoji}</span>
+                <span class="building-icon">${getBuildingImageHTML(project.building.name, '48px')}</span>
                 <div class="building-shadow"></div>
             </div>
         `;
@@ -1045,7 +1058,7 @@ export function renderCompletedBuildings() {
                     <div class="tile-land">
                         <div class="land-visual has-building">
                             <div class="building-3d ${getBuildingSizeClass(building.building)}">
-                                <span class="building-icon">${building.building.emoji}</span>
+                                <span class="building-icon">${getBuildingImageHTML(building.building.name, '48px')}</span>
                                 <div class="building-shadow"></div>
                             </div>
                         </div>
@@ -1053,7 +1066,7 @@ export function renderCompletedBuildings() {
 
                     <div class="tile-info">
                         <div class="tile-land-name">${building.land.name}</div>
-                        <div class="tile-building-name">${building.building.emoji} ${building.building.name}</div>
+                        <div class="tile-building-name">${getBuildingImageHTML(building.building.name, '20px')} ${building.building.name}</div>
                         <div class="tile-cost">가치: ${gameState.formatMoney(building.salePrice)}</div>
                     </div>
 
@@ -1077,7 +1090,7 @@ export function renderCompletedBuildings() {
                             <div class="tile-land">
                                 <div class="land-visual sold">
                                     <div class="building-3d ${getBuildingSizeClass(sold.building)} sold">
-                                        <span class="building-icon">${sold.building.emoji}</span>
+                                        <span class="building-icon">${getBuildingImageHTML(sold.building.name, '48px')}</span>
                                         <div class="sold-overlay">💰</div>
                                     </div>
                                 </div>
@@ -1085,7 +1098,7 @@ export function renderCompletedBuildings() {
 
                             <div class="tile-info">
                                 <div class="tile-land-name">${sold.land.name}</div>
-                                <div class="tile-building-name">${sold.building.emoji} ${sold.building.name}</div>
+                                <div class="tile-building-name">${getBuildingImageHTML(sold.building.name, '20px')} ${sold.building.name}</div>
                                 <div class="tile-cost sold-price">매각가: ${gameState.formatMoney(sold.sellPrice)}</div>
                             </div>
 

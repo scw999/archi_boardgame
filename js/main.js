@@ -9,8 +9,20 @@ import { selectLand, attemptLandPurchase, attemptLandPurchaseByLand, checkLandPh
 import { getAvailableBuildings, selectArchitect, selectBuilding, completeDesign, checkDesignPhaseComplete } from './phases/design-phase.js';
 import { canSelectConstructor, selectConstructor, processRisks, checkConstructionPhaseComplete } from './phases/construction-phase.js';
 import { calculateSalePrice, completeEvaluation, checkEvaluationPhaseComplete, getRoundSummary, getFinalResults } from './phases/evaluation-phase.js';
-import { buildings } from './data/buildings.js';
+import { buildings, BUILDING_IMAGES } from './data/buildings.js';
 import { constructors } from './data/constructors.js';
+import { architects } from './data/architects.js';
+
+// 건물 이미지 HTML 생성 헬퍼 함수
+function getBuildingImage(buildingName, size = '48px') {
+    const imagePath = BUILDING_IMAGES[buildingName];
+    if (imagePath) {
+        return `<img src="${imagePath}" alt="${buildingName}" class="building-img" style="width: ${size}; height: ${size}; object-fit: contain;">`;
+    }
+    // 이미지가 없으면 기본 이모지 반환
+    const building = buildings[buildingName];
+    return building ? building.emoji : '🏢';
+}
 
 // 게임 앱 클래스
 class GameApp {
@@ -25,7 +37,64 @@ class GameApp {
     init() {
         this.bindEvents();
         initProjectMap();
-        this.showMainMenu();
+        this.preloadAllAssets(); // 이미지 및 에셋 프리로드
+    }
+
+    // 모든 에셋 프리로드 (이미지, 지도 등)
+    async preloadAllAssets() {
+        const preloader = document.getElementById('preloader');
+        const progressBar = document.getElementById('preloader-progress-bar');
+        const preloaderText = document.querySelector('.preloader-text');
+
+        // 프리로드할 이미지 목록
+        const buildingImages = Object.values(BUILDING_IMAGES);
+        const mapImages = ['assets/images/city-map.png'];
+        const allImages = [...buildingImages, ...mapImages];
+
+        let loadedCount = 0;
+        const totalCount = allImages.length;
+
+        const updateProgress = () => {
+            loadedCount++;
+            const percent = Math.round((loadedCount / totalCount) * 100);
+            if (progressBar) {
+                progressBar.style.width = `${percent}%`;
+            }
+            if (preloaderText) {
+                preloaderText.textContent = `로딩 중... ${percent}%`;
+            }
+        };
+
+        // 이미지 로드 프로미스 생성
+        const loadImage = (url) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    updateProgress();
+                    resolve(true);
+                };
+                img.onerror = () => {
+                    updateProgress();
+                    resolve(false); // 에러가 나도 진행
+                };
+                img.src = url;
+            });
+        };
+
+        console.log(`🖼️ ${totalCount}개 에셋 프리로드 시작...`);
+
+        // 모든 이미지 로드 대기
+        await Promise.all(allImages.map(url => loadImage(url)));
+
+        console.log('✅ 모든 에셋 로드 완료!');
+
+        // 프리로더 숨기기 (약간의 딜레이 후)
+        setTimeout(() => {
+            if (preloader) {
+                preloader.classList.add('hidden');
+            }
+            this.showMainMenu();
+        }, 500);
     }
 
     // 이벤트 바인딩
@@ -41,6 +110,133 @@ class GameApp {
 
         // 유틸리티 버튼
         document.getElementById('btn-budget-table')?.addEventListener('click', () => this.showBudgetTable());
+        document.getElementById('btn-game-manual')?.addEventListener('click', () => this.showGameManual());
+        document.getElementById('btn-save-game')?.addEventListener('click', () => this.saveGame());
+        document.getElementById('btn-load-game-utility')?.addEventListener('click', () => this.loadGame());
+    }
+
+    // 게임 저장
+    saveGame() {
+        gameState.save();
+        showNotification('게임이 저장되었습니다! 💾', 'success');
+    }
+
+    // 게임 규칙 메뉴얼
+    showGameManual() {
+        showResultModal('📖 갓물주 게임 규칙', `
+            <div class="game-manual">
+                <div class="manual-section">
+                    <h3>🎯 게임 목표</h3>
+                    <p>부동산 개발을 통해 가장 많은 자산을 모으는 것이 목표입니다.</p>
+                    <p>최종 자산 = <strong>현금 + 건물 가치 - 대출금</strong></p>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🔄 게임 진행 (4라운드)</h3>
+                    <p>각 라운드는 4단계로 진행됩니다:</p>
+                    <ol>
+                        <li><strong>🏞️ 대지 구매</strong> - 토지 카드를 선택하여 구매</li>
+                        <li><strong>📐 설계 단계</strong> - 건축가와 건물 유형 선택</li>
+                        <li><strong>🏗️ 시공 단계</strong> - 시공사 선택 및 리스크 처리</li>
+                        <li><strong>🏆 평가</strong> - 완성된 건물 평가 및 보너스 획득</li>
+                    </ol>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🏞️ 대지 구매</h3>
+                    <ul>
+                        <li><strong>시세</strong>: 100% 확률로 구매 가능</li>
+                        <li><strong>급매</strong>: 특정 주사위 눈이 나와야 구매 (더 저렴)</li>
+                        <li><strong>경매</strong>: 가장 저렴하지만 확률 낮음</li>
+                    </ul>
+                    <p>💡 지역별로 토지 가치가 다릅니다: 서울 핵심 > 서울 > 경기 주요 > 경기 외곽 > 지방</p>
+                </div>
+
+                <div class="manual-section">
+                    <h3>📐 설계 단계</h3>
+                    <ul>
+                        <li>건축가마다 <strong>대표작</strong>이 있습니다 (보너스 100%)</li>
+                        <li>대표작이 아닌 건물은 설계비 30% 할인, 보너스 50%</li>
+                        <li>건축가의 <strong>특성</strong>이 건물 평가에 영향:</li>
+                        <ul>
+                            <li>예술성: 디자인 평가 보너스</li>
+                            <li>효율성: 시공비 절감</li>
+                            <li>기능성: 실용성 평가 보너스</li>
+                        </ul>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🏗️ 시공 단계</h3>
+                    <ul>
+                        <li>시공사 규모에 따라 <strong>리스크 카드</strong> 수가 다릅니다:</li>
+                        <ul>
+                            <li>대형: 리스크 1장 (안전, 비용 높음)</li>
+                            <li>중견: 리스크 2장</li>
+                            <li>영세: 리스크 3장 (위험, 비용 낮음)</li>
+                        </ul>
+                        <li>리스크 카드는 <strong>공사 지연, 비용 증가, 품질 문제</strong> 등 발생</li>
+                        <li>자금 부족 시 <strong>대출</strong> 또는 <strong>건물/토지 매각</strong> 가능</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🏆 평가 단계</h3>
+                    <ul>
+                        <li>완성된 건물의 가치가 산정됩니다</li>
+                        <li>평가 요소: 건축가 명성, 건물 품질, 시공 상태</li>
+                        <li>수상 시 추가 보너스:
+                            <ul>
+                                <li>🏅 건축상: 우수 건축 평가</li>
+                                <li>🌿 친환경상: 지속가능 건축</li>
+                                <li>💎 랜드마크상: 지역 상징 건물</li>
+                            </ul>
+                        </li>
+                        <li>🃏 <strong>와일드카드</strong> 획득 기회!</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🃏 와일드카드</h3>
+                    <ul>
+                        <li>특별한 효과를 가진 카드</li>
+                        <li>건물 완공 시 확률적으로 획득</li>
+                        <li>종류: 설계비 무료, 시공비 할인, 리스크 무효화 등</li>
+                        <li>적절한 타이밍에 사용하면 큰 이점!</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>💰 자금 관리</h3>
+                    <ul>
+                        <li><strong>대출</strong>: 현금의 최대 233%까지 (이자율 10%)</li>
+                        <li><strong>토지담보대출</strong>: 토지 가치의 70%</li>
+                        <li><strong>PM 컨설팅</strong>: 2억 수입, 해당 라운드 스킵</li>
+                        <li><strong>건물 매각</strong>: 시장 상황에 따라 85%~115% 가격</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🎮 게임 팁</h3>
+                    <ul>
+                        <li>💡 건축가의 대표작을 선택하면 보너스 2배!</li>
+                        <li>💡 대형 시공사는 안전하지만 비용이 높습니다</li>
+                        <li>💡 와일드카드는 위기 상황에 대비해 아껴두세요</li>
+                        <li>💡 무리한 대출은 최종 자산에서 차감됩니다</li>
+                        <li>💡 토지 적합 건물을 선택하면 평가 보너스!</li>
+                    </ul>
+                </div>
+            </div>
+        `, () => {});
+
+        // 메뉴얼 모달 너비 조정 및 버튼 변경
+        const overlay = document.querySelector('.modal-overlay:last-child');
+        const modal = overlay?.querySelector('.result-modal');
+        if (overlay && modal) {
+            overlay.style.background = 'rgba(0, 0, 0, 0.95)';
+            modal.style.maxWidth = '700px';
+            modal.style.width = '95%';
+        }
     }
 
     // 메인 메뉴 표시
@@ -130,6 +326,9 @@ class GameApp {
         // 공통 액션 패널 제거 (하단 액션 영역에 통합)
         document.getElementById('common-action-panel')?.remove();
 
+        // 단계 시작 시 지도 먼저 보여주기
+        this.scrollToMapThenCards();
+
         switch (gameState.phase) {
             case GAME_PHASES.LAND_PURCHASE:
                 this.runLandPhase();
@@ -152,97 +351,16 @@ class GameApp {
         }
     }
 
-    // 공통 액션 패널 (모든 페이즈에서 표시)
+    // 단계 시작 시 지도로 스크롤 (가장 위로)
+    scrollToMapThenCards() {
+        // 개발 지도가 시작 화면에 보이도록 맨 위로 스크롤
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 공통 액션 패널 - 더 이상 사용하지 않음 (항상 가능한 액션 박스 제거됨)
     showCommonActionPanel() {
-        const player = gameState.getCurrentPlayer();
-        if (!player) return;
-
-        // 기존 패널 제거
+        // 기존 패널 제거만 수행
         document.getElementById('common-action-panel')?.remove();
-
-        const pmIncome = 50000000 + (player.buildings.length * 20000000);
-
-        const panel = document.createElement('div');
-        panel.id = 'common-action-panel';
-        panel.className = 'common-action-panel';
-        panel.innerHTML = `
-            <div class="panel-title">💼 항상 가능한 액션</div>
-            <div class="action-buttons-row">
-                <button class="common-action-btn pm" id="common-pm">
-                    <span class="btn-icon">👷</span>
-                    <span class="btn-text">PM 컨설팅</span>
-                    <span class="btn-value">+${gameState.formatMoney(pmIncome)}</span>
-                </button>
-                ${player.currentProject?.land ? `
-                <button class="common-action-btn sell-land" id="common-sell-land">
-                    <span class="btn-icon">🏞️</span>
-                    <span class="btn-text">대지 매각</span>
-                    <span class="btn-value">${gameState.formatMoney(Math.floor((player.currentProject.landPrice + (player.currentProject.developmentCost || 0)) * 1.1))}</span>
-                </button>
-                ` : ''}
-                ${player.buildings.length > 0 ? `
-                <button class="common-action-btn sell-building" id="common-sell-building">
-                    <span class="btn-icon">🏢</span>
-                    <span class="btn-text">건물 매각</span>
-                    <span class="btn-value">${player.buildings.length}개 보유</span>
-                </button>
-                ` : ''}
-                <button class="common-action-btn skip" id="common-skip">
-                    <span class="btn-icon">⏭️</span>
-                    <span class="btn-text">턴 넘기기</span>
-                </button>
-            </div>
-        `;
-
-        // 게임 보드에 패널 추가 (action-area 위에)
-        const actionArea = document.getElementById('action-area');
-        if (actionArea) {
-            actionArea.parentNode.insertBefore(panel, actionArea);
-        }
-
-        // 이벤트 바인딩
-        document.getElementById('common-pm')?.addEventListener('click', () => {
-            const result = gameState.doPMActivity(gameState.currentPlayerIndex);
-            if (result.success) {
-                showNotification(result.message, 'success');
-                this.updateUI();
-                // PM 활동 후 자동으로 턴 넘기기
-                this.nextPlayerOrPhase(this.getCurrentCheckField());
-            }
-        });
-
-        document.getElementById('common-sell-land')?.addEventListener('click', () => {
-            // 설계/시공 단계에서 대지 매각 시 경고
-            if (gameState.phase === GAME_PHASES.DESIGN || gameState.phase === GAME_PHASES.CONSTRUCTION) {
-                const confirmMsg = '⚠️ 주의: 설계/시공 단계에서 대지를 매각하면 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?';
-                if (!confirm(confirmMsg)) {
-                    return;
-                }
-            } else {
-                if (!confirm('정말로 현재 대지를 매각하시겠습니까? 진행 중인 프로젝트가 취소됩니다.')) {
-                    return;
-                }
-            }
-
-            const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
-            if (result.success) {
-                showNotification(result.message, 'success');
-                // 설계/시공 단계에서 토지 매각 시 자동으로 턴 넘기기
-                this.nextPlayerOrPhase(this.getCurrentCheckField());
-            }
-        });
-
-        document.getElementById('common-sell-building')?.addEventListener('click', () => {
-            this.showBuildingSellModal(() => this.updateUI());
-        });
-
-        document.getElementById('common-skip')?.addEventListener('click', () => {
-            if (confirm('이번 턴을 넘기시겠습니까?')) {
-                gameState.addLog(`${player.name}: 턴 패스`);
-                showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
-                this.nextPlayerOrPhase(this.getCurrentCheckField());
-            }
-        });
     }
 
     // 현재 체크 필드 반환
@@ -264,6 +382,13 @@ class GameApp {
 
         const player = gameState.getCurrentPlayer();
 
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
+        if (player.pmSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('land');
+            return;
+        }
+
         renderCardGrid(gameState.availableLands, 'land', (index, land) => {
             this.selectedCardIndex = index;
             highlightCard(index);
@@ -272,7 +397,7 @@ class GameApp {
 
         // 액션 버튼 - PM활동, 매각 옵션 추가
         const actions = [
-            { id: 'pm-activity', label: 'PM 컨설팅 (+1억)', icon: '👷' },
+            { id: 'pm-activity', label: 'PM 컨설팅 (+2억)', icon: '👷' },
             { id: 'sell-land', label: '대지 매각', icon: '💰' },
             { id: 'skip-land', label: '이번 턴 패스', icon: '⏭️' }
         ];
@@ -292,6 +417,8 @@ class GameApp {
 
         // PM 활동
         document.querySelector('[data-action="pm-activity"]')?.addEventListener('click', () => {
+            if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
+
             const result = gameState.doPMActivity(gameState.currentPlayerIndex);
             showNotification(result.message, 'success');
             this.updateUI();
@@ -434,7 +561,7 @@ class GameApp {
     }
 
     // 건물 매각 모달 표시
-    showBuildingSellModal() {
+    showBuildingSellModal(onSellCallback) {
         const player = gameState.getCurrentPlayer();
 
         if (player.buildings.length === 0) {
@@ -442,17 +569,27 @@ class GameApp {
             return;
         }
 
-        const buildingList = player.buildings.map((b, idx) => `
+        const buildingList = player.buildings.map((b, idx) => {
+            // 실제 매각 계산식과 동일하게 예상 가격 계산
+            const totalInvestment = b.landPrice + b.designFee + b.constructionCost;
+            const evalFactor = b.evaluationFactor || 1.0;
+            const architectBonus = b.architect ? (b.architect.fame || 0) * 0.02 : 0;
+            // 시장 변동 범위 (85% ~ 115%)
+            const minPrice = Math.floor(totalInvestment * evalFactor * 0.85 * (1 + architectBonus));
+            const maxPrice = Math.floor(totalInvestment * evalFactor * 1.15 * (1 + architectBonus));
+
+            return `
             <div class="sell-building-item" data-index="${idx}">
-                <span class="building-info">${b.building.emoji} ${b.building.name} @ ${b.land.name}</span>
-                <span class="sell-price">매각가: ${gameState.formatMoney(Math.floor(b.salePrice * 0.9))}</span>
+                <span class="building-info">${getBuildingImage(b.building.name, '32px')} ${b.building.name} @ ${b.land.name}</span>
+                <span class="sell-price">예상가: ${gameState.formatMoney(minPrice)} ~ ${gameState.formatMoney(maxPrice)}</span>
                 <button class="btn-sell-item" data-index="${idx}">매각</button>
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         showResultModal('건물 매각', `
             <div class="sell-modal">
-                <p>매각할 건물을 선택하세요. (원가의 90%)</p>
+                <p>매각할 건물을 선택하세요. (시장 상황에 따라 85%~115% 변동)</p>
                 <div class="sell-list">${buildingList}</div>
             </div>
         `, () => { });
@@ -466,6 +603,10 @@ class GameApp {
                     showNotification(result.message, 'success');
                     document.querySelector('.modal-overlay')?.remove();
                     this.updateUI();
+                    // 콜백이 있으면 실행 (설계 패널 갱신 등)
+                    if (onSellCallback && typeof onSellCallback === 'function') {
+                        onSellCallback();
+                    }
                 } else {
                     showNotification(result.message, 'error');
                 }
@@ -636,11 +777,22 @@ class GameApp {
             }
         } else {
             // 급매/경매는 주사위
+            const currentPlayer = gameState.getCurrentPlayer();
+            const canReroll = currentPlayer.bonusDiceActive || false;
+
             const diceResult = await showLandPurchaseDice(
                 savedLand.name,
                 priceType,
-                savedLand.diceRequired[priceType]
+                savedLand.diceRequired[priceType],
+                null,
+                canReroll
             );
+
+            // 재굴림 사용 시 플래그 리셋
+            if (diceResult.rerollUsed) {
+                currentPlayer.bonusDiceActive = false;
+                renderPlayerPanels();
+            }
 
             // 토지 객체를 직접 전달하는 새 함수 사용 (인덱스 문제 완전 우회)
             const result = attemptLandPurchaseByLand(
@@ -669,6 +821,13 @@ class GameApp {
 
         const player = gameState.getCurrentPlayer();
 
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
+        if (player.pmSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('architect');
+            return;
+        }
+
         // 토지가 없으면 설계 불가 - 평가 단계까지 쉼
         if (!player.currentProject || !player.currentProject.land) {
             showNotification(`${player.name}님은 토지가 없어 평가 단계까지 쉽니다.`, 'info');
@@ -688,6 +847,11 @@ class GameApp {
             highlightCard(index);
             this.showDesignPanel(architect);
         });
+
+        // 페이즈 시작 시 개발 지도가 보이도록 맨 위로 스크롤
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
     }
 
     // 설계 패널 표시 (건축가 선택 후)
@@ -695,14 +859,18 @@ class GameApp {
         const player = gameState.getCurrentPlayer();
         const land = player.currentProject.land;
         const buildings = getAvailableBuildings(land);
-        const pmIncome = 50000000 + (player.buildings.length * 20000000);
+        const pmIncome = 200000000; // 고정 2억
 
-        const designPanel = document.getElementById('design-panel') || document.createElement('div');
-        designPanel.id = 'design-panel';
-        designPanel.className = 'design-panel';
+        // 기존 모달 제거
+        document.getElementById('design-modal-overlay')?.remove();
 
-        designPanel.innerHTML = `
-            <div class="design-panel-content">
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'design-modal-overlay';
+        modalOverlay.className = 'design-modal-overlay';
+
+        modalOverlay.innerHTML = `
+            <div class="design-modal-content">
+                <button class="modal-close-btn" id="design-close-btn">&times;</button>
                 <h3>📐 설계 진행</h3>
                 <div class="architect-info">
                     <span class="portrait">${architect.portrait}</span>
@@ -717,11 +885,18 @@ class GameApp {
             const constructionCost = Math.round(building.constructionCost * architect.constructionMultiplier);
             const isMasterpiece = architect.masterpieces.includes(building.name);
 
+            // 총 필요 비용 계산 (설계비 + 시공비)
+            const totalCost = designFee + constructionCost;
+            const maxAvailable = player.money + gameState.getMaxLoan(player) - player.loan;
+            const canAfford = maxAvailable >= totalCost;
+            const disabledClass = canAfford ? '' : ' building-disabled';
+
             return `
-                            <div class="building-option ${building.isSuitable ? 'suitable' : ''}"
+                            <div class="building-option${disabledClass}"
                                  data-index="${index}"
-                                 data-building="${building.name}">
-                                <div class="building-emoji">${building.emoji}</div>
+                                 data-building="${building.name}"
+                                 data-affordable="${canAfford}">
+                                <div class="building-emoji">${getBuildingImage(building.name, '100px')}</div>
                                 <div class="building-name">${building.name}</div>
                                 ${isMasterpiece ? '<div class="masterpiece-badge">✨ 대표작</div>' : ''}
                                 <div class="building-costs">
@@ -734,6 +909,7 @@ class GameApp {
                                         <span class="cost-value">${gameState.formatMoney(constructionCost)}</span>
                                     </div>
                                 </div>
+                                ${!canAfford ? '<div class="unaffordable-badge">💸 자금 부족</div>' : ''}
                                 ${building.isSuitable ? '<div class="suitable-badge">✓ 토지 적합</div>' : ''}
                             </div>
                         `;
@@ -747,7 +923,7 @@ class GameApp {
                 </div>
 
                 <div class="design-action-buttons">
-                    <button class="action-btn" id="design-pm">👷 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})</button>
+                    <button class="action-btn pm-consulting" id="design-pm">👷 PM 컨설팅 (+2억, 라운드 스킵)</button>
                     <button class="action-btn" id="design-sell-land">🏞️ 대지 매각</button>
                     ${player.buildings.length > 0 ? '<button class="action-btn" id="design-sell-building">🏢 건물 매각</button>' : ''}
                     <button class="action-btn" id="design-skip">⏭️ 턴 넘기기</button>
@@ -755,18 +931,24 @@ class GameApp {
             </div>
         `;
 
-        // 패널을 DOM에 추가
-        const actionArea = document.getElementById('action-area');
-        if (actionArea) {
-            actionArea.innerHTML = '';
-            actionArea.appendChild(designPanel);
-        }
+        // 모달을 body에 추가
+        document.body.appendChild(modalOverlay);
+
+        // 닫기 버튼 이벤트
+        document.getElementById('design-close-btn')?.addEventListener('click', () => {
+            this.hideDesignPanel();
+        });
 
         // 기존 공통 액션 패널 제거 (중복 방지)
         document.getElementById('common-action-panel')?.remove();
 
         // 액션 버튼 이벤트 바인딩
         document.getElementById('design-pm')?.addEventListener('click', () => {
+            if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
+
+            // 모달 닫기
+            this.hideDesignPanel();
+
             const result = gameState.doPMActivity(gameState.currentPlayerIndex);
             if (result.success) {
                 showNotification(result.message, 'success');
@@ -781,13 +963,28 @@ class GameApp {
 
             const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
             if (result.success) {
-                showNotification(result.message, 'success');
-                this.nextPlayerOrPhase('architect');
+                // 설계 모달 먼저 닫기
+                modalOverlay.classList.add('closing');
+                setTimeout(() => modalOverlay.remove(), 300);
+
+                // 쉬어야 합니다 알림 표시
+                showResultModal('😴 휴식 알림', `
+                    <div style="text-align: center; padding: 1rem;">
+                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">대지를 매각하여 이번 라운드는 쉬어야 합니다.</p>
+                        <p style="color: var(--text-muted);">평가 단계까지 자동으로 진행됩니다.</p>
+                    </div>
+                `, () => {
+                    showNotification(result.message, 'success');
+                    this.nextPlayerOrPhase('architect');
+                });
             }
         });
 
         document.getElementById('design-sell-building')?.addEventListener('click', () => {
-            this.showBuildingSellModal(() => this.updateUI());
+            this.showBuildingSellModal(() => {
+                // 매각 후 설계 패널 갱신 (건물 목록의 자금 부족 상태 업데이트)
+                this.showDesignPanel(architect);
+            });
         });
 
         document.getElementById('design-skip')?.addEventListener('click', () => {
@@ -799,10 +996,16 @@ class GameApp {
         });
 
         // 건물 선택 이벤트
-        designPanel.querySelectorAll('.building-option').forEach(option => {
+        modalOverlay.querySelectorAll('.building-option').forEach(option => {
             option.addEventListener('click', () => {
+                // 비활성화된 건물은 선택 불가
+                if (option.dataset.affordable === 'false') {
+                    showNotification('자금이 부족하여 이 건물을 선택할 수 없습니다.', 'warning');
+                    return;
+                }
+
                 // 이전 선택 해제
-                designPanel.querySelectorAll('.building-option').forEach(o => o.classList.remove('selected'));
+                modalOverlay.querySelectorAll('.building-option').forEach(o => o.classList.remove('selected'));
                 option.classList.add('selected');
 
                 const buildingName = option.dataset.building;
@@ -810,6 +1013,14 @@ class GameApp {
 
                 // 선택 정보 표시
                 this.showSelectedBuildingInfo(architect, buildings.find(b => b.name === buildingName));
+
+                // 설계 진행 버튼이 보이도록 모달 하단으로 스크롤
+                setTimeout(() => {
+                    const confirmBtn = document.getElementById('btn-confirm-design');
+                    if (confirmBtn) {
+                        confirmBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
             });
         });
     }
@@ -841,7 +1052,7 @@ class GameApp {
             <div class="summary-grid">
                 <div class="summary-item">
                     <span class="label">건물</span>
-                    <span class="value">${building.emoji} ${building.name}</span>
+                    <span class="value">${getBuildingImage(building.name, '24px')} ${building.name}</span>
                 </div>
                 <div class="summary-item">
                     <span class="label">건축가</span>
@@ -880,6 +1091,9 @@ class GameApp {
             return;
         }
 
+        // 설계 모달 닫기
+        this.hideDesignPanel();
+
         const player = gameState.getCurrentPlayer();
         const constructionCost = Math.round(building.constructionCost * architect.constructionMultiplier);
         const isMasterpiece = architect.masterpieces.includes(building.name);
@@ -902,16 +1116,16 @@ class GameApp {
 
                 <div class="blueprint-modal">
                     <div class="blueprint-header">
-                        <div class="building-icon">${building.emoji}</div>
+                        <div class="building-icon">${getBuildingImage(building.name, '64px')}</div>
                         <h2>${building.name}</h2>
                         ${isMasterpiece ? '<span class="masterpiece-badge">✨ 대표작</span>' : ''}
                     </div>
 
                     <div class="blueprint-content">
                         <div class="blueprint-image">
-                            <div class="blueprint-frame">
+                            <div class="blueprint-frame compact">
                                 <div class="blueprint-grid">
-                                    ${building.emoji}
+                                    ${getBuildingImage(building.name, '100px')}
                                 </div>
                                 <div class="blueprint-label">설계도 미리보기</div>
                             </div>
@@ -1016,15 +1230,15 @@ class GameApp {
         showResultModal(`📐 설계 완료!`, `
             <div class="blueprint-modal">
                 <div class="blueprint-header">
-                    <div class="building-icon">${building.emoji}</div>
+                    <div class="building-icon">${getBuildingImage(building.name, '64px')}</div>
                     <h2>${building.name}</h2>
                 </div>
-                
+
                 <div class="blueprint-content">
                     <div class="blueprint-image">
                         <div class="blueprint-frame">
                             <div class="blueprint-grid">
-                                ${building.emoji}
+                                ${getBuildingImage(building.name, '120px')}
                             </div>
                             <div class="blueprint-label">설계도</div>
                         </div>
@@ -1098,6 +1312,13 @@ class GameApp {
 
         const player = gameState.getCurrentPlayer();
 
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
+        if (player.pmSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('constructor');
+            return;
+        }
+
         // 토지가 없는 경우 - 평가 단계까지 쉼
         if (!player.currentProject || !player.currentProject.land) {
             showNotification(`${player.name}님은 토지가 없어 평가 단계까지 쉽니다.`, 'info');
@@ -1153,9 +1374,15 @@ class GameApp {
 
         const needsMoney = cheapestConstructor && player.money < cheapestConstructor.cost * 0.3;
 
-        // 액션 영역에 돈벌기 옵션 표시
+        // 액션 영역에 돈벌기 옵션 표시 (자금 부족 시에만)
         if (needsMoney) {
             this.showConstructionMoneyOptions(player, cheapestConstructor.cost);
+        } else {
+            // 자금이 충분하면 액션 영역 초기화
+            const actionArea = document.getElementById('action-area');
+            if (actionArea) {
+                actionArea.innerHTML = '';
+            }
         }
 
         // 카드 그리드에 선점된 카드 표시 포함
@@ -1174,6 +1401,11 @@ class GameApp {
             const originalIndex = gameState.availableConstructors.findIndex(c => c.id === constructor.id);
             this.showConstructionPanel(constructor, originalIndex, building, architect);
         });
+
+        // 페이즈 시작 시 개발 지도가 보이도록 맨 위로 스크롤
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
     }
 
     // 시공 단계 돈벌기 옵션 표시
@@ -1184,13 +1416,34 @@ class GameApp {
         // 기존 돈벌기 옵션 패널이 있으면 제거
         document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
 
-        const pmIncome = 100000000; // 고정 1억
+        const pmIncome = 200000000; // 고정 2억
+
+        // 대출 관련 계산
+        const maxLoan = gameState.getMaxLoan(player);
+        const availableLoan = maxLoan - player.loan;
+        const shortfall = neededCost - player.money;
+        const suggestedLoan = Math.min(availableLoan, Math.max(shortfall, 100000000)); // 최소 1억 단위
+
+        // 토지 담보대출 가능 금액 (현재 토지 가치의 70%)
+        const landValue = player.currentProject?.landPrice || 0;
+        const landMortgage = Math.floor(landValue * 0.7);
 
         const moneyOptionsHtml = `
             <div class="money-options-panel">
                 <h4>💰 자금이 부족합니다</h4>
                 <p>필요 시공비: 약 ${gameState.formatMoney(neededCost)} / 보유: ${gameState.formatMoney(player.money)}</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">대출 한도: ${gameState.formatMoney(maxLoan)} / 현재 대출: ${gameState.formatMoney(player.loan)}</p>
                 <div class="money-action-buttons">
+                    ${availableLoan > 0 ? `
+                        <button class="action-btn loan" id="btn-loan-construction">
+                            🏦 건설자금대출 (+${gameState.formatMoney(suggestedLoan)})
+                        </button>
+                    ` : ''}
+                    ${landMortgage > 0 && availableLoan > 0 ? `
+                        <button class="action-btn loan" id="btn-land-mortgage">
+                            🏠 토지담보대출 (+${gameState.formatMoney(Math.min(landMortgage, availableLoan))})
+                        </button>
+                    ` : ''}
                     <button class="action-btn pm" id="btn-pm-construction">
                         💼 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})
                     </button>
@@ -1214,15 +1467,76 @@ class GameApp {
         // 공통 액션 패널 다시 표시
         this.showCommonActionPanel();
 
+        // 건설자금대출 버튼
+        const loanBtn = document.getElementById('btn-loan-construction');
+        if (loanBtn) {
+            loanBtn.onclick = () => {
+                const maxLoan = gameState.getMaxLoan(player);
+                const availableLoan = maxLoan - player.loan;
+                const shortfall = neededCost - player.money;
+                const loanAmount = Math.min(availableLoan, Math.max(shortfall, 100000000));
+
+                if (loanAmount <= 0) {
+                    showNotification('추가 대출이 불가능합니다.', 'error');
+                    return;
+                }
+
+                const result = gameState.takeLoan(gameState.currentPlayerIndex, loanAmount);
+                if (result.success) {
+                    showNotification(`건설자금대출 ${gameState.formatMoney(loanAmount)} 실행!`, 'success');
+                    this.updateUI();
+                    this.runConstructionPhase();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            };
+        }
+
+        // 토지담보대출 버튼
+        const mortgageBtn = document.getElementById('btn-land-mortgage');
+        if (mortgageBtn) {
+            mortgageBtn.onclick = () => {
+                const landValue = player.currentProject?.landPrice || 0;
+                const maxLoan = gameState.getMaxLoan(player);
+                const availableLoan = maxLoan - player.loan;
+                const mortgageAmount = Math.min(Math.floor(landValue * 0.7), availableLoan);
+
+                if (mortgageAmount <= 0) {
+                    showNotification('토지담보대출이 불가능합니다.', 'error');
+                    return;
+                }
+
+                const result = gameState.takeLoan(gameState.currentPlayerIndex, mortgageAmount);
+                if (result.success) {
+                    showNotification(`토지담보대출 ${gameState.formatMoney(mortgageAmount)} 실행! (토지 가치의 70%)`, 'success');
+                    this.updateUI();
+                    this.runConstructionPhase();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            };
+        }
+
         // PM 활동 버튼
         const pmBtn = document.getElementById('btn-pm-construction');
         if (pmBtn) {
+            // 현재 플레이어 인덱스를 클로저로 저장
+            const currentPlayerIdx = gameState.currentPlayerIndex;
             pmBtn.onclick = () => {
+                // 현재 턴인 플레이어만 PM 컨설팅 실행 가능
+                if (gameState.currentPlayerIndex !== currentPlayerIdx) {
+                    showNotification('현재 턴이 아닙니다.', 'error');
+                    return;
+                }
+
+                if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
+
                 const result = gameState.doPMActivity(gameState.currentPlayerIndex);
                 if (result.success) {
                     showNotification(result.message, 'success');
                     this.updateUI();
-                    this.runConstructionPhase();
+                    // PM 컨설팅 후 다음 플레이어로 이동
+                    this.nextPlayerOrPhase('constructor');
                 }
             };
         }
@@ -1370,9 +1684,12 @@ class GameApp {
             return;
         }
 
-        const constructionPanel = document.getElementById('construction-panel') || document.createElement('div');
-        constructionPanel.id = 'construction-panel';
-        constructionPanel.className = 'construction-panel';
+        // 기존 모달 제거
+        document.getElementById('construction-modal-overlay')?.remove();
+
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'construction-modal-overlay';
+        modalOverlay.className = 'construction-modal-overlay';
 
         const sizeNames = {
             large: '🏢 대형',
@@ -1382,10 +1699,11 @@ class GameApp {
             direct: '👷 직영공사'
         };
 
-        constructionPanel.innerHTML = `
-            <div class="construction-panel-content">
+        modalOverlay.innerHTML = `
+            <div class="construction-modal-content">
+                <button class="modal-close-btn" id="construction-close-btn">&times;</button>
                 <h3>🏗️ 시공 계약</h3>
-                
+
                 <div class="constructor-info">
                     <div class="constructor-header">
                         <span class="emoji">${constructor.emoji}</span>
@@ -1399,7 +1717,7 @@ class GameApp {
                     <div class="detail-grid">
                         <div class="detail-item">
                             <span class="label">건물</span>
-                            <span class="value">${building.emoji} ${building.name}</span>
+                            <span class="value">${getBuildingImage(building.name, '24px')} ${building.name}</span>
                         </div>
                         <div class="detail-item highlight">
                             <span class="label">시공비</span>
@@ -1457,15 +1775,14 @@ class GameApp {
             </div>
         `;
 
-        // 패널을 DOM에 추가
-        const actionArea = document.getElementById('action-area');
-        if (actionArea) {
-            actionArea.innerHTML = '';
-            actionArea.appendChild(constructionPanel);
-        }
+        // 모달을 body에 추가
+        document.body.appendChild(modalOverlay);
 
-        // 공통 액션 패널 다시 표시 (시공 패널 위에)
-        this.showCommonActionPanel();
+        // 닫기 버튼 이벤트
+        document.getElementById('construction-close-btn')?.addEventListener('click', () => {
+            this.hideConstructionPanel();
+            this.runConstructionPhase();
+        });
 
         // 시공 계약 버튼 이벤트
         const confirmBtn = document.getElementById('btn-confirm-construction');
@@ -1479,20 +1796,25 @@ class GameApp {
         const cancelBtn = document.getElementById('btn-cancel-construction');
         if (cancelBtn) {
             cancelBtn.onclick = () => {
+                this.hideConstructionPanel();
                 this.runConstructionPhase();
             };
         }
     }
 
-    // 시공 패널 숨기기
+    // 시공 모달 숨기기
     hideConstructionPanel() {
-        const constructionPanel = document.getElementById('construction-panel');
-        if (constructionPanel) {
-            constructionPanel.remove();
+        const modal = document.getElementById('construction-modal-overlay');
+        if (modal) {
+            modal.remove();
         }
-        const actionArea = document.getElementById('action-area');
-        if (actionArea) {
-            actionArea.innerHTML = '';
+    }
+
+    // 설계 모달 숨기기
+    hideDesignPanel() {
+        const modal = document.getElementById('design-modal-overlay');
+        if (modal) {
+            modal.remove();
         }
     }
 
@@ -1732,7 +2054,7 @@ class GameApp {
                             <div class="risk-emoji">${risk.emoji}</div>
                             <div class="risk-name">${risk.name}</div>
                             <div class="risk-effect">${risk.description || ''}</div>
-                            <div class="risk-blocked">🛡️ 방어!<br><small>${blockSource}</small></div>
+                            <div class="risk-blocked">🛡️ 방어!</div>
                         `;
 
                         // 리스크 카드에 방어 표시
@@ -1762,6 +2084,8 @@ class GameApp {
                         }
                     }
                     gameState.addLog(`${player.name}: 와일드카드 리스크 방어권 ${usedWildcardBlocks}개 사용`);
+                    // 플레이어 패널 즉시 업데이트 (카드 개수 반영)
+                    renderPlayerPanels();
                 }
 
                 // 결과 요약 표시
@@ -1876,7 +2200,7 @@ class GameApp {
         showResultModal('🏗️ 시공 완료!', `
             <div class="construction-result">
                 <div class="result-header">
-                    <span class="building-emoji">${project.building.emoji}</span>
+                    <span class="building-emoji">${getBuildingImage(project.building.name, '64px')}</span>
                     <h2>${project.building.name}</h2>
                 </div>
                 
@@ -1931,6 +2255,20 @@ class GameApp {
         const player = gameState.getCurrentPlayer();
         const project = player.currentProject;
 
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
+        if (player.pmSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('salePrice');
+            return;
+        }
+
+        // 시공 단계에서 자금 부족으로 스킵한 경우
+        if (project?.constructionSkippedRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 시공을 진행하지 못해 평가를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('salePrice');
+            return;
+        }
+
         // 평가할 프로젝트가 없는 경우 스킵 (토지, 건물, 시공사 모두 필요)
         if (!project || !project.land || !project.building) {
             showNotification(`${player.name}님은 평가할 건물이 없어 스킵합니다.`, 'info');
@@ -1944,21 +2282,23 @@ class GameApp {
             return;
         }
 
-        const result = calculateSalePrice(gameState.currentPlayerIndex);
+        // 먼저 평가 완료 처리 (와일드카드 지급 포함)
+        const evalResult = completeEvaluation(gameState.currentPlayerIndex);
 
-        if (!result.success) {
-            showNotification(result.message, 'error');
+        if (!evalResult.success) {
+            showNotification(evalResult.message, 'error');
             return;
         }
 
-        const bd = result.breakdown;
+        const bd = evalResult.breakdown;
         const hasAwards = bd.awards.length > 0;
         const isProfit = bd.netProfit > bd.totalInvestment;
+        const grantedWildcards = evalResult.grantedWildcards || [];
 
         showResultModal(`🏆 ${player.name}의 건물 평가`, `
       <div class="evaluation-result fancy">
         <div class="eval-building-showcase">
-          <div class="building-icon-large">${player.currentProject.building.emoji}</div>
+          <div class="building-icon-large">${getBuildingImage(player.currentProject.building.name, '100px')}</div>
           <h2>${player.currentProject.building.name}</h2>
           <p class="location">📍 ${player.currentProject.land.name}</p>
         </div>
@@ -1972,6 +2312,23 @@ class GameApp {
                 <span class="award-emoji">${a.emoji}</span>
                 <span class="award-name">${a.name}</span>
                 <span class="award-bonus">+${Math.round((a.bonus - 1) * 100)}%</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${grantedWildcards.length > 0 ? `
+        <div class="wildcard-grant-section">
+          <h3>🎁 와일드카드 획득!</h3>
+          <div class="wildcard-grant-list">
+            ${grantedWildcards.map((card, i) => `
+              <div class="wildcard-grant-item animate-wildcard" style="animation-delay: ${i * 0.3}s">
+                <div class="wildcard-grant-icon">${card.name.split(' ')[0]}</div>
+                <div class="wildcard-grant-info">
+                  <div class="wildcard-grant-name">${card.name}</div>
+                  <div class="wildcard-grant-desc">${card.description}</div>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -2030,7 +2387,7 @@ class GameApp {
             }
       </div>
     `, () => {
-            completeEvaluation(gameState.currentPlayerIndex);
+            // completeEvaluation은 이미 위에서 호출됨
             this.nextPlayerOrPhase('salePrice');
         });
     }
@@ -2158,7 +2515,7 @@ class GameApp {
                 <div class="rank-info">
                   <div class="rank-name">${r.name}</div>
                   <div class="rank-buildings">
-                    ${r.buildings.map(b => `<span class="building-emoji">${b.emoji}</span>`).join('')}
+                    ${r.buildings.map(b => `<span class="building-emoji">${getBuildingImage(b.name, '32px')}</span>`).join('')}
                     ${r.buildingsCount === 0 ? '<span class="no-buildings">건물 없음</span>' : ''}
                   </div>
                 </div>
@@ -2244,6 +2601,9 @@ class GameApp {
             const cityGridSection = document.getElementById('city-grid');
             if (cityGridSection) {
                 finalCityGrid.innerHTML = cityGridSection.innerHTML;
+
+                // 최종 지도에서 건물 클릭 이벤트 바인딩
+                this.bindFinalMapPlotEvents(finalCityGrid);
             }
         }
 
@@ -2315,9 +2675,217 @@ class GameApp {
                 #final-map-view.hidden {
                     display: none;
                 }
+                .final-map-content .plot-marker {
+                    cursor: pointer;
+                }
+                .final-map-content .plot-marker:hover {
+                    transform: scale(1.1);
+                    z-index: 100;
+                }
             `;
             document.head.appendChild(style);
         }
+    }
+
+    // 최종 지도 건물 클릭 이벤트 바인딩
+    bindFinalMapPlotEvents(container) {
+        const plotMarkers = container.querySelectorAll('.plot-marker.owned');
+
+        plotMarkers.forEach(marker => {
+            marker.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const plotIndex = parseInt(marker.dataset.plotIndex);
+                this.showFinalMapBuildingDetail(plotIndex, marker);
+            });
+        });
+    }
+
+    // 최종 지도 건물 상세 정보 표시
+    showFinalMapBuildingDetail(plotIndex, marker) {
+        // 기존 모달 제거
+        document.querySelectorAll('.final-building-modal').forEach(m => m.remove());
+
+        // 소유 정보 수집
+        const ownedPlots = [];
+        gameState.players.forEach((player, playerIndex) => {
+            // 완성된 건물
+            player.buildings.forEach(building => {
+                ownedPlots.push({
+                    type: 'completed',
+                    playerIndex,
+                    playerName: player.name,
+                    land: building.land,
+                    building: building.building,
+                    architect: building.architect,
+                    constructor: building.constructor,
+                    salePrice: building.salePrice,
+                    plotIndex: building.plotIndex
+                });
+            });
+
+            // 매각 이력
+            player.soldHistory.forEach(sold => {
+                if (sold.type === 'building' && sold.originalProject) {
+                    ownedPlots.push({
+                        type: 'sold',
+                        playerIndex,
+                        playerName: player.name,
+                        land: sold.land,
+                        building: sold.building,
+                        architect: sold.architect,
+                        sellPrice: sold.sellPrice,
+                        soldAt: sold.soldAt,
+                        plotIndex: sold.originalProject.plotIndex
+                    });
+                }
+            });
+        });
+
+        const owned = ownedPlots.find(o => o.plotIndex === plotIndex);
+        if (!owned) return;
+
+        const playerColors = [
+            { bg: '#ef4444', border: '#f87171' },
+            { bg: '#3b82f6', border: '#60a5fa' },
+            { bg: '#22c55e', border: '#4ade80' },
+            { bg: '#f59e0b', border: '#fbbf24' }
+        ];
+        const playerColor = playerColors[owned.playerIndex] || playerColors[0];
+
+        const isSold = owned.type === 'sold';
+        const statusText = isSold ? '매각됨' : '완공';
+        const statusClass = isSold ? 'status-sold' : 'status-completed';
+
+        const modal = document.createElement('div');
+        modal.className = 'final-building-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <button class="modal-close">✕</button>
+                <div class="modal-header" style="border-left: 4px solid ${playerColor.border}">
+                    <span class="modal-status ${statusClass}">${statusText}</span>
+                    <span class="modal-owner">${owned.playerName}</span>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-land">
+                        <strong>📍 ${owned.land?.name || '알 수 없음'}</strong>
+                        <span>${owned.land?.area || '-'}평</span>
+                    </div>
+                    ${owned.building ? `
+                        <div class="modal-building">
+                            <strong>🏢 ${owned.building.name}</strong>
+                        </div>
+                    ` : ''}
+                    ${owned.architect ? `
+                        <div class="modal-architect">
+                            <span>${owned.architect.portrait || '👤'} ${owned.architect.name}</span>
+                        </div>
+                    ` : ''}
+                    ${owned.constructor ? `
+                        <div class="modal-constructor">
+                            <span>${owned.constructor.emoji || '🏗️'} ${owned.constructor.name}</span>
+                        </div>
+                    ` : ''}
+                    <div class="modal-price">
+                        ${isSold
+                            ? `<span class="sold">💰 매각가: ${gameState.formatMoney(owned.sellPrice)} (라운드 ${owned.soldAt})</span>`
+                            : `<span>💎 건물 가치: ${gameState.formatMoney(owned.salePrice || 0)}</span>`
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 스타일 추가
+        if (!document.getElementById('final-modal-styles')) {
+            const style = document.createElement('style');
+            style.id = 'final-modal-styles';
+            style.textContent = `
+                .final-building-modal {
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: var(--bg-secondary);
+                    border-radius: var(--radius-lg);
+                    padding: 1.5rem;
+                    z-index: 2000;
+                    min-width: 300px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                    border: 1px solid rgba(255,255,255,0.1);
+                }
+                .final-building-modal .modal-content {
+                    position: relative;
+                }
+                .final-building-modal .modal-close {
+                    position: absolute;
+                    top: -0.5rem;
+                    right: -0.5rem;
+                    background: var(--bg-tertiary);
+                    border: none;
+                    color: var(--text-secondary);
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-size: 1rem;
+                }
+                .final-building-modal .modal-close:hover {
+                    background: var(--accent-red);
+                    color: white;
+                }
+                .final-building-modal .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0.5rem;
+                    margin-bottom: 1rem;
+                    background: rgba(255,255,255,0.05);
+                    border-radius: var(--radius-sm);
+                }
+                .final-building-modal .modal-status {
+                    padding: 0.25rem 0.5rem;
+                    border-radius: var(--radius-sm);
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                }
+                .final-building-modal .status-completed {
+                    background: var(--accent-green);
+                    color: white;
+                }
+                .final-building-modal .status-sold {
+                    background: var(--accent-purple);
+                    color: white;
+                }
+                .final-building-modal .modal-owner {
+                    font-weight: 600;
+                }
+                .final-building-modal .modal-body > div {
+                    padding: 0.5rem 0;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                }
+                .final-building-modal .modal-body > div:last-child {
+                    border-bottom: none;
+                }
+                .final-building-modal .modal-price .sold {
+                    color: var(--accent-purple);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(modal);
+
+        // 닫기 버튼 이벤트
+        modal.querySelector('.modal-close').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        // 모달 외부 클릭 시 닫기
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
     }
 
     // UI 업데이트
@@ -2343,12 +2911,125 @@ class GameApp {
         // 플레이어 패널의 와일드카드 슬롯 클릭 이벤트
         document.querySelectorAll('.clickable-wildcard').forEach(slot => {
             slot.addEventListener('click', () => {
-                const panel = document.getElementById('wildcard-panel');
-                if (panel) {
-                    panel.classList.toggle('hidden');
-                }
+                const playerIndex = parseInt(slot.dataset.playerIndex);
+                this.showPlayerWildcardsModal(playerIndex);
             });
         });
+
+        // 플레이어 패널의 건물 슬롯 클릭 이벤트
+        document.querySelectorAll('.clickable-building').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const playerIndex = parseInt(slot.dataset.playerIndex);
+                this.showPlayerBuildingsModal(playerIndex);
+            });
+        });
+    }
+
+    // 플레이어 건물 목록 모달 표시
+    showPlayerBuildingsModal(playerIndex) {
+        const player = gameState.players[playerIndex];
+        if (!player || !player.buildings || player.buildings.length === 0) {
+            showNotification('건물이 없습니다.', 'info');
+            return;
+        }
+
+        const buildingsList = player.buildings.map((building, index) => {
+            const estimatedValue = building.salePrice || 0;
+            return `
+                <div class="building-list-item" data-player="${playerIndex}" data-building="${index}">
+                    <div class="building-icon">${getBuildingImage(building.building.name, '48px')}</div>
+                    <div class="building-info">
+                        <div class="building-name">${building.building.name}</div>
+                        <div class="building-land">📍 ${building.land.name}</div>
+                        <div class="building-value">💰 ${gameState.formatMoney(estimatedValue)}</div>
+                    </div>
+                    <div class="building-arrow">▶</div>
+                </div>
+            `;
+        }).join('');
+
+        showResultModal(`🏢 ${player.name}의 건물 (${player.buildings.length}개)`, `
+            <div class="player-buildings-modal">
+                <div class="buildings-list">
+                    ${buildingsList}
+                </div>
+            </div>
+        `, null, true);
+
+        // 건물 아이템 클릭 이벤트 바인딩
+        setTimeout(() => {
+            document.querySelectorAll('.building-list-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const pIdx = parseInt(item.dataset.player);
+                    const bIdx = parseInt(item.dataset.building);
+                    const building = gameState.players[pIdx]?.buildings[bIdx];
+                    if (building) {
+                        // 기존 모달 닫기
+                        document.querySelector('.modal-overlay')?.remove();
+                        // 건물 상세 보기
+                        this.showPropertyDetail(building, pIdx);
+                    }
+                });
+            });
+        }, 100);
+    }
+
+    // 플레이어 와일드카드 모달 표시
+    showPlayerWildcardsModal(playerIndex) {
+        const player = gameState.players[playerIndex];
+        if (!player || !player.wildcards || player.wildcards.length === 0) {
+            showNotification('와일드카드가 없습니다.', 'info');
+            return;
+        }
+
+        const isCurrentPlayer = playerIndex === gameState.currentPlayerIndex;
+
+        const wildcardsList = player.wildcards.map((card, index) => {
+            const effectDescription = this.getWildcardEffectDescription(card.effect);
+            const usagePhase = this.getWildcardUsagePhase(card.effect.type);
+            return `
+                <div class="wildcard-list-item" data-player="${playerIndex}" data-card="${index}">
+                    <div class="wildcard-card-mini">
+                        <div class="card-icon">🃏</div>
+                    </div>
+                    <div class="wildcard-info">
+                        <div class="wildcard-name">${card.name}</div>
+                        <div class="wildcard-desc">${card.description}</div>
+                        <div class="wildcard-effect">✨ ${effectDescription}</div>
+                        <div class="wildcard-phase">⏰ ${usagePhase}</div>
+                    </div>
+                    ${isCurrentPlayer ? `
+                    <div class="wildcard-actions">
+                        <button class="btn-use-card" data-index="${index}">사용</button>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+
+        showResultModal(`🃏 ${player.name}의 와일드카드 (${player.wildcards.length}장)`, `
+            <div class="player-wildcards-modal">
+                <div class="wildcards-list">
+                    ${wildcardsList}
+                </div>
+            </div>
+        `, null, true);
+
+        // 와일드카드 사용 버튼 이벤트 바인딩
+        if (isCurrentPlayer) {
+            setTimeout(() => {
+                document.querySelectorAll('.btn-use-card').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const cardIndex = parseInt(btn.dataset.index);
+                        // 모달 닫기
+                        document.querySelector('.modal-overlay')?.remove();
+                        // 와일드카드 사용
+                        this.useWildcard(cardIndex);
+                    });
+                });
+            }, 100);
+        }
     }
 
     // 자산 클릭 이벤트 바인딩
@@ -2492,7 +3173,7 @@ class GameApp {
         showResultModal(`📊 ${building.name} 상세 정보`, `
             <div class="property-detail">
                 <div class="property-header">
-                    <span class="property-emoji">${building.emoji}</span>
+                    <span class="property-emoji">${getBuildingImage(building.name, '64px')}</span>
                     <div class="property-title">
                         <h2>${building.name}</h2>
                         <span class="property-location">📍 ${landName}</span>
@@ -2588,6 +3269,23 @@ class GameApp {
         if (confirm(`정말로 ${project.building.name}을(를) ${gameState.formatMoney(estimatedValue)}에 매각하시겠습니까?`)) {
             const player = gameState.getCurrentPlayer();
 
+            // 손익 계산
+            const originalSalePrice = project.salePrice || estimatedValue;
+            const profitLoss = estimatedValue - originalSalePrice;
+
+            // 매각 이력에 추가 (지도에 흔적을 남김)
+            player.soldHistory.push({
+                type: 'building',
+                building: project.building,
+                land: project.land,
+                architect: project.architect,
+                sellPrice: estimatedValue,
+                profitLoss,
+                marketFactor: 1.0,
+                soldAt: gameState.currentRound,
+                originalProject: { ...project }
+            });
+
             // 매각 처리
             player.money += estimatedValue;
 
@@ -2609,7 +3307,7 @@ class GameApp {
                 player.currentProject = null;
             }
 
-            // 지도에서 제거
+            // 지도에서 제거 (cityMap에서만 제거, 아이소메트릭 맵에서는 soldHistory로 표시)
             for (let y = 0; y < 5; y++) {
                 for (let x = 0; x < 5; x++) {
                     if (gameState.cityMap[y][x].project === project) {
@@ -2693,7 +3391,7 @@ class GameApp {
                         ${project.building ? `
                         <div class="info-row">
                             <span class="label">설계 건물</span>
-                            <span class="value">${project.building.emoji} ${project.building.name}</span>
+                            <span class="value">${getBuildingImage(project.building.name, '24px')} ${project.building.name}</span>
                         </div>
                         ` : ''}
                     </div>
@@ -2753,9 +3451,19 @@ class GameApp {
     confirmLandSale(project) {
         const totalInvestment = (project.landPrice || 0) + (project.developmentCost || 0) + (project.designFee || 0);
         const salePrice = Math.floor(totalInvestment * 0.8);
+        const profit = salePrice - totalInvestment;
 
         if (confirm(`정말로 ${project.land.name}을(를) ${gameState.formatMoney(salePrice)}에 매각하시겠습니까?\n(투자 대비 20% 손실)`)) {
             const player = gameState.getCurrentPlayer();
+
+            // 매각 이력에 추가 (지도에 흔적을 남김)
+            player.soldHistory.push({
+                type: 'land',
+                land: project.land,
+                sellPrice: salePrice,
+                profit,
+                soldAt: gameState.currentRound
+            });
 
             // 매각 처리
             player.money += salePrice;
@@ -2781,7 +3489,7 @@ class GameApp {
         showResultModal(`💰 ${sold.building.name} 매각 이력`, `
             <div class="sold-detail">
                 <div class="sold-header">
-                    <span class="sold-emoji">${sold.building.emoji}</span>
+                    <span class="sold-emoji">${getBuildingImage(sold.building.name, '64px')}</span>
                     <div class="sold-title">
                         <h2>${sold.building.name}</h2>
                         <span class="sold-location">📍 ${sold.land.name}</span>
@@ -3109,6 +3817,8 @@ class GameApp {
             showNotification(`🃏 ${card.name} 사용! ${message}`, 'success');
             gameState.addLog(`${player.name}: ${card.name} 사용`);
             this.updateWildcardPanel();
+            // 플레이어 패널 즉시 업데이트 (카드 개수 반영)
+            renderPlayerPanels();
         } else {
             showNotification(message, 'warning');
         }
@@ -3116,13 +3826,38 @@ class GameApp {
 
     // 게임 불러오기
     loadGame() {
-        if (gameState.load()) {
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('game-container').classList.remove('hidden');
-            this.updateUI();
-            this.runPhase();
-        } else {
+        const saveInfo = gameState.getSaveInfo();
+
+        if (!saveInfo) {
             showNotification('저장된 게임이 없습니다.', 'error');
+            return;
+        }
+
+        // 저장된 게임 정보 표시
+        const phaseNames = {
+            'land': '대지 구매',
+            'architect': '설계 단계',
+            'constructor': '시공 단계',
+            'evaluation': '평가'
+        };
+
+        const savedDate = saveInfo.savedAt ? new Date(saveInfo.savedAt).toLocaleString('ko-KR') : '알 수 없음';
+        const confirmMsg = `저장된 게임을 불러올까요?\n\n` +
+            `📅 저장 시간: ${savedDate}\n` +
+            `🎮 라운드: ${saveInfo.round}/${saveInfo.maxRounds}\n` +
+            `📍 단계: ${phaseNames[saveInfo.phase] || saveInfo.phase}\n` +
+            `👥 플레이어: ${saveInfo.playerNames.join(', ')}`;
+
+        if (confirm(confirmMsg)) {
+            if (gameState.load()) {
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('game-container').classList.remove('hidden');
+                this.updateUI();
+                this.runPhase();
+                showNotification('게임을 불러왔습니다! 🎮', 'success');
+            } else {
+                showNotification('게임 불러오기에 실패했습니다.', 'error');
+            }
         }
     }
 
@@ -3139,14 +3874,40 @@ class GameApp {
             </tr>
         `).join('');
 
+        const sizeLabels = {
+            'large': '대형',
+            'medium': '중견',
+            'small': '영세',
+            'atelier': '아뜰리에',
+            'direct': '직영'
+        };
+
         const constructorRows = constructors.map(c => `
             <tr>
                 <td class="constructor-cell">${c.emoji} ${c.name}</td>
-                <td class="type-cell">${c.type === 'small' ? '영세' : c.type === 'medium' ? '중견' : '대형'}</td>
+                <td class="type-cell">${sizeLabels[c.size] || c.size}</td>
                 <td class="number-cell">${(c.costMultiplier * 100).toFixed(0)}%</td>
                 <td class="number-cell">${c.paymentStages}단계</td>
                 <td class="number-cell">${c.riskBlocks}개</td>
                 <td class="desc-cell">${c.description}</td>
+            </tr>
+        `).join('');
+
+        const traitLabels = {
+            'artistry': '예술성',
+            'efficiency': '효율성',
+            'functionality': '기능성',
+            'fame': '유명도'
+        };
+
+        const architectRows = architects.map(a => `
+            <tr>
+                <td class="architect-cell">${a.portrait} ${a.name}</td>
+                <td class="type-cell">${traitLabels[a.trait] || a.trait}</td>
+                <td class="number-cell">+${((a.traitBonus - 1) * 100).toFixed(0)}%</td>
+                <td class="number-cell">${(a.feeMultiplier * 100).toFixed(0)}%</td>
+                <td class="number-cell">${(a.constructionMultiplier * 100).toFixed(0)}%</td>
+                <td class="desc-cell">${a.masterpieces.join(', ')}</td>
             </tr>
         `).join('');
 
@@ -3167,6 +3928,25 @@ class GameApp {
                         </thead>
                         <tbody>
                             ${buildingRows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-section">
+                    <h3>🎨 건축가 정보</h3>
+                    <table class="budget-table architect-table">
+                        <thead>
+                            <tr>
+                                <th>건축가</th>
+                                <th>특성</th>
+                                <th>보너스</th>
+                                <th>설계비</th>
+                                <th>시공비</th>
+                                <th>대표작</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${architectRows}
                         </tbody>
                     </table>
                 </div>

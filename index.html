@@ -19,6 +19,23 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
 </head>
 <body>
+  <!-- 프리로더 -->
+  <div id="preloader">
+    <div class="preloader-content">
+      <div class="preloader-logo">🏗️</div>
+      <h1 class="preloader-title">갓물주</h1>
+      <div class="preloader-spinner">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+      </div>
+      <div class="preloader-text">로딩 중...</div>
+      <div class="preloader-progress">
+        <div class="progress-bar-inner" id="preloader-progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- 알림 컨테이너 -->
   <div id="notifications"></div>
   
@@ -95,18 +112,26 @@
     <!-- 게임 유틸리티 버튼 -->
     <div id="game-utility-buttons">
       <button class="utility-btn" id="btn-budget-table">💰 단가표</button>
+      <button class="utility-btn" id="btn-game-manual">📖 규칙</button>
+      <button class="utility-btn" id="btn-save-game">💾 저장</button>
+      <button class="utility-btn" id="btn-load-game-utility">📂 이어하기</button>
     </div>
+
+    <!-- 아이소메트릭 개발 지도 -->
+    <section id="city-grid" class="hidden">
+      <!-- 동적으로 생성됨 -->
+    </section>
 
     <!-- 카드 그리드 (중앙) -->
     <section id="card-grid">
       <!-- 동적으로 생성됨 -->
     </section>
-    
+
     <!-- 건물 선택기 -->
     <section id="building-selector" class="hidden">
       <!-- 동적으로 생성됨 -->
     </section>
-    
+
     <!-- 구매 옵션 패널 -->
     <div id="purchase-options" class="hidden">
       <!-- 동적으로 생성됨 -->
@@ -116,18 +141,12 @@
     <section id="project-map" class="hidden">
       <div class="map-header">
         <h3>🗺️ 프로젝트 현황</h3>
-        <button class="map-toggle-btn" id="toggle-map-view">3D 보기</button>
       </div>
       <div class="map-container">
         <div class="map-grid" id="map-grid">
           <!-- 동적으로 생성됨 -->
         </div>
       </div>
-    </section>
-
-    <!-- 아이소메트릭 개발 지도 -->
-    <section id="city-grid" class="hidden">
-      <!-- 동적으로 생성됨 -->
     </section>
 
     <!-- 액션 영역 (하단) -->

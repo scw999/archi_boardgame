@@ -364,16 +364,18 @@ class GameState {
             }
         }
 
-        // 건축가 덱 리필
+        // 건축가 덱 리필 (중복 방지)
         if (this.architectDeck.length < minCards) {
-            const newCards = createArchitectDeck();
+            const existingIds = new Set(this.architectDeck.map(a => a.id));
+            const newCards = createArchitectDeck().filter(a => !existingIds.has(a.id));
             this.architectDeck = [...this.architectDeck, ...newCards].sort(() => Math.random() - 0.5);
             this.addLog('🎨 건축가 카드가 보충되었습니다.');
         }
 
-        // 시공사 덱 리필
+        // 시공사 덱 리필 (중복 방지)
         if (this.constructorDeck.length < minCards) {
-            const newCards = createConstructorDeck();
+            const existingIds = new Set(this.constructorDeck.map(c => c.id));
+            const newCards = createConstructorDeck().filter(c => !existingIds.has(c.id));
             this.constructorDeck = [...this.constructorDeck, ...newCards].sort(() => Math.random() - 0.5);
             this.addLog('🏗️ 시공사 카드가 보충되었습니다.');
         }
@@ -562,13 +564,13 @@ class GameState {
         const maxLoan = this.getMaxLoan(player);
 
         if (player.loan + amount > maxLoan) {
-            return false;
+            return { success: false, message: '대출 한도를 초과했습니다.' };
         }
 
         player.loan += amount;
         player.money += amount;
         this.addLog(`${player.name}: ${this.formatMoney(amount)} 대출 실행`);
-        return true;
+        return { success: true, message: `${this.formatMoney(amount)} 대출이 실행되었습니다.` };
     }
 
     // 이자 계산 (월 단위)
@@ -586,19 +588,23 @@ class GameState {
         return false;
     }
 
-    // PM 활동 (턴 패스하고 돈 벌기)
+    // PM 활동 (라운드 스킵하고 2억 벌기)
     doPMActivity(playerIndex) {
         const player = this.players[playerIndex];
-        // PM 활동 수익: 고정 1억
-        const totalIncome = 100000000;
+        // PM 활동 수익: 고정 2억
+        const totalIncome = 200000000;
 
         player.money += totalIncome;
-        this.addLog(`${player.name}: PM 활동으로 ${this.formatMoney(totalIncome)} 수입`);
+        // 라운드 스킵 플래그 설정
+        player.pmSkippedRound = this.currentRound;
+
+        this.addLog(`${player.name}: PM 컨설팅으로 ${this.formatMoney(totalIncome)} 수입 (이번 라운드 스킵)`);
 
         return {
             success: true,
             income: totalIncome,
-            message: `PM 활동 완료! ${this.formatMoney(totalIncome)} 수입`
+            skippedRound: true,
+            message: `PM 컨설팅 완료! ${this.formatMoney(totalIncome)} 수입 (이번 라운드 스킵)`
         };
     }
 
@@ -767,9 +773,30 @@ class GameState {
             players: this.players,
             currentPlayerIndex: this.currentPlayerIndex,
             currentRound: this.currentRound,
+            maxRounds: this.maxRounds,
             phase: this.phase,
             settings: this.settings,
-            log: this.log.slice(-50) // 최근 50개 로그만
+            usedArchitects: this.usedArchitects,
+            usedConstructors: this.usedConstructors,
+            // 덱 상태
+            landDeck: this.landDeck,
+            architectDeck: this.architectDeck,
+            constructorDeck: this.constructorDeck,
+            riskDeck: this.riskDeck,
+            // 현재 공개된 카드들
+            availableLands: this.availableLands,
+            availableArchitects: this.availableArchitects,
+            availableConstructors: this.availableConstructors,
+            // 선점 상태 (Set을 배열로 변환)
+            selectedArchitects: Array.from(this.selectedArchitects || []),
+            selectedConstructors: Array.from(this.selectedConstructors || []),
+            // 라운드 관련
+            startingPlayerIndex: this.startingPlayerIndex,
+            roundStartingPlayer: this.roundStartingPlayer,
+            premiumLandsAdded: this.premiumLandsAdded,
+            // 로그
+            log: this.log.slice(-50),
+            savedAt: new Date().toISOString()
         };
         localStorage.setItem('godmulju_save', JSON.stringify(saveData));
     }
@@ -779,15 +806,68 @@ class GameState {
         const saveData = localStorage.getItem('godmulju_save');
         if (saveData) {
             const data = JSON.parse(saveData);
-            Object.assign(this, data);
-            // 덱은 다시 생성 (셔플 상태 유지 어려움)
-            this.landDeck = createLandDeck();
-            this.architectDeck = createArchitectDeck();
-            this.constructorDeck = createConstructorDeck();
-            this.riskDeck = createRiskDeck();
+
+            // 기본 상태 복원
+            this.players = data.players || [];
+            this.currentPlayerIndex = data.currentPlayerIndex || 0;
+            this.currentRound = data.currentRound || 1;
+            this.maxRounds = data.maxRounds || 4;
+            this.phase = data.phase || 'land';
+            this.settings = data.settings || {};
+            this.usedArchitects = data.usedArchitects || [];
+            this.usedConstructors = data.usedConstructors || [];
+            this.log = data.log || [];
+
+            // 덱 복원
+            this.landDeck = data.landDeck || createLandDeck();
+            this.architectDeck = data.architectDeck || createArchitectDeck();
+            this.constructorDeck = data.constructorDeck || createConstructorDeck();
+            this.riskDeck = data.riskDeck || createRiskDeck();
+
+            // 현재 공개된 카드들 복원
+            this.availableLands = data.availableLands || [];
+            this.availableArchitects = data.availableArchitects || [];
+            this.availableConstructors = data.availableConstructors || [];
+
+            // 선점 상태 복원 (배열을 Set으로 변환)
+            this.selectedArchitects = new Set(data.selectedArchitects || []);
+            this.selectedConstructors = new Set(data.selectedConstructors || []);
+
+            // 라운드 관련 복원
+            this.startingPlayerIndex = data.startingPlayerIndex || 0;
+            this.roundStartingPlayer = data.roundStartingPlayer || 0;
+            this.premiumLandsAdded = data.premiumLandsAdded || false;
+
             return true;
         }
         return false;
+    }
+
+    // 저장된 게임 확인
+    hasSavedGame() {
+        return localStorage.getItem('godmulju_save') !== null;
+    }
+
+    // 저장된 게임 정보 가져오기
+    getSaveInfo() {
+        const saveData = localStorage.getItem('godmulju_save');
+        if (saveData) {
+            const data = JSON.parse(saveData);
+            return {
+                savedAt: data.savedAt,
+                round: data.currentRound,
+                maxRounds: data.maxRounds,
+                phase: data.phase,
+                playerCount: data.players?.length || 0,
+                playerNames: data.players?.map(p => p.name) || []
+            };
+        }
+        return null;
+    }
+
+    // 저장된 게임 삭제
+    deleteSave() {
+        localStorage.removeItem('godmulju_save');
     }
 }
 
