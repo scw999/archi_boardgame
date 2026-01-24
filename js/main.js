@@ -326,8 +326,8 @@ class GameApp {
         // 공통 액션 패널 제거 (하단 액션 영역에 통합)
         document.getElementById('common-action-panel')?.remove();
 
-        // 단계 시작 시 지도 먼저 보여주기
-        this.scrollToMapThenCards();
+        // 단계 시작 시 화면 위치 유지 (스크롤하지 않음)
+        // this.scrollToMapThenCards();
 
         switch (gameState.phase) {
             case GAME_PHASES.LAND_PURCHASE:
@@ -861,10 +861,10 @@ class GameApp {
             this.showDesignPanel(architect);
         });
 
-        // 페이즈 시작 시 개발 지도가 보이도록 맨 위로 스크롤
-        setTimeout(() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
+        // 페이즈 시작 시 화면 위치 유지 (스크롤하지 않음)
+        // setTimeout(() => {
+        //     window.scrollTo({ top: 0, behavior: 'smooth' });
+        // }, 100);
     }
 
     // 설계 패널 표시 (건축가 선택 후)
@@ -1416,10 +1416,10 @@ class GameApp {
             this.showConstructionPanel(constructor, originalIndex, building, architect);
         });
 
-        // 페이즈 시작 시 개발 지도가 보이도록 맨 위로 스크롤
-        setTimeout(() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
+        // 페이즈 시작 시 화면 위치 유지 (스크롤하지 않음)
+        // setTimeout(() => {
+        //     window.scrollTo({ top: 0, behavior: 'smooth' });
+        // }, 100);
     }
 
     // 시공 단계 돈벌기 옵션 표시
