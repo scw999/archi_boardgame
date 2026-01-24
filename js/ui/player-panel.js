@@ -79,7 +79,7 @@ function renderPlayerPanel(player, isActive) {
 
         <div class="stats-row">
           ${player.buildings.length > 0 ? `
-          <div class="stat-item building clickable-building" data-action="show-buildings" data-player-index="${player.id}" title="클릭하여 건물 보기">
+          <div class="stat-item building clickable-building" data-action="show-buildings" data-player-index="${playerIndex}" title="클릭하여 건물 보기">
             <span class="stat-icon">🏢</span>
             <span class="stat-value">${player.buildings.length}</span>
             <span class="stat-label">건물</span>
@@ -92,7 +92,7 @@ function renderPlayerPanel(player, isActive) {
           </div>
           `}
           ${wildcardCount > 0 ? `
-          <div class="stat-item wildcard clickable-wildcard" data-action="toggle-wildcard" data-player-index="${player.id}" title="클릭하여 와일드카드 보기">
+          <div class="stat-item wildcard clickable-wildcard" data-action="toggle-wildcard" data-player-index="${playerIndex}" title="클릭하여 와일드카드 보기">
             <span class="stat-icon">🃏</span>
             <span class="stat-value">${wildcardCount}</span>
             <span class="stat-label">카드</span>

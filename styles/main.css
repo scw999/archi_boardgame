@@ -4012,6 +4012,7 @@ body {
   color: var(--accent-purple);
   opacity: 0;
   transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .stat-item.wildcard.clickable-wildcard:hover::after {
@@ -7299,21 +7300,44 @@ body {
 .final-map-grid .plot-marker,
 .final-map-grid .plot-marker:hover {
   transform: translate(-50%, -50%) !important;
-  transition: none !important;
+  transition: box-shadow 0.2s ease !important;
+  z-index: 10 !important;
 }
 
+#final-map-view .plot-marker.has-building-img .plot-building-img,
 #final-map-view .plot-marker.has-building-img:hover .plot-building-img,
+.final-map-grid .plot-marker.has-building-img .plot-building-img,
 .final-map-grid .plot-marker.has-building-img:hover .plot-building-img {
   transform: none !important;
+  transition: none !important;
 }
 
 #final-map-view .plot-marker:hover .plot-marker-inner,
 .final-map-grid .plot-marker:hover .plot-marker-inner {
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5) !important;
 }
 
 /* 최종 지도 건물 클릭 커서 */
 #final-map-view .plot-marker.owned,
 .final-map-grid .plot-marker.owned {
   cursor: pointer;
+}
+
+/* 최종 지도 건물 클릭 시 하이라이트 */
+#final-map-view .plot-marker.owned:active,
+.final-map-grid .plot-marker.owned:active {
+  opacity: 0.8;
+}
+
+/* 최종 지도 내 지도 그리드도 호버 비활성화 */
+#final-city-grid .plot-marker,
+#final-city-grid .plot-marker:hover {
+  transform: translate(-50%, -50%) !important;
+  z-index: 10 !important;
+}
+
+#final-city-grid .plot-marker .plot-building-img,
+#final-city-grid .plot-marker:hover .plot-building-img {
+  transform: none !important;
+  transition: none !important;
 }
