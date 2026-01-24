@@ -808,13 +808,13 @@ export class Building3DViewer {
             bgColor = 0x3b82f6; // 파랑
             iconEmoji = '📐';
         } else if (status === 'construction') {
-            labelText = '시공중';
-            bgColor = 0xf59e0b; // 주황
-            iconEmoji = '🏗️';
-        } else if (status === 'constructionComplete') {
-            labelText = '시공완료';
+            labelText = '설계완료';
             bgColor = 0x22c55e; // 초록
             iconEmoji = '✅';
+        } else if (status === 'constructionComplete') {
+            labelText = '시공완료';
+            bgColor = 0x10b981; // 진한 초록
+            iconEmoji = '🏢';
         } else {
             return; // 알 수 없는 상태는 라벨 표시 안함
         }
@@ -889,8 +889,8 @@ export class Building3DViewer {
         textMesh.renderOrder = 3;
         labelGroup.add(textMesh);
 
-        // 라벨 위치 설정 - 깃발과 겹치지 않게 오른쪽으로 오프셋
-        labelGroup.position.set(25, totalHeight + 20, 0);
+        // 라벨 위치 설정 - 건물 가운데, 깃발 바로 위
+        labelGroup.position.set(0, totalHeight + 32, 0);
 
         // 카메라를 향하도록 설정 (빌보드)
         labelGroup.userData.isBillboard = true;
