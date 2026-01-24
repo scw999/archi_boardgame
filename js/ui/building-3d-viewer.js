@@ -1049,4 +1049,4 @@ export function getGlobalViewer() {
     return globalViewer;
 }
 
-export { BUILDING_3D_CONFIG, BUILDING_GLB_MODELS, PLAYER_COLORS as PLAYER_3D_COLORS };
+export { BUILDING_3D_CONFIG, PLAYER_COLORS as PLAYER_3D_COLORS };
