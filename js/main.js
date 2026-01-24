@@ -3188,13 +3188,6 @@ class GameApp {
                     padding: 0.5rem;
                     margin-bottom: 1rem;
                 }
-                /* 최종 결과에서 city-grid 헤더 숨기기 */
-                .final-map-grid .iso-city-header {
-                    display: none;
-                }
-                .final-map-grid .iso-city-container {
-                    padding-top: 0;
-                }
                 .final-map-footer {
                     text-align: center;
                 }
@@ -3412,6 +3405,9 @@ class GameApp {
                     architect: building.architect,
                     constructor: building.constructor,
                     salePrice: building.salePrice,
+                    landPrice: building.landPrice || 0,
+                    designFee: building.designFee || 0,
+                    constructionCost: building.constructionCost || 0,
                     plotIndex: building.plotIndex
                 });
             });
@@ -3426,8 +3422,12 @@ class GameApp {
                         land: sold.land,
                         building: sold.building,
                         architect: sold.architect,
+                        constructor: sold.constructor,
                         sellPrice: sold.sellPrice,
                         soldAt: sold.soldAt,
+                        landPrice: sold.originalProject.landPrice || sold.landPrice || 0,
+                        designFee: sold.originalProject.designFee || sold.designFee || 0,
+                        constructionCost: sold.originalProject.constructionCost || sold.constructionCost || 0,
                         plotIndex: sold.originalProject.plotIndex
                     });
                 }
@@ -3449,6 +3449,13 @@ class GameApp {
         const statusText = isSold ? '매각됨' : '완공';
         const statusClass = isSold ? 'status-sold' : 'status-completed';
 
+        // 비용 계산
+        const totalInvestment = owned.landPrice + owned.designFee + owned.constructionCost;
+        const finalPrice = isSold ? owned.sellPrice : owned.salePrice;
+        const profit = finalPrice - totalInvestment;
+        const profitClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
+        const profitSign = profit >= 0 ? '+' : '';
+
         const modal = document.createElement('div');
         modal.className = 'final-building-modal';
         modal.innerHTML = `
@@ -3459,30 +3466,62 @@ class GameApp {
                     <span class="modal-owner">${owned.playerName}</span>
                 </div>
                 <div class="modal-body">
-                    <div class="modal-land">
-                        <strong>📍 ${owned.land?.name || '알 수 없음'}</strong>
-                        <span>${owned.land?.area || '-'}평</span>
+                    <div class="modal-section">
+                        <div class="modal-land">
+                            <strong>📍 ${owned.land?.name || '알 수 없음'}</strong>
+                            <span class="land-area">${owned.land?.area || '-'}평</span>
+                        </div>
+                        ${owned.building ? `
+                            <div class="modal-building">
+                                <strong>🏢 ${owned.building.name}</strong>
+                            </div>
+                        ` : ''}
                     </div>
-                    ${owned.building ? `
-                        <div class="modal-building">
-                            <strong>🏢 ${owned.building.name}</strong>
+
+                    <div class="modal-section team-info">
+                        ${owned.architect ? `
+                            <div class="modal-architect">
+                                <span class="label">건축가</span>
+                                <span class="value">${owned.architect.portrait || '👤'} ${owned.architect.name}</span>
+                            </div>
+                        ` : ''}
+                        ${owned.constructor ? `
+                            <div class="modal-constructor">
+                                <span class="label">시공사</span>
+                                <span class="value">${owned.constructor.emoji || '🏗️'} ${owned.constructor.name}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="modal-section cost-breakdown">
+                        <h4>💰 투자 내역</h4>
+                        <div class="cost-row">
+                            <span>토지 구입비</span>
+                            <span>${gameState.formatMoney(owned.landPrice)}</span>
                         </div>
-                    ` : ''}
-                    ${owned.architect ? `
-                        <div class="modal-architect">
-                            <span>${owned.architect.portrait || '👤'} ${owned.architect.name}</span>
+                        <div class="cost-row">
+                            <span>설계비</span>
+                            <span>${gameState.formatMoney(owned.designFee)}</span>
                         </div>
-                    ` : ''}
-                    ${owned.constructor ? `
-                        <div class="modal-constructor">
-                            <span>${owned.constructor.emoji || '🏗️'} ${owned.constructor.name}</span>
+                        <div class="cost-row">
+                            <span>시공비</span>
+                            <span>${gameState.formatMoney(owned.constructionCost)}</span>
                         </div>
-                    ` : ''}
-                    <div class="modal-price">
-                        ${isSold
-                            ? `<span class="sold">💰 매각가: ${gameState.formatMoney(owned.sellPrice)} (라운드 ${owned.soldAt})</span>`
-                            : `<span>💎 건물 가치: ${gameState.formatMoney(owned.salePrice || 0)}</span>`
-                        }
+                        <div class="cost-row total">
+                            <span>총 투자금</span>
+                            <span>${gameState.formatMoney(totalInvestment)}</span>
+                        </div>
+                    </div>
+
+                    <div class="modal-section result-info">
+                        <div class="result-row">
+                            <span>${isSold ? '매각가' : '건물 가치'}</span>
+                            <span class="final-price">${gameState.formatMoney(finalPrice)}${isSold ? ` (R${owned.soldAt})` : ''}</span>
+                        </div>
+                        <div class="result-row profit ${profitClass}">
+                            <span>수익</span>
+                            <span>${profitSign}${gameState.formatMoney(Math.abs(profit))}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3561,6 +3600,88 @@ class GameApp {
                 }
                 .final-building-modal .modal-price .sold {
                     color: var(--accent-purple);
+                }
+                .final-building-modal .modal-section {
+                    margin-bottom: 0.5rem;
+                }
+                .final-building-modal .modal-section h4 {
+                    margin: 0 0 0.5rem 0;
+                    font-size: 0.9rem;
+                    color: var(--accent-gold);
+                }
+                .final-building-modal .modal-land,
+                .final-building-modal .modal-building {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .final-building-modal .land-area {
+                    color: var(--text-muted);
+                    font-size: 0.85rem;
+                }
+                .final-building-modal .team-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.4rem;
+                }
+                .final-building-modal .modal-architect,
+                .final-building-modal .modal-constructor {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 0.9rem;
+                }
+                .final-building-modal .team-info .label {
+                    color: var(--text-muted);
+                }
+                .final-building-modal .team-info .value {
+                    font-weight: 500;
+                }
+                .final-building-modal .cost-breakdown {
+                    background: rgba(0,0,0,0.2);
+                    border-radius: var(--radius-sm);
+                    padding: 0.75rem;
+                }
+                .final-building-modal .cost-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 0.25rem 0;
+                    font-size: 0.85rem;
+                }
+                .final-building-modal .cost-row.total {
+                    border-top: 1px solid rgba(255,255,255,0.1);
+                    margin-top: 0.5rem;
+                    padding-top: 0.5rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                }
+                .final-building-modal .result-info {
+                    background: rgba(245, 158, 11, 0.1);
+                    border-radius: var(--radius-sm);
+                    padding: 0.75rem;
+                }
+                .final-building-modal .result-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 0.25rem 0;
+                    font-size: 0.9rem;
+                }
+                .final-building-modal .result-row .final-price {
+                    font-weight: 600;
+                    color: var(--accent-gold);
+                }
+                .final-building-modal .result-row.profit {
+                    border-top: 1px solid rgba(255,255,255,0.1);
+                    margin-top: 0.5rem;
+                    padding-top: 0.5rem;
+                    font-weight: 700;
+                    font-size: 1rem;
+                }
+                .final-building-modal .profit-positive {
+                    color: var(--accent-emerald);
+                }
+                .final-building-modal .profit-negative {
+                    color: var(--accent-red);
                 }
             `;
             document.head.appendChild(style);
