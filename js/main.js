@@ -4029,7 +4029,10 @@ class GameApp {
             <div class="wildcard-list">
                 ${player.wildcards.map((card, index) => `
                     <div class="wildcard-item" data-index="${index}">
-                        <span class="card-name">${card.name}</span>
+                        <div class="wildcard-item-header">
+                            <span class="card-name">${card.name}</span>
+                            <span class="card-detail-hint">ℹ️ 상세보기</span>
+                        </div>
                         <span class="card-desc">${card.description}</span>
                         <button class="btn-use-wildcard" data-index="${index}">사용</button>
                     </div>

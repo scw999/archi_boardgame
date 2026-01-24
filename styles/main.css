@@ -5440,6 +5440,25 @@ body {
   background: rgba(251, 191, 36, 0.1);
 }
 
+.wildcard-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.card-detail-hint {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: all var(--transition-fast);
+}
+
+.wildcard-item:hover .card-detail-hint {
+  opacity: 1;
+  color: var(--accent-gold);
+}
+
 .wildcard-item .card-name {
   display: block;
   font-weight: 600;
