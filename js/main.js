@@ -3467,7 +3467,7 @@ class GameApp {
                                 <li class="history-item sale-item">
                                     <span class="item-icon">${getBuildingImage(s.building?.name || '건물', '20px')}</span>
                                     <span class="item-name">${s.building?.name || '건물'}</span>
-                                    <span class="item-round">R${s.soldAt || '?'}</span>
+                                    <span class="item-round">${s.soldAt || '?'}라운드 매각</span>
                                     <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
                                     <span class="item-profit ${profitClass}">(${profitSign}${gameState.formatMoney(Math.abs(s.profitLoss || 0))})</span>
                                 </li>
@@ -3486,7 +3486,7 @@ class GameApp {
                                 <li class="history-item project-sale-item">
                                     <span class="item-icon">📋</span>
                                     <span class="item-name">${s.building?.name || s.land?.name || '프로젝트'}</span>
-                                    <span class="item-round">R${s.soldAt || '?'}</span>
+                                    <span class="item-round">${s.soldAt || '?'}라운드 매각</span>
                                     <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
                                     <span class="item-loss">(-${gameState.formatMoney(s.loss || 0)})</span>
                                 </li>
@@ -3505,7 +3505,7 @@ class GameApp {
                                 <li class="history-item land-sale-item">
                                     <span class="item-icon">🏞️</span>
                                     <span class="item-name">${s.land?.name || '토지'}</span>
-                                    <span class="item-round">R${s.soldAt || '?'}</span>
+                                    <span class="item-round">${s.soldAt || '?'}라운드 매각</span>
                                     <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
                                     <span class="item-profit profit">(+${gameState.formatMoney(s.profit || 0)})</span>
                                 </li>
@@ -3527,6 +3527,71 @@ class GameApp {
                 </div>
             `;
         }
+
+        // 4. 수익 요약 및 자산 계산
+        const buildingValue = player.buildings?.reduce((sum, b) => sum + (b.salePrice || 0), 0) || 0;
+
+        // 총 매각 수익 계산
+        let totalSaleProfit = 0;
+        if (player.soldHistory) {
+            player.soldHistory.forEach(sold => {
+                if (sold.type === 'building') {
+                    totalSaleProfit += (sold.profitLoss || 0);
+                } else if (sold.type === 'land') {
+                    totalSaleProfit += (sold.profit || 0);
+                } else {
+                    totalSaleProfit -= (sold.loss || 0);
+                }
+            });
+        }
+
+        // 진행중인 프로젝트 투자금
+        let projectInvestment = 0;
+        if (player.currentProject && player.currentProject.land) {
+            const project = player.currentProject;
+            projectInvestment = (project.landPrice || 0) + (project.developmentCost || 0) +
+                               (project.designFee || 0) + (project.constructionCost || 0);
+        }
+
+        const totalAssets = player.money + buildingValue - player.loan;
+        const profitClass = totalSaleProfit >= 0 ? 'profit' : 'loss';
+        const profitSign = totalSaleProfit >= 0 ? '+' : '';
+
+        historyHtml += `
+            <div class="history-section summary">
+                <h5>📊 자산 요약</h5>
+                <div class="asset-summary">
+                    <div class="summary-row">
+                        <span class="label">보유 현금</span>
+                        <span class="value">${gameState.formatMoney(player.money)}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">건물 가치 (${player.buildings?.length || 0}채)</span>
+                        <span class="value">${gameState.formatMoney(buildingValue)}</span>
+                    </div>
+                    ${projectInvestment > 0 ? `
+                    <div class="summary-row">
+                        <span class="label">진행중 프로젝트 투자</span>
+                        <span class="value dimmed">(${gameState.formatMoney(projectInvestment)})</span>
+                    </div>
+                    ` : ''}
+                    ${player.loan > 0 ? `
+                    <div class="summary-row negative">
+                        <span class="label">대출 잔액</span>
+                        <span class="value">-${gameState.formatMoney(player.loan)}</span>
+                    </div>
+                    ` : ''}
+                    <div class="summary-row total">
+                        <span class="label">총 자산</span>
+                        <span class="value highlight">${gameState.formatMoney(totalAssets)}</span>
+                    </div>
+                    <div class="summary-row ${profitClass}">
+                        <span class="label">총 매각 수익</span>
+                        <span class="value">${profitSign}${gameState.formatMoney(Math.abs(totalSaleProfit))}</span>
+                    </div>
+                </div>
+            </div>
+        `;
 
         // 히스토리가 비어있는 경우
         if (!historyHtml) {
@@ -4467,44 +4532,87 @@ class GameApp {
             : `-${gameState.formatMoney(Math.abs(sold.profitLoss))}`;
         const marketStatus = sold.marketFactor >= 1.0 ? '호황' : '불황';
 
+        // 투자 내역 계산
+        const landCost = sold.originalProject?.landPrice || 0;
+        const devCost = sold.originalProject?.developmentCost || 0;
+        const designFee = sold.originalProject?.designFee || 0;
+        const constructionCost = sold.originalProject?.constructionCost || 0;
+        const totalInvestment = landCost + devCost + designFee + constructionCost;
+
         showResultModal(`💰 ${sold.building.name} 매각 이력`, `
-            <div class="sold-detail">
-                <div class="sold-header">
-                    <span class="sold-emoji">${getBuildingImage(sold.building.name, '64px')}</span>
-                    <div class="sold-title">
-                        <h2>${sold.building.name}</h2>
-                        <span class="sold-location">📍 ${sold.land.name}</span>
-                        <span class="sold-owner">👤 ${ownerName}</span>
+            <div class="property-detail-modal sold-modal">
+                <div class="property-header">
+                    <div class="property-image">
+                        ${getBuildingImage(sold.building.name, '80px')}
                     </div>
-                    <span class="sold-badge">매각 완료</span>
+                    <div class="property-title">
+                        <h2>${sold.building.name}</h2>
+                        <p class="property-location">📍 ${sold.land.name}</p>
+                        <p class="property-owner">👤 소유자: ${ownerName}</p>
+                    </div>
+                    <span class="property-badge sold">매각 완료</span>
                 </div>
 
-                <div class="sold-info-grid">
-                    <div class="info-section">
-                        <h4>🏗️ 건물 정보</h4>
+                <div class="property-section">
+                    <h4 class="section-title">🏗️ 프로젝트 정보</h4>
+                    <div class="info-grid">
                         <div class="info-row">
                             <span class="label">건축가</span>
-                            <span class="value">${sold.architect?.portrait || ''} ${sold.architect?.name || '-'}</span>
+                            <span class="value">${sold.architect?.portrait || '👤'} ${sold.architect?.name || '-'}</span>
                         </div>
                         <div class="info-row">
                             <span class="label">시공사</span>
-                            <span class="value">${sold.originalProject?.constructor?.emoji || '🏗️'} ${sold.originalProject?.constructor?.name || '-'}</span>
+                            <span class="value">${sold.originalProject?.constructor?.emoji || sold.constructor?.emoji || '🏗️'} ${sold.originalProject?.constructor?.name || sold.constructor?.name || '-'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">평가 팩터</span>
+                            <span class="value highlight">x${sold.marketFactor?.toFixed(2) || '-'}</span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="info-section">
-                        <h4>💰 매각 정보</h4>
+                <div class="property-section">
+                    <h4 class="section-title">💰 투자 내역</h4>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="label">대지비</span>
+                            <span class="value">${gameState.formatMoney(landCost)}</span>
+                        </div>
+                        ${devCost > 0 ? `
+                        <div class="info-row">
+                            <span class="label">개발비</span>
+                            <span class="value">${gameState.formatMoney(devCost)}</span>
+                        </div>
+                        ` : ''}
+                        <div class="info-row">
+                            <span class="label">설계비</span>
+                            <span class="value">${gameState.formatMoney(designFee)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">시공비</span>
+                            <span class="value">${gameState.formatMoney(constructionCost)}</span>
+                        </div>
+                        <div class="info-row total">
+                            <span class="label">총 투자</span>
+                            <span class="value highlight">${gameState.formatMoney(totalInvestment)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="property-section result">
+                    <h4 class="section-title">📈 매각 정보</h4>
+                    <div class="info-grid">
                         <div class="info-row large">
                             <span class="label">매각가</span>
                             <span class="value gold">${gameState.formatMoney(sold.sellPrice)}</span>
                         </div>
-                        <div class="info-row">
+                        <div class="info-row large">
                             <span class="label">손익</span>
                             <span class="value ${sold.profitLoss >= 0 ? 'profit' : 'loss'}">${profitLossText}</span>
                         </div>
                         <div class="info-row">
                             <span class="label">시장 상황</span>
-                            <span class="value">${marketStatus} (x${sold.marketFactor.toFixed(2)})</span>
+                            <span class="value">${marketStatus} (x${sold.marketFactor?.toFixed(2) || '1.00'})</span>
                         </div>
                     </div>
                 </div>
@@ -4516,31 +4624,33 @@ class GameApp {
     showSoldLandDetail(sold, ownerIndex) {
         const ownerName = gameState.players[ownerIndex]?.name || '알 수 없음';
 
-        showResultModal(`💰 ${sold.land.name} 토지 매각 이력`, `
-            <div class="sold-detail land-sold">
-                <div class="sold-header">
-                    <span class="sold-emoji">🏞️</span>
-                    <div class="sold-title">
-                        <h2>${sold.land.name}</h2>
-                        <span class="sold-owner">👤 ${ownerName}</span>
+        showResultModal(`🏞️ ${sold.land.name} 토지 매각 이력`, `
+            <div class="property-detail-modal sold-modal land-sold">
+                <div class="property-header">
+                    <div class="property-image land-image">
+                        🏞️
                     </div>
-                    <span class="sold-badge">토지 매각</span>
+                    <div class="property-title">
+                        <h2>${sold.land.name}</h2>
+                        <p class="property-owner">👤 소유자: ${ownerName}</p>
+                    </div>
+                    <span class="property-badge sold">토지 매각</span>
                 </div>
 
-                <div class="sold-info-grid">
-                    <div class="info-section">
-                        <h4>💰 매각 정보</h4>
+                <div class="property-section result">
+                    <h4 class="section-title">💰 매각 정보</h4>
+                    <div class="info-grid">
                         <div class="info-row large">
                             <span class="label">매각가</span>
                             <span class="value gold">${gameState.formatMoney(sold.sellPrice)}</span>
                         </div>
-                        <div class="info-row">
+                        <div class="info-row large">
                             <span class="label">수익</span>
-                            <span class="value profit">+${gameState.formatMoney(sold.profit)}</span>
+                            <span class="value profit">+${gameState.formatMoney(sold.profit || 0)}</span>
                         </div>
                         <div class="info-row">
-                            <span class="label">매각 라운드</span>
-                            <span class="value">라운드 ${sold.soldAt}</span>
+                            <span class="label">매각 시점</span>
+                            <span class="value">${sold.soldAt}라운드</span>
                         </div>
                     </div>
                 </div>

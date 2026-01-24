@@ -312,31 +312,45 @@ function collectOwnedPlots() {
             });
         }
 
-        // 매각 이력 (건물은 지도에 남음)
+        // 매각 이력 (건물 및 토지 매각)
         if (player.soldHistory) {
             player.soldHistory.forEach(sold => {
-                // 대지만 매각한 경우는 건물이 없으므로 제외
-                if (sold.type === 'land') return;
-
                 const landId = sold.land.instanceId || sold.land.id;
                 const assignedPlot = getOrAssignPlotForLand(landId, sold.land.region, sold.land.name);
 
-                ownedPlots.push({
-                    type: 'sold',
-                    playerIndex,
-                    playerName: player.name,
-                    land: sold.land,
-                    building: sold.building,
-                    architect: sold.architect || sold.originalProject?.architect,
-                    constructorInfo: sold.constructor || sold.originalProject?.constructor,
-                    sellPrice: sold.sellPrice,
-                    soldAt: sold.soldAt,
-                    landPrice: sold.originalProject?.landPrice || sold.landPrice || 0,
-                    designFee: sold.originalProject?.designFee || sold.designFee || 0,
-                    constructionCost: sold.originalProject?.constructionCost || sold.constructionCost || 0,
-                    plotIndex: assignedPlot,
-                    status: 'sold'
-                });
+                if (sold.type === 'land') {
+                    // 토지만 매각한 경우
+                    ownedPlots.push({
+                        type: 'sold-land',
+                        playerIndex,
+                        playerName: player.name,
+                        land: sold.land,
+                        building: null,
+                        sellPrice: sold.sellPrice,
+                        profit: sold.profit,
+                        soldAt: sold.soldAt,
+                        plotIndex: assignedPlot,
+                        status: 'sold-land'
+                    });
+                } else {
+                    // 건물 매각
+                    ownedPlots.push({
+                        type: 'sold',
+                        playerIndex,
+                        playerName: player.name,
+                        land: sold.land,
+                        building: sold.building,
+                        architect: sold.architect || sold.originalProject?.architect,
+                        constructorInfo: sold.constructor || sold.originalProject?.constructor,
+                        sellPrice: sold.sellPrice,
+                        soldAt: sold.soldAt,
+                        landPrice: sold.originalProject?.landPrice || sold.landPrice || 0,
+                        designFee: sold.originalProject?.designFee || sold.designFee || 0,
+                        constructionCost: sold.originalProject?.constructionCost || sold.constructionCost || 0,
+                        plotIndex: assignedPlot,
+                        status: 'sold'
+                    });
+                }
             });
         }
     });
@@ -473,7 +487,7 @@ function getProjectStatus(project) {
 function renderPlotMarker(plot, index, owned) {
     const tierClass = `tier-${plot.tier}`;
     const isOwned = owned !== undefined;
-    const isSold = isOwned && owned.status === 'sold';
+    const isSold = isOwned && (owned.status === 'sold' || owned.status === 'sold-land');
     const ownerClass = isOwned ? `owned owner-${owned.playerIndex}${isSold ? ' sold' : ''}` : 'available';
     const playerColor = isOwned ? PLAYER_COLORS[owned.playerIndex] : null;
     const hasBuilding = isOwned && owned.building;
@@ -506,6 +520,7 @@ function renderPlotMarker(plot, index, owned) {
             case 'construction': statusIcon = '🏗️'; break;
             case 'completed': statusIcon = '✅'; break;
             case 'sold': statusIcon = '💰'; break;
+            case 'sold-land': statusIcon = '💰'; break;
         }
     } else {
         content = `<span class="plot-empty">${plot.emoji}</span>`;
@@ -614,9 +629,11 @@ function renderOwnedAssetsList(ownedPlots) {
                     ${plots.map(plot => {
                         // 건물이 완성되었으면 건물 이름 표시, 아니면 토지 이름 표시
                         const hasCompletedBuilding = plot.building && (plot.status === 'completed' || plot.status === 'sold');
+                        const isLandSold = plot.status === 'sold-land';
                         const assetName = hasCompletedBuilding ? `${plot.building.name} 건물` : `${plot.land.name.replace(' 필지', '')} 택지`;
+                        const statusClass = isLandSold ? 'sold sold-land' : plot.status;
                         return `
-                        <div class="asset-item ${plot.status}">
+                        <div class="asset-item ${statusClass}">
                             <span class="asset-icon">${plot.building ? getBuildingImageHTML(plot.building.name, '24px') : '🏞️'}</span>
                             <span class="asset-name">${assetName}</span>
                             <span class="asset-status">${getStatusLabel(plot.status)}</span>
@@ -638,7 +655,8 @@ function getStatusLabel(status) {
         'construction': '설계 완료',  // 시공 단계 진입 = 설계 완료
         'constructionComplete': '시공 완료',  // 시공사 선정 후 시공 완료
         'completed': '완료',
-        'sold': '매각됨'
+        'sold': '매각됨',
+        'sold-land': '토지 매각'
     };
     return labels[status] || status;
 }

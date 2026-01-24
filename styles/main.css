@@ -2436,7 +2436,161 @@ body {
   width: 100%;
 }
 
-/* 매각 상세 모달 */
+/* 매각 상세 모달 (새 스타일) */
+.property-detail-modal {
+  padding: 1rem 0;
+}
+
+.property-detail-modal .property-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.property-detail-modal .property-image {
+  width: 80px;
+  height: 80px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.property-detail-modal .property-image.land-image {
+  font-size: 2.5rem;
+}
+
+.property-detail-modal .property-title {
+  flex: 1;
+}
+
+.property-detail-modal .property-title h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.property-detail-modal .property-location,
+.property-detail-modal .property-owner {
+  margin: 0.25rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.property-detail-modal .property-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.property-detail-modal .property-badge.sold {
+  background: linear-gradient(135deg, #6b7280, #9ca3af);
+  color: white;
+}
+
+.property-detail-modal .property-section {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.property-detail-modal .property-section:last-child {
+  margin-bottom: 0;
+}
+
+.property-detail-modal .section-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.property-detail-modal .property-section.result .section-title {
+  color: var(--accent-emerald);
+}
+
+.property-detail-modal .info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.property-detail-modal .info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.property-detail-modal .info-row:last-child {
+  border-bottom: none;
+}
+
+.property-detail-modal .info-row .label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.property-detail-modal .info-row .value {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.property-detail-modal .info-row .value.highlight {
+  color: var(--accent-blue);
+  font-weight: 600;
+}
+
+.property-detail-modal .info-row .value.gold {
+  color: var(--accent-gold);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.property-detail-modal .info-row .value.profit {
+  color: var(--accent-emerald);
+  font-weight: 600;
+}
+
+.property-detail-modal .info-row .value.loss {
+  color: var(--accent-red);
+  font-weight: 600;
+}
+
+.property-detail-modal .info-row.total {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+}
+
+.property-detail-modal .info-row.large {
+  padding: 0.5rem 0;
+}
+
+.property-detail-modal .info-row.large .label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.property-detail-modal .info-row.large .value {
+  font-size: 1.1rem;
+}
+
+/* 기존 매각 상세 모달 (하위 호환) */
 .sold-detail {
   padding: 1rem 0;
 }
@@ -8199,4 +8353,72 @@ body {
   padding: 0.5rem;
   font-size: 0.85rem;
   font-style: italic;
+}
+
+/* 자산 요약 */
+.history-section.summary {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.asset-summary {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+}
+
+.asset-summary .summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.asset-summary .summary-row:last-child {
+  border-bottom: none;
+}
+
+.asset-summary .summary-row .label {
+  color: var(--text-secondary);
+}
+
+.asset-summary .summary-row .value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.asset-summary .summary-row .value.dimmed {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.asset-summary .summary-row.negative .value {
+  color: var(--accent-red);
+}
+
+.asset-summary .summary-row.total {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.asset-summary .summary-row.total .label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.asset-summary .summary-row.total .value.highlight {
+  color: var(--accent-gold);
+  font-size: 1rem;
+}
+
+.asset-summary .summary-row.profit .value {
+  color: var(--accent-emerald);
+}
+
+.asset-summary .summary-row.loss .value {
+  color: var(--accent-red);
 }
