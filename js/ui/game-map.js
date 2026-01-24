@@ -1193,27 +1193,31 @@ function renderProjectTile(player, playerIndex) {
 function renderLandVisual(project, phase) {
     const hasBuilding = project.building !== null;
     const isConstructing = phase === 'construction';
+    const isDesigning = phase === 'design';
 
     let buildingHtml = '';
 
     if (project.building) {
         const sizeClass = getBuildingSizeClass(project.building);
-        const constructClass = isConstructing ? 'constructing' : '';
+        // 설계중이면 designing 클래스, 시공중이면 constructing 클래스
+        const stateClass = isDesigning ? 'designing' : (isConstructing ? 'constructing' : '');
 
         buildingHtml = `
-            <div class="building-3d ${sizeClass} ${constructClass}">
+            <div class="building-3d ${sizeClass} ${stateClass}">
                 <span class="building-icon">${getBuildingImageHTML(project.building.name, '48px')}</span>
                 <div class="building-shadow"></div>
+                ${isDesigning ? '<div class="design-overlay">📐</div>' : ''}
             </div>
         `;
     } else if (project.land) {
         buildingHtml = `<span style="font-size: 1.5rem;">🌿</span>`;
     }
 
+    // 설계중일 때 청사진 표시 (건물 선택 전에만)
     const blueprintHtml = phase === 'design' && !project.building ? '<div class="blueprint"></div>' : '';
 
     return `
-        <div class="land-visual ${hasBuilding ? 'has-building' : ''}">
+        <div class="land-visual ${hasBuilding ? 'has-building' : ''} ${isDesigning ? 'designing-phase' : ''}">
             ${blueprintHtml}
             ${buildingHtml}
         </div>

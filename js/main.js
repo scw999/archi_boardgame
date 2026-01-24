@@ -1385,9 +1385,10 @@ class GameApp {
             }, { constructor: null, cost: Infinity })
             : null;
 
-        const needsMoney = cheapestConstructor && player.money < cheapestConstructor.cost * 0.3;
+        // 자금 부족 여부: 가장 저렴한 시공사의 시공비보다 보유금이 적으면 부족
+        const needsMoney = cheapestConstructor && player.money < cheapestConstructor.cost;
 
-        // 액션 영역에 돈벌기 옵션 표시 (자금 부족 시에만)
+        // 액션 영역에 돈벌기 옵션 표시 (자금 부족 시)
         if (needsMoney) {
             this.showConstructionMoneyOptions(player, cheapestConstructor.cost);
         } else {
@@ -1460,14 +1461,11 @@ class GameApp {
                     <button class="action-btn pm" id="btn-pm-construction">
                         💼 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})
                     </button>
-                    ${player.currentProject?.land && !player.currentProject?.building ? `
+                    ${player.currentProject?.land && !player.currentProject?.constructor ? `
                         <button class="action-btn sell" id="btn-sell-land-construction">
-                            🏞️ 대지 매각 (${gameState.formatMoney(Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1))})
-                        </button>
-                    ` : ''}
-                    ${player.currentProject?.building && !player.currentProject?.constructor ? `
-                        <button class="action-btn sell designed" id="btn-sell-designed-project">
-                            📐 설계 프로젝트 매각 (${gameState.formatMoney(Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee) * 0.9))})
+                            🏞️ 대지 매각 (${gameState.formatMoney(player.currentProject.building
+                                ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee) * 0.9)
+                                : Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1))})
                         </button>
                     ` : ''}
                     ${player.buildings.length > 0 ? `
@@ -1559,36 +1557,35 @@ class GameApp {
             };
         }
 
-        // 대지 매각 버튼
+        // 대지 매각 버튼 (설계중인 프로젝트 포함)
         const sellLandBtn = document.getElementById('btn-sell-land-construction');
         if (sellLandBtn) {
             sellLandBtn.onclick = () => {
-                const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
-                if (result.success) {
-                    showNotification(result.message, 'success');
-                    this.updateUI();
-                    // 대지를 팔면 시공 불가, 다음 플레이어로
-                    this.nextPlayerOrPhase('constructor');
-                } else {
-                    showNotification(result.message, 'error');
-                }
-            };
-        }
+                const currentPlayer = gameState.getCurrentPlayer();
+                const hasBuilding = currentPlayer.currentProject?.building;
 
-        // 설계 프로젝트 매각 버튼
-        const sellDesignedBtn = document.getElementById('btn-sell-designed-project');
-        if (sellDesignedBtn) {
-            sellDesignedBtn.onclick = () => {
-                if (!confirm('설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
+                // 설계중인 프로젝트면 확인 메시지 표시
+                if (hasBuilding) {
+                    if (!confirm('설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
 
-                const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
-                if (result.success) {
-                    showNotification(result.message, 'success');
-                    this.updateUI();
-                    // 설계 프로젝트 매각 후 다음 플레이어로
-                    this.nextPlayerOrPhase('constructor');
+                    const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        this.updateUI();
+                        this.nextPlayerOrPhase('constructor');
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
                 } else {
-                    showNotification(result.message, 'error');
+                    const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        this.updateUI();
+                        // 대지를 팔면 시공 불가, 다음 플레이어로
+                        this.nextPlayerOrPhase('constructor');
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
                 }
             };
         }
