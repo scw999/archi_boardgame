@@ -3323,14 +3323,16 @@ class GameApp {
         const buildingsList = player.buildings.map((building, index) => {
             const estimatedValue = building.salePrice || 0;
             return `<div class="building-list-item" data-player="${playerIndex}" data-building="${index}">
-<div class="building-icon">${getBuildingImage(building.building.name, '48px')}</div>
-<div class="building-info">
-<div class="building-name">${building.building.name}</div>
-<div class="building-land">📍 ${building.land.name}</div>
-<div class="building-value">💰 ${gameState.formatMoney(estimatedValue)}</div>
-</div>
-<div class="building-arrow">▶</div>
-</div>`;
+                <div class="building-icon-box">
+                    ${getBuildingImage(building.building.name, '56px')}
+                </div>
+                <div class="building-info">
+                    <div class="building-name">${building.building.name}</div>
+                    <div class="building-land">📍 ${building.land.name}</div>
+                    <div class="building-value">💰 ${gameState.formatMoney(estimatedValue)}</div>
+                </div>
+                <div class="building-arrow-btn">▶</div>
+            </div>`;
         }).join('');
 
         showResultModal(`🏢 ${player.name}의 건물 (${player.buildings.length}개)`,
@@ -3375,13 +3377,9 @@ class GameApp {
                              card.effect.type === 'land_discount' ? '🎫' :
                              card.effect.type === 'design_free' ? '🎫' :
                              card.effect.type === 'loan_rate_cut' ? '💰' : '🃏';
-            const cardImage = card.effect.type === 'bonus_dice' || card.effect.type === 'extra_dice'
-                ? '<img src="assets/images/cards/bonus-dice.png" alt="행운 주사위" class="wildcard-img" onerror="this.style.display=\'none\'">'
-                : '';
 
             return `<div class="wildcard-list-item ${isCurrentPlayer ? 'can-use' : ''}" data-player="${playerIndex}" data-card="${index}">
                 <div class="wildcard-card-icon">
-                    ${cardImage}
                     <span class="card-emoji">${cardIcon}</span>
                 </div>
                 <div class="wildcard-details">
@@ -3391,7 +3389,7 @@ class GameApp {
                     </div>
                     <div class="wildcard-desc">${card.description}</div>
                     <div class="wildcard-effect">✨ ${effectDescription}</div>
-                    <div class="wildcard-phase">⏰ 🎯 ${usagePhase}</div>
+                    <div class="wildcard-phase">🎯 ${usagePhase}</div>
                 </div>
                 ${isCurrentPlayer ? `<button class="btn-use-wildcard" data-index="${index}">사용</button>` : ''}
             </div>`;

@@ -7187,6 +7187,7 @@ body {
   padding: 1rem 0;
 }
 
+/* ===== 와일드카드 모달 스타일 ===== */
 .wildcards-list {
   display: flex;
   flex-direction: column;
@@ -7199,7 +7200,7 @@ body {
   gap: 1rem;
   padding: 1rem;
   background: var(--bg-tertiary);
-  border: 2px solid rgba(59, 130, 246, 0.3);
+  border: 2px solid rgba(59, 130, 246, 0.4);
   border-radius: var(--radius-lg);
   transition: all 0.2s ease;
 }
@@ -7214,10 +7215,11 @@ body {
 }
 
 .wildcard-card-icon {
-  width: 60px;
-  height: 60px;
-  min-width: 60px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+  width: 64px;
+  height: 72px;
+  min-width: 64px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+  border: 2px solid rgba(59, 130, 246, 0.3);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -7225,10 +7227,9 @@ body {
   position: relative;
 }
 
-.wildcard-card-icon .wildcard-img {
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
+.wildcard-list-item.can-use .wildcard-card-icon {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
 }
 
 .wildcard-card-icon .card-emoji {
@@ -7239,33 +7240,35 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.25rem;
 }
 
 .wildcard-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .wildcard-header .wildcard-icon {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .wildcard-header .wildcard-name {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: #60a5fa;
 }
 
 .wildcard-details .wildcard-desc {
   font-size: 0.9rem;
   color: var(--text-primary);
+  margin-top: 0.1rem;
 }
 
 .wildcard-details .wildcard-effect {
   font-size: 0.85rem;
-  color: var(--accent-gold);
+  color: #60a5fa;
+  margin-top: 0.2rem;
 }
 
 .wildcard-details .wildcard-phase {
@@ -7274,22 +7277,107 @@ body {
 }
 
 .btn-use-wildcard {
-  padding: 0.6rem 1.5rem;
+  padding: 0.5rem 1.2rem;
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border: none;
   border-radius: var(--radius-md);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  margin-left: auto;
 }
 
 .btn-use-wildcard:hover {
   transform: scale(1.05);
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* ===== 건물 모달 스타일 ===== */
+.buildings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.building-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--bg-tertiary);
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.building-list-item:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.building-icon-box {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.building-icon-box img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.building-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.building-info .building-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.building-info .building-land {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.building-info .building-value {
+  font-size: 0.95rem;
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.building-arrow-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(107, 114, 128, 0.3);
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.building-list-item:hover .building-arrow-btn {
+  background: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
 }
 
 .insufficient-action-buttons .action-btn .btn-icon {
