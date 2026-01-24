@@ -2860,21 +2860,8 @@ class GameApp {
         // 와일드카드 패널 업데이트
         this.updateWildcardPanel();
 
-        // 플레이어 패널의 와일드카드 슬롯 클릭 이벤트
-        document.querySelectorAll('.clickable-wildcard').forEach(slot => {
-            slot.addEventListener('click', () => {
-                const playerIndex = parseInt(slot.dataset.playerIndex);
-                this.showPlayerWildcardsModal(playerIndex);
-            });
-        });
-
-        // 플레이어 패널의 건물 슬롯 클릭 이벤트
-        document.querySelectorAll('.clickable-building').forEach(slot => {
-            slot.addEventListener('click', () => {
-                const playerIndex = parseInt(slot.dataset.playerIndex);
-                this.showPlayerBuildingsModal(playerIndex);
-            });
-        });
+        // 플레이어 패널 클릭 이벤트 바인딩
+        this.bindPlayerPanelClickEvents();
     }
 
     // 플레이어 건물 목록 모달 표시
@@ -2887,26 +2874,21 @@ class GameApp {
 
         const buildingsList = player.buildings.map((building, index) => {
             const estimatedValue = building.salePrice || 0;
-            return `
-                <div class="building-list-item" data-player="${playerIndex}" data-building="${index}">
-                    <div class="building-icon">${getBuildingImage(building.building.name, '48px')}</div>
-                    <div class="building-info">
-                        <div class="building-name">${building.building.name}</div>
-                        <div class="building-land">📍 ${building.land.name}</div>
-                        <div class="building-value">💰 ${gameState.formatMoney(estimatedValue)}</div>
-                    </div>
-                    <div class="building-arrow">▶</div>
-                </div>
-            `;
+            return `<div class="building-list-item" data-player="${playerIndex}" data-building="${index}">
+<div class="building-icon">${getBuildingImage(building.building.name, '48px')}</div>
+<div class="building-info">
+<div class="building-name">${building.building.name}</div>
+<div class="building-land">📍 ${building.land.name}</div>
+<div class="building-value">💰 ${gameState.formatMoney(estimatedValue)}</div>
+</div>
+<div class="building-arrow">▶</div>
+</div>`;
         }).join('');
 
-        showResultModal(`🏢 ${player.name}의 건물 (${player.buildings.length}개)`, `
-            <div class="player-buildings-modal">
-                <div class="buildings-list">
-                    ${buildingsList}
-                </div>
-            </div>
-        `, null, true);
+        showResultModal(`🏢 ${player.name}의 건물 (${player.buildings.length}개)`,
+`<div class="player-buildings-modal">
+<div class="buildings-list">${buildingsList}</div>
+</div>`, null, true);
 
         // 건물 아이템 클릭 이벤트 바인딩
         setTimeout(() => {
@@ -2939,33 +2921,23 @@ class GameApp {
         const wildcardsList = player.wildcards.map((card, index) => {
             const effectDescription = this.getWildcardEffectDescription(card.effect);
             const usagePhase = this.getWildcardUsagePhase(card.effect.type);
-            return `
-                <div class="wildcard-list-item" data-player="${playerIndex}" data-card="${index}">
-                    <div class="wildcard-card-mini">
-                        <div class="card-icon">🃏</div>
-                    </div>
-                    <div class="wildcard-info">
-                        <div class="wildcard-name">${card.name}</div>
-                        <div class="wildcard-desc">${card.description}</div>
-                        <div class="wildcard-effect">✨ ${effectDescription}</div>
-                        <div class="wildcard-phase">⏰ ${usagePhase}</div>
-                    </div>
-                    ${isCurrentPlayer ? `
-                    <div class="wildcard-actions">
-                        <button class="btn-use-card" data-index="${index}">사용</button>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
+            const actionBtn = isCurrentPlayer ? `<div class="wildcard-actions"><button class="btn-use-card" data-index="${index}">사용</button></div>` : '';
+            return `<div class="wildcard-list-item" data-player="${playerIndex}" data-card="${index}">
+<div class="wildcard-card-mini"><div class="card-icon">🃏</div></div>
+<div class="wildcard-info">
+<div class="wildcard-name">${card.name}</div>
+<div class="wildcard-desc">${card.description}</div>
+<div class="wildcard-effect">✨ ${effectDescription}</div>
+<div class="wildcard-phase">⏰ ${usagePhase}</div>
+</div>
+${actionBtn}
+</div>`;
         }).join('');
 
-        showResultModal(`🃏 ${player.name}의 와일드카드 (${player.wildcards.length}장)`, `
-            <div class="player-wildcards-modal">
-                <div class="wildcards-list">
-                    ${wildcardsList}
-                </div>
-            </div>
-        `, null, true);
+        showResultModal(`🃏 ${player.name}의 와일드카드 (${player.wildcards.length}장)`,
+`<div class="player-wildcards-modal">
+<div class="wildcards-list">${wildcardsList}</div>
+</div>`, null, true);
 
         // 와일드카드 사용 버튼 이벤트 바인딩
         if (isCurrentPlayer) {
@@ -3769,11 +3741,31 @@ class GameApp {
             showNotification(`🃏 ${card.name} 사용! ${message}`, 'success');
             gameState.addLog(`${player.name}: ${card.name} 사용`);
             this.updateWildcardPanel();
-            // 플레이어 패널 즉시 업데이트 (카드 개수 반영)
+            // 플레이어 패널 즉시 업데이트 (카드 개수 반영) + 클릭 이벤트 재바인딩
             renderPlayerPanels();
+            this.bindPlayerPanelClickEvents();
         } else {
             showNotification(message, 'warning');
         }
+    }
+
+    // 플레이어 패널 클릭 이벤트 바인딩
+    bindPlayerPanelClickEvents() {
+        // 와일드카드 슬롯 클릭 이벤트
+        document.querySelectorAll('.clickable-wildcard').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const playerIndex = parseInt(slot.dataset.playerIndex);
+                this.showPlayerWildcardsModal(playerIndex);
+            });
+        });
+
+        // 건물 슬롯 클릭 이벤트
+        document.querySelectorAll('.clickable-building').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const playerIndex = parseInt(slot.dataset.playerIndex);
+                this.showPlayerBuildingsModal(playerIndex);
+            });
+        });
     }
 
     // 게임 불러오기
