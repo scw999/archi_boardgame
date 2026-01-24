@@ -16,16 +16,16 @@ const PLAYER_COLORS = [
 // null이면 절차적 모델 사용, 문자열 경로면 GLB 로드
 export const BUILDING_GLB_MODELS = {
     '단독주택': 'assets/models/house.glb',
-    '전원주택': 'assets/models/house.glb',
-    '상가주택': 'assets/models/house.glb',
-    '카페': 'assets/models/house.glb',
+    '전원주택': 'assets/models/country-house.glb',
+    '상가주택': 'assets/models/mixed-use.glb',
+    '카페': 'assets/models/cafe.glb',
     '풀빌라': 'assets/models/pool-villa.glb',
-    '호텔': 'assets/models/house.glb',
-    '대형카페': 'assets/models/house.glb',
-    '상가': 'assets/models/house.glb',
-    '복합몰': 'assets/models/house.glb',
-    '펜션': 'assets/models/house.glb',
-    '대형빌딩': 'assets/models/house.glb'
+    '호텔': 'assets/models/hotel.glb',
+    '대형카페': 'assets/models/large-cafe.glb',
+    '상가': 'assets/models/store.glb',
+    '복합몰': 'assets/models/mall.glb',
+    '펜션': 'assets/models/pension.glb',
+    '대형빌딩': 'assets/models/skyscraper.glb'
 };
 
 // 건물 타입별 3D 설정
