@@ -4526,7 +4526,7 @@ class GameApp {
                         <button class="btn-use-wildcard-detail ${canUseNow.canUse ? '' : 'disabled'}"
                                 data-index="${cardIndex}"
                                 ${canUseNow.canUse ? '' : 'disabled'}>
-                            ${canUseNow.canUse ? '🎴 사용하기' : `❌ ${canUseNow.reason}`}
+                            ${canUseNow.canUse ? '사용하기' : canUseNow.reason}
                         </button>
                     ` : ''}
                     <button class="btn-close">닫기</button>
