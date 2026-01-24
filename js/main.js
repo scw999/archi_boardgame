@@ -3042,6 +3042,7 @@ class GameApp {
             <div class="final-map-container">
                 <div class="final-map-header">
                     <h2>🏆 최종 결과 화면</h2>
+                    <p class="final-map-subtitle">${gameState.maxRounds}라운드 동안 개발한 자산 결과</p>
                 </div>
                 <div class="final-map-content">
                     <div id="final-city-grid" class="final-map-grid"></div>
@@ -3174,13 +3175,25 @@ class GameApp {
                 .final-map-header h2 {
                     font-size: 1.75rem;
                     color: var(--accent-gold);
-                    margin-bottom: 0;
+                    margin-bottom: 0.25rem;
+                }
+                .final-map-subtitle {
+                    color: var(--text-secondary);
+                    font-size: 1rem;
+                    margin: 0;
                 }
                 .final-map-content {
                     background: var(--bg-secondary);
                     border-radius: var(--radius-lg);
-                    padding: 1rem;
-                    margin-bottom: 2rem;
+                    padding: 0.5rem;
+                    margin-bottom: 1rem;
+                }
+                /* 최종 결과에서 city-grid 헤더 숨기기 */
+                .final-map-grid .iso-city-header {
+                    display: none;
+                }
+                .final-map-grid .iso-city-container {
+                    padding-top: 0;
                 }
                 .final-map-footer {
                     text-align: center;
@@ -3351,23 +3364,33 @@ class GameApp {
 
     // 최종 지도 건물 클릭 이벤트 바인딩
     bindFinalMapPlotEvents(container) {
-        // plot-markers 컨테이너에 이벤트 위임 사용
-        const plotMarkersContainer = container.querySelector('.plot-markers');
-        if (plotMarkersContainer) {
-            // 기존 이벤트 리스너 제거
-            const newContainer = plotMarkersContainer.cloneNode(true);
-            plotMarkersContainer.parentNode.replaceChild(newContainer, plotMarkersContainer);
+        // iso-city-map 컨테이너에 이벤트 위임 사용 (더 넓은 범위)
+        const isoCityMap = container.querySelector('.iso-city-map') || container.querySelector('#iso-city-map');
 
+        if (isoCityMap) {
             // 이벤트 위임으로 모든 플롯 마커 클릭 처리
-            newContainer.addEventListener('click', (e) => {
+            isoCityMap.addEventListener('click', (e) => {
                 const marker = e.target.closest('.plot-marker.owned');
                 if (marker) {
                     e.stopPropagation();
+                    e.preventDefault();
                     const plotIndex = parseInt(marker.dataset.plotIndex);
                     this.showFinalMapBuildingDetail(plotIndex, marker);
                 }
             });
         }
+
+        // 모든 owned 마커에 직접 이벤트 바인딩 (백업)
+        const ownedMarkers = container.querySelectorAll('.plot-marker.owned');
+        ownedMarkers.forEach(marker => {
+            marker.style.cursor = 'pointer';
+            marker.onclick = (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const plotIndex = parseInt(marker.dataset.plotIndex);
+                this.showFinalMapBuildingDetail(plotIndex, marker);
+            };
+        });
     }
 
     // 최종 지도 건물 상세 정보 표시
