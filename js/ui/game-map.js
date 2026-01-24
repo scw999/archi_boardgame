@@ -279,7 +279,7 @@ function collectOwnedPlots() {
                 land: project.land,
                 building: project.building,
                 architect: project.architect,
-                constructor: project.constructor,
+                constructorInfo: project.constructor,
                 landPrice: project.landPrice || 0,
                 designFee: project.designFee || 0,
                 constructionCost: project.constructionCost || 0,
@@ -301,7 +301,7 @@ function collectOwnedPlots() {
                     land: building.land,
                     building: building.building,
                     architect: building.architect,
-                    constructor: building.constructor,
+                    constructorInfo: building.constructor,
                     salePrice: building.salePrice,
                     landPrice: building.landPrice || 0,
                     designFee: building.designFee || 0,
@@ -328,7 +328,7 @@ function collectOwnedPlots() {
                     land: sold.land,
                     building: sold.building,
                     architect: sold.architect || sold.originalProject?.architect,
-                    constructor: sold.constructor || sold.originalProject?.constructor,
+                    constructorInfo: sold.constructor || sold.originalProject?.constructor,
                     sellPrice: sold.sellPrice,
                     soldAt: sold.soldAt,
                     landPrice: sold.originalProject?.landPrice || sold.landPrice || 0,
@@ -1127,20 +1127,24 @@ function showBuildingDetailModal(plotIndex) {
     }
 
     // 팀 정보 (건축가, 시공사) - 건물이 있을 때만 표시
+    // Note: constructor는 JavaScript 예약 속성이므로 hasOwnProperty로 체크
+    const hasArchitect = owned.architect && typeof owned.architect === 'object' && owned.architect.name;
+    const hasConstructor = owned.constructorInfo && typeof owned.constructorInfo === 'object' && owned.constructorInfo.name;
+
     let teamInfo = '';
-    if (owned.building && (owned.architect || owned.constructor)) {
+    if (owned.building && (hasArchitect || hasConstructor)) {
         teamInfo = `
             <div class="modal-section team-info">
-                ${owned.architect ? `
+                ${hasArchitect ? `
                     <div class="modal-architect">
                         <span class="label">건축가</span>
                         <span class="value">${owned.architect.portrait || '👤'} ${owned.architect.name}</span>
                     </div>
                 ` : ''}
-                ${owned.constructor ? `
+                ${hasConstructor ? `
                     <div class="modal-constructor">
                         <span class="label">시공사</span>
-                        <span class="value">${owned.constructor.emoji || '🏗️'} ${owned.constructor.name}</span>
+                        <span class="value">${owned.constructorInfo.emoji || '🏗️'} ${owned.constructorInfo.name}</span>
                     </div>
                 ` : ''}
             </div>

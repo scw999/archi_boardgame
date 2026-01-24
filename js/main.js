@@ -4427,8 +4427,8 @@ class GameApp {
                             <span class="value">${sold.architect?.portrait || ''} ${sold.architect?.name || '-'}</span>
                         </div>
                         <div class="info-row">
-                            <span class="label">매각 라운드</span>
-                            <span class="value">라운드 ${sold.soldAt}</span>
+                            <span class="label">시공사</span>
+                            <span class="value">${sold.originalProject?.constructor?.emoji || '🏗️'} ${sold.originalProject?.constructor?.name || '-'}</span>
                         </div>
                     </div>
 
