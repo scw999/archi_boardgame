@@ -2,6 +2,14 @@
 import { gameState } from '../core/game-state.js';
 import { buildings, BUILDING_IMAGES } from '../data/buildings.js';
 
+// 플레이어 색상 (3D 뷰어와 동일)
+const PLAYER_COLORS = [
+    '#ef4444', // 빨강
+    '#3b82f6', // 파랑
+    '#22c55e', // 초록
+    '#a855f7'  // 보라
+];
+
 // 건물 이미지 HTML 생성 헬퍼 함수
 function getBuildingImage(buildingName, size = '32px') {
     const imagePath = BUILDING_IMAGES[buildingName];
@@ -25,6 +33,8 @@ export function renderPlayerPanels() {
 // 개별 플레이어 패널
 function renderPlayerPanel(player, isActive) {
     const project = player.currentProject;
+    const playerIndex = gameState.players.indexOf(player);
+    const playerColor = PLAYER_COLORS[playerIndex] || PLAYER_COLORS[0];
 
     // 돈 상태 클래스 결정
     const moneyClass = player.money >= 200000000 ? 'high' :
@@ -35,8 +45,9 @@ function renderPlayerPanel(player, isActive) {
     const wildcardCount = player.wildcards?.length || 0;
 
     return `
-    <div class="player-panel ${isActive ? 'active' : ''}" data-player-id="${player.id}">
+    <div class="player-panel ${isActive ? 'active' : ''}" data-player-id="${player.id}" style="--player-color: ${playerColor}; border-left: 4px solid ${playerColor};">
       <div class="panel-header">
+        <span class="player-color-indicator" style="background-color: ${playerColor};"></span>
         <span class="player-name">${player.name}</span>
         ${isActive ? '<span class="turn-indicator">🎯 내 턴</span>' : ''}
       </div>

@@ -7288,3 +7288,29 @@ body {
 .iso-city-map.hidden {
   display: none;
 }
+
+/* ===== 플레이어 색상 인디케이터 ===== */
+.player-color-indicator {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-right: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  vertical-align: middle;
+}
+
+.player-panel {
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+}
+
+.panel-header .player-name {
+  flex: 1;
+}

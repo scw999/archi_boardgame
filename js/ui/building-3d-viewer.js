@@ -769,22 +769,29 @@ export class Building3DViewer {
     addPlayerFlag(buildingGroup, playerIndex, totalHeight) {
         const flagGroup = new THREE.Group();
 
-        // 깃대
-        const poleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 5, 8);
+        // 깃대 (더 크게)
+        const poleGeometry = new THREE.CylinderGeometry(0.5, 0.5, 25, 8);
         const poleMaterial = new THREE.MeshLambertMaterial({ color: 0x808080 });
         const pole = new THREE.Mesh(poleGeometry, poleMaterial);
-        pole.position.y = 2.5;
+        pole.position.y = 12.5;
         flagGroup.add(pole);
 
-        // 깃발
-        const flagGeometry = new THREE.PlaneGeometry(2, 1.5);
+        // 깃발 (더 크게)
+        const flagGeometry = new THREE.PlaneGeometry(15, 10);
         const flagMaterial = new THREE.MeshLambertMaterial({
             color: PLAYER_COLORS[playerIndex] || 0xffffff,
             side: THREE.DoubleSide
         });
         const flag = new THREE.Mesh(flagGeometry, flagMaterial);
-        flag.position.set(1, 4, 0);
+        flag.position.set(8, 20, 0);
         flagGroup.add(flag);
+
+        // 깃발 테두리
+        const borderGeometry = new THREE.EdgesGeometry(flagGeometry);
+        const borderMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+        const border = new THREE.LineSegments(borderGeometry, borderMaterial);
+        border.position.set(8, 20, 0);
+        flagGroup.add(border);
 
         flagGroup.position.set(0, totalHeight, 0);
         buildingGroup.add(flagGroup);
