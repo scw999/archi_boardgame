@@ -567,9 +567,17 @@ class GameState {
         }, 0);
     }
 
-    takeLoan(playerIndex, amount) {
+    takeLoan(playerIndex, amount, loanType = 'construction') {
         const player = this.players[playerIndex];
         const maxLoan = this.getMaxLoan(player);
+
+        // 라운드당 1회 제한 체크
+        if (loanType === 'construction' && player.constructionLoanUsedRound === this.currentRound) {
+            return { success: false, message: '이번 라운드에 이미 건설자금대출을 받았습니다.' };
+        }
+        if (loanType === 'landMortgage' && player.landMortgageUsedRound === this.currentRound) {
+            return { success: false, message: '이번 라운드에 이미 토지담보대출을 받았습니다.' };
+        }
 
         if (player.loan + amount > maxLoan) {
             return { success: false, message: '대출 한도를 초과했습니다.' };
@@ -577,8 +585,29 @@ class GameState {
 
         player.loan += amount;
         player.money += amount;
-        this.addLog(`${player.name}: ${this.formatMoney(amount)} 대출 실행`);
+
+        // 대출 사용 기록
+        if (loanType === 'construction') {
+            player.constructionLoanUsedRound = this.currentRound;
+        } else if (loanType === 'landMortgage') {
+            player.landMortgageUsedRound = this.currentRound;
+        }
+
+        const loanTypeName = loanType === 'landMortgage' ? '토지담보대출' : '건설자금대출';
+        this.addLog(`${player.name}: ${loanTypeName} ${this.formatMoney(amount)} 실행`);
         return { success: true, message: `${this.formatMoney(amount)} 대출이 실행되었습니다.` };
+    }
+
+    // 대출 가능 여부 체크
+    canTakeLoan(playerIndex, loanType = 'construction') {
+        const player = this.players[playerIndex];
+        if (loanType === 'construction') {
+            return player.constructionLoanUsedRound !== this.currentRound;
+        }
+        if (loanType === 'landMortgage') {
+            return player.landMortgageUsedRound !== this.currentRound;
+        }
+        return true;
     }
 
     // 이자 계산 (월 단위)

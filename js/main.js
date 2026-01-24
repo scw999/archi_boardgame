@@ -435,9 +435,9 @@ class GameApp {
             { id: 'skip-land', label: '이번 턴 패스', icon: '⏭️' }
         ];
 
-        // 완성된 건물이 있으면 건물 매각 버튼 추가
+        // 완성된 건물이 있으면 건물 매각 버튼 추가 (오렌지색)
         if (player.buildings.length > 0) {
-            actions.splice(2, 0, { id: 'sell-building', label: '건물 매각', icon: '🏢' });
+            actions.splice(2, 0, { id: 'sell-building', label: '건물 매각', icon: '🏢', className: 'sell-building-btn' });
         }
 
         // 토지 가로채기 가능한 경우 버튼 추가 (게임당 1회, 1.5배 비용)
@@ -972,7 +972,7 @@ class GameApp {
                 <div class="design-action-buttons">
                     <button class="action-btn pm-consulting" id="design-pm">👷 PM 컨설팅 (+2억, 라운드 스킵)</button>
                     <button class="action-btn" id="design-sell-land">🏞️ 대지 매각</button>
-                    ${player.buildings.length > 0 ? '<button class="action-btn" id="design-sell-building">🏢 건물 매각</button>' : ''}
+                    ${player.buildings.length > 0 ? '<button class="action-btn sell-building-btn" id="design-sell-building">🏢 건물 매각</button>' : ''}
                     <button class="action-btn" id="design-skip">⏭️ 턴 넘기기</button>
                 </div>
             </div>
@@ -1478,20 +1478,32 @@ class GameApp {
         const landValue = player.currentProject?.landPrice || 0;
         const landMortgage = Math.floor(landValue * 0.7);
 
+        // 라운드당 1회 제한 체크
+        const canUseConstructionLoan = gameState.canTakeLoan(gameState.currentPlayerIndex, 'construction');
+        const canUseLandMortgage = gameState.canTakeLoan(gameState.currentPlayerIndex, 'landMortgage');
+
         const moneyOptionsHtml = `
             <div class="money-options-panel">
                 <h4>💰 자금이 부족합니다</h4>
                 <p>필요 시공비: 약 ${gameState.formatMoney(neededCost)} / 보유: ${gameState.formatMoney(player.money)}</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted);">대출 한도: ${gameState.formatMoney(maxLoan)} / 현재 대출: ${gameState.formatMoney(player.loan)}</p>
                 <div class="money-action-buttons">
-                    ${availableLoan > 0 ? `
+                    ${availableLoan > 0 && canUseConstructionLoan ? `
                         <button class="action-btn loan" id="btn-loan-construction">
                             🏦 건설자금대출 (+${gameState.formatMoney(suggestedLoan)})
                         </button>
+                    ` : availableLoan > 0 && !canUseConstructionLoan ? `
+                        <button class="action-btn loan disabled" disabled title="이번 라운드에 이미 사용">
+                            🏦 건설자금대출 (사용완료)
+                        </button>
                     ` : ''}
-                    ${landMortgage > 0 && availableLoan > 0 ? `
+                    ${landMortgage > 0 && availableLoan > 0 && canUseLandMortgage ? `
                         <button class="action-btn loan" id="btn-land-mortgage">
                             🏠 토지담보대출 (+${gameState.formatMoney(Math.min(landMortgage, availableLoan))})
+                        </button>
+                    ` : landMortgage > 0 && availableLoan > 0 && !canUseLandMortgage ? `
+                        <button class="action-btn loan disabled" disabled title="이번 라운드에 이미 사용">
+                            🏠 토지담보대출 (사용완료)
                         </button>
                     ` : ''}
                     <button class="action-btn pm" id="btn-pm-construction">
@@ -1536,7 +1548,7 @@ class GameApp {
                     return;
                 }
 
-                const result = gameState.takeLoan(gameState.currentPlayerIndex, loanAmount);
+                const result = gameState.takeLoan(gameState.currentPlayerIndex, loanAmount, 'construction');
                 if (result.success) {
                     showNotification(`건설자금대출 ${gameState.formatMoney(loanAmount)} 실행!`, 'success');
                     this.updateUI();
@@ -1561,7 +1573,7 @@ class GameApp {
                     return;
                 }
 
-                const result = gameState.takeLoan(gameState.currentPlayerIndex, mortgageAmount);
+                const result = gameState.takeLoan(gameState.currentPlayerIndex, mortgageAmount, 'landMortgage');
                 if (result.success) {
                     showNotification(`토지담보대출 ${gameState.formatMoney(mortgageAmount)} 실행! (토지 가치의 70%)`, 'success');
                     this.updateUI();
@@ -1716,6 +1728,10 @@ class GameApp {
         const landValue = player.currentProject?.landPrice || 0;
         const landMortgage = Math.floor(landValue * 0.7);
 
+        // 라운드당 1회 제한 체크
+        const canUseConstructionLoan = gameState.canTakeLoan(gameState.currentPlayerIndex, 'construction');
+        const canUseLandMortgage = gameState.canTakeLoan(gameState.currentPlayerIndex, 'landMortgage');
+
         const insufficientHtml = `
             <div class="insufficient-funds-notice">
                 <div class="notice-header">
@@ -1731,18 +1747,30 @@ class GameApp {
                 </div>
             </div>
             <div class="insufficient-action-buttons">
-                ${availableLoan > 0 ? `
+                ${availableLoan > 0 && canUseConstructionLoan ? `
                     <button class="action-btn loan-btn" id="btn-loan-insufficient">
                         <span class="btn-icon">🏦</span>
                         <span class="btn-label">건설자금대출</span>
                         <span class="btn-value">+${gameState.formatMoney(suggestedLoan)}</span>
                     </button>
+                ` : availableLoan > 0 && !canUseConstructionLoan ? `
+                    <button class="action-btn loan-btn disabled" disabled title="이번 라운드에 이미 사용">
+                        <span class="btn-icon">🏦</span>
+                        <span class="btn-label">건설자금대출</span>
+                        <span class="btn-value">사용완료</span>
+                    </button>
                 ` : ''}
-                ${landMortgage > 0 && availableLoan > 0 ? `
+                ${landMortgage > 0 && availableLoan > 0 && canUseLandMortgage ? `
                     <button class="action-btn loan-btn" id="btn-land-mortgage-insufficient">
                         <span class="btn-icon">🏠</span>
                         <span class="btn-label">토지담보대출</span>
                         <span class="btn-value">+${gameState.formatMoney(Math.min(landMortgage, availableLoan))}</span>
+                    </button>
+                ` : landMortgage > 0 && availableLoan > 0 && !canUseLandMortgage ? `
+                    <button class="action-btn loan-btn disabled" disabled title="이번 라운드에 이미 사용">
+                        <span class="btn-icon">🏠</span>
+                        <span class="btn-label">토지담보대출</span>
+                        <span class="btn-value">사용완료</span>
                     </button>
                 ` : ''}
                 <button class="action-btn pm-btn" id="btn-pm-insufficient">
@@ -1788,7 +1816,7 @@ class GameApp {
                     return;
                 }
 
-                const result = gameState.takeLoan(gameState.currentPlayerIndex, loanAmount);
+                const result = gameState.takeLoan(gameState.currentPlayerIndex, loanAmount, 'construction');
                 if (result.success) {
                     showNotification(`건설자금대출 ${gameState.formatMoney(loanAmount)} 실행!`, 'success');
                     this.updateUI();
@@ -1813,7 +1841,7 @@ class GameApp {
                     return;
                 }
 
-                const result = gameState.takeLoan(gameState.currentPlayerIndex, mortgageAmount);
+                const result = gameState.takeLoan(gameState.currentPlayerIndex, mortgageAmount, 'landMortgage');
                 if (result.success) {
                     showNotification(`토지담보대출 ${gameState.formatMoney(mortgageAmount)} 실행! (토지 가치의 70%)`, 'success');
                     this.updateUI();
@@ -2834,9 +2862,6 @@ class GameApp {
                 <div class="final-map-header">
                     <h2>🏙️ 개발 완료 지도</h2>
                     <p>총 ${gameState.maxRounds}라운드 동안 건설된 모든 건물들</p>
-                    <div class="final-map-controls">
-                        <button id="final-3d-toggle" class="btn-3d-toggle">🏙️ 3D 보기</button>
-                    </div>
                 </div>
                 <div class="final-map-content">
                     <div id="final-city-grid" class="final-map-grid"></div>
@@ -2906,17 +2931,16 @@ class GameApp {
 
                 // 최종 지도에서 건물 클릭 이벤트 바인딩
                 this.bindFinalMapPlotEvents(finalCityGrid);
-            }
-        }
 
-        // 3D 토글 버튼 이벤트 - 게임 내 3D 도시 뷰 사용
-        const toggle3dBtn = document.getElementById('final-3d-toggle');
-        if (toggle3dBtn) {
-            toggle3dBtn.addEventListener('click', async () => {
-                // 기존 3D 토글 기능 사용
-                const is3D = await toggle3DCityView();
-                toggle3dBtn.textContent = is3D ? '🗺️ 2D 보기' : '🏙️ 3D 보기';
-            });
+                // 3D 토글 버튼 이벤트 재바인딩
+                const toggle3DBtn = finalCityGrid.querySelector('#toggle-3d-city-btn');
+                if (toggle3DBtn) {
+                    toggle3DBtn.addEventListener('click', async () => {
+                        const is3D = await toggle3DCityView();
+                        toggle3DBtn.textContent = is3D ? '🗺️ 2D' : '🏙️ 3D';
+                    });
+                }
+            }
         }
 
         // 게임 종료 버튼 이벤트

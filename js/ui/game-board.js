@@ -144,8 +144,8 @@ export function renderActionArea(actions) {
     actionArea.innerHTML = `
     <div class="action-buttons">
       ${actions.map(action => `
-        <button 
-          class="action-btn ${action.primary ? 'primary' : ''} ${action.disabled ? 'disabled' : ''}"
+        <button
+          class="action-btn ${action.primary ? 'primary' : ''} ${action.disabled ? 'disabled' : ''} ${action.className || ''}"
           data-action="${action.id}"
           ${action.disabled ? 'disabled' : ''}
         >

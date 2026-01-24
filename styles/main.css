@@ -7813,3 +7813,16 @@ body {
   border-top: 4px solid currentColor;
   vertical-align: middle;
 }
+
+/* ===== 건물 매각 버튼 (오렌지색) ===== */
+.action-btn.sell-building-btn {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border-color: #c2410c;
+  color: white;
+}
+
+.action-btn.sell-building-btn:hover {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
