@@ -2465,6 +2465,36 @@ body {
   50% { opacity: 0.7; transform: scale(0.95); }
 }
 
+/* 설계 중 스타일 */
+.building-3d.designing {
+  opacity: 0.7;
+  filter: saturate(0.5);
+  animation: designing 2s ease-in-out infinite;
+}
+
+@keyframes designing {
+  0%, 100% { opacity: 0.7; transform: translateY(0); }
+  50% { opacity: 0.5; transform: translateY(-2px); }
+}
+
+.building-3d .design-overlay {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 1rem;
+  background: var(--accent-blue);
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.land-visual.designing-phase {
+  border: 2px dashed var(--accent-blue);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+
 /* 설계도 표시 */
 .blueprint {
   position: absolute;
@@ -7170,9 +7200,9 @@ body {
 }
 
 .wildcard-list-item .btn-use-card {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, var(--accent-gold) 0%, #b8860b 100%);
-  color: #000;
+  padding: 0.5rem 1.2rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;
@@ -7183,7 +7213,8 @@ body {
 
 .wildcard-list-item .btn-use-card:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 /* 클릭 가능한 stat-item 스타일 */
