@@ -485,7 +485,12 @@ class GameState {
         this.players.forEach((player, playerIndex) => {
             if (player.currentProject && player.currentProject.building) {
                 // 건물을 자산으로 추가 (현금은 지급하지 않음 - 매각해야 현금 획득)
-                player.buildings.push({ ...player.currentProject });
+                // Note: constructor는 JavaScript 예약 속성이므로 constructorData로 별도 저장
+                const completedBuilding = {
+                    ...player.currentProject,
+                    constructorData: player.currentProject.constructor
+                };
+                player.buildings.push(completedBuilding);
                 // 대출은 상환하지 않고 유지 (건물 자산이 담보가 됨)
                 this.addLog(`🏢 ${player.name}: ${player.currentProject.building.name} 완공! (자산가치: ${this.formatMoney(player.currentProject.salePrice)})`);
 
@@ -670,7 +675,7 @@ class GameState {
             land: project.land,
             sellPrice,
             profit,
-            soldAt: this.round
+            soldAt: this.currentRound
         });
 
         // 개발 지도에서 제거
@@ -823,7 +828,7 @@ class GameState {
             sellPrice,
             profitLoss,
             marketFactor,
-            soldAt: this.round,
+            soldAt: this.currentRound,
             originalProject: { ...building }
         });
 

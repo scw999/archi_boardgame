@@ -301,7 +301,7 @@ function collectOwnedPlots() {
                     land: building.land,
                     building: building.building,
                     architect: building.architect,
-                    constructorInfo: building.constructor,
+                    constructorInfo: building.constructorData || building.constructor,
                     salePrice: building.salePrice,
                     landPrice: building.landPrice || 0,
                     designFee: building.designFee || 0,

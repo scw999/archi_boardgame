@@ -3367,6 +3367,43 @@ class GameApp {
 
         let historyHtml = '';
 
+        // 0. 현재 진행 중인 프로젝트 (게임 종료 시 미완성 상태)
+        if (player.currentProject && player.currentProject.land) {
+            const project = player.currentProject;
+            const hasBuilding = !!project.building;
+            const hasConstructor = !!project.constructor;
+
+            let statusText = '대지 소유 중';
+            let statusEmoji = '🏞️';
+            if (hasConstructor) {
+                statusText = '시공 중';
+                statusEmoji = '🔨';
+            } else if (hasBuilding) {
+                statusText = '설계 완료';
+                statusEmoji = '📐';
+            }
+
+            const landCost = (project.landPrice || 0) + (project.developmentCost || 0);
+            const designCost = project.designFee || 0;
+            const constructionCost = project.constructionCost || 0;
+            const totalInvestment = landCost + designCost + constructionCost;
+
+            historyHtml += `
+                <div class="history-section current-project">
+                    <h5>${statusEmoji} 진행 중인 프로젝트</h5>
+                    <ul class="history-list">
+                        <li class="history-item project-item">
+                            <span class="item-icon">${hasBuilding ? getBuildingImage(project.building.name, '20px') : '🏞️'}</span>
+                            <span class="item-name">${hasBuilding ? project.building.name : project.land.name}</span>
+                            ${hasBuilding ? `<span class="item-location">@ ${project.land.name}</span>` : ''}
+                            <span class="item-status">(${statusText})</span>
+                            <span class="item-cost">투자: ${gameState.formatMoney(totalInvestment)}</span>
+                        </li>
+                    </ul>
+                </div>
+            `;
+        }
+
         // 1. 완성된 건물 목록
         if (player.buildings && player.buildings.length > 0) {
             historyHtml += `
@@ -3524,7 +3561,7 @@ class GameApp {
                     land: building.land,
                     building: building.building,
                     architect: building.architect,
-                    constructor: building.constructor,
+                    constructorInfo: building.constructorData || building.constructor,
                     salePrice: building.salePrice,
                     landPrice: building.landPrice || 0,
                     designFee: building.designFee || 0,
@@ -3543,7 +3580,7 @@ class GameApp {
                         land: sold.land,
                         building: sold.building,
                         architect: sold.architect,
-                        constructor: sold.constructor,
+                        constructorInfo: sold.constructor || sold.originalProject?.constructorData,
                         sellPrice: sold.sellPrice,
                         soldAt: sold.soldAt,
                         landPrice: sold.originalProject.landPrice || sold.landPrice || 0,
@@ -3606,10 +3643,10 @@ class GameApp {
                                 <span class="value">${owned.architect.portrait || '👤'} ${owned.architect.name}</span>
                             </div>
                         ` : ''}
-                        ${owned.constructor ? `
+                        ${owned.constructorInfo && typeof owned.constructorInfo === 'object' && owned.constructorInfo.name ? `
                             <div class="modal-constructor">
                                 <span class="label">시공사</span>
-                                <span class="value">${owned.constructor.emoji || '🏗️'} ${owned.constructor.name}</span>
+                                <span class="value">${owned.constructorInfo.emoji || '🏗️'} ${owned.constructorInfo.name}</span>
                             </div>
                         ` : ''}
                     </div>
