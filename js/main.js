@@ -3531,20 +3531,6 @@ class GameApp {
         // 4. 수익 요약 및 자산 계산
         const buildingValue = player.buildings?.reduce((sum, b) => sum + (b.salePrice || 0), 0) || 0;
 
-        // 총 매각 수익 계산
-        let totalSaleProfit = 0;
-        if (player.soldHistory) {
-            player.soldHistory.forEach(sold => {
-                if (sold.type === 'building') {
-                    totalSaleProfit += (sold.profitLoss || 0);
-                } else if (sold.type === 'land') {
-                    totalSaleProfit += (sold.profit || 0);
-                } else {
-                    totalSaleProfit -= (sold.loss || 0);
-                }
-            });
-        }
-
         // 진행중인 프로젝트 투자금
         let projectInvestment = 0;
         if (player.currentProject && player.currentProject.land) {
@@ -3553,14 +3539,26 @@ class GameApp {
                                (project.designFee || 0) + (project.constructionCost || 0);
         }
 
+        // 초기 자금 (저장되지 않은 경우 기본값 10억)
+        const initialMoney = player.initialMoney || 1000000000;
         const totalAssets = player.money + buildingValue - player.loan;
-        const profitClass = totalSaleProfit >= 0 ? 'profit' : 'loss';
-        const profitSign = totalSaleProfit >= 0 ? '+' : '';
+
+        // 총 수익 = 현재 총 자산 - 초기 자금
+        const totalProfit = totalAssets - initialMoney;
+        const profitClass = totalProfit >= 0 ? 'profit' : 'loss';
+        const profitSign = totalProfit >= 0 ? '+' : '';
+
+        // 수익률 계산
+        const profitRate = ((totalAssets / initialMoney) - 1) * 100;
 
         historyHtml += `
             <div class="history-section summary">
                 <h5>📊 자산 요약</h5>
                 <div class="asset-summary">
+                    <div class="summary-row dimmed">
+                        <span class="label">시작 자금</span>
+                        <span class="value">${gameState.formatMoney(initialMoney)}</span>
+                    </div>
                     <div class="summary-row">
                         <span class="label">보유 현금</span>
                         <span class="value">${gameState.formatMoney(player.money)}</span>
@@ -3585,9 +3583,9 @@ class GameApp {
                         <span class="label">총 자산</span>
                         <span class="value highlight">${gameState.formatMoney(totalAssets)}</span>
                     </div>
-                    <div class="summary-row ${profitClass}">
-                        <span class="label">총 매각 수익</span>
-                        <span class="value">${profitSign}${gameState.formatMoney(Math.abs(totalSaleProfit))}</span>
+                    <div class="summary-row total-profit ${profitClass}">
+                        <span class="label">총 수익</span>
+                        <span class="value large">${profitSign}${gameState.formatMoney(Math.abs(totalProfit))} (${profitSign}${profitRate.toFixed(1)}%)</span>
                     </div>
                 </div>
             </div>

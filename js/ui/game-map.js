@@ -1120,13 +1120,14 @@ function showBuildingDetailModal(plotIndex) {
         'design': { text: '설계 중', class: 'status-design' },
         'construction': { text: '시공 중', class: 'status-construction' },
         'completed': { text: '완공', class: 'status-completed' },
-        'sold': { text: '매각됨', class: 'status-sold' }
+        'sold': { text: '매각됨', class: 'status-sold' },
+        'sold-land': { text: '매각됨', class: 'status-sold' }
     };
     const statusInfo = statusLabels[owned.status] || { text: owned.status, class: '' };
 
     // 비용 계산
     const totalInvestment = (owned.landPrice || 0) + (owned.designFee || 0) + (owned.constructionCost || 0);
-    const isSold = owned.status === 'sold';
+    const isSold = owned.status === 'sold' || owned.status === 'sold-land';
     const finalPrice = isSold ? (owned.sellPrice || 0) : (owned.salePrice || 0);
     const profit = finalPrice - totalInvestment;
     const profitClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
@@ -1202,7 +1203,7 @@ function showBuildingDetailModal(plotIndex) {
             <div class="modal-section result-info">
                 <div class="result-row">
                     <span>${isSold ? '매각가' : '건물 가치'}</span>
-                    <span class="final-price">${gameState.formatMoney(finalPrice)}${isSold && owned.soldAt ? ` (R${owned.soldAt})` : ''}</span>
+                    <span class="final-price">${gameState.formatMoney(finalPrice)}</span>
                 </div>
                 <div class="result-row profit ${profitClass}">
                     <span>수익</span>

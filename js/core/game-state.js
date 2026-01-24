@@ -41,6 +41,7 @@ function createPlayer(id, name) {
         id,
         name,
         money: 0,
+        initialMoney: 0,          // 시작 자금 (수익 계산용)
         loan: 0,
         interestRate: 0.1,        // 대출 이자율 10%
         maxLoanMultiplier: 2.33,  // 최대 대출 배율
@@ -280,14 +281,17 @@ class GameState {
 
     // 시작 자금 설정 (주사위 결과)
     setStartingMoney(playerIndex, diceTotal) {
+        let startingMoney;
         if (this.settings.easyStart) {
-            this.players[playerIndex].money = this.settings.startingMoney;
+            startingMoney = this.settings.startingMoney;
         } else {
-            this.players[playerIndex].money = STARTING_MONEY[diceTotal] || 500000000;
+            startingMoney = STARTING_MONEY[diceTotal] || 500000000;
         }
+        this.players[playerIndex].money = startingMoney;
+        this.players[playerIndex].initialMoney = startingMoney;  // 초기 자금 저장
         // 시작 자금 주사위 결과 저장 (선 플레이어 결정용)
         this.players[playerIndex].startingDiceTotal = diceTotal;
-        this.addLog(`${this.players[playerIndex].name}: 시작 자금 ${this.formatMoney(this.players[playerIndex].money)}`);
+        this.addLog(`${this.players[playerIndex].name}: 시작 자금 ${this.formatMoney(startingMoney)}`);
     }
 
     // 선 플레이어 결정 (주사위 합계가 가장 높은 플레이어)
