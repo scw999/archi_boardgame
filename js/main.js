@@ -1568,56 +1568,87 @@ class GameApp {
         }
     }
 
-    // 자금 부족 시 옵션 표시 (시공 불가)
+    // 자금 부족 시 옵션 표시 (시공 불가) - 카드 그리드 + 액션 버튼 형태로 표시
     showInsufficientFundsOptions(player, building) {
-        const actionArea = document.getElementById('action-area');
-        if (!actionArea) return;
-
         // 기존 패널 제거
         document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
+        document.getElementById('common-action-panel')?.remove();
 
-        const pmIncome = 100000000; // 고정 1억
-        const landSellPrice = player.currentProject?.land
-            ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1)
-            : 0;
-
-        // 가장 저렴한 시공사 비용 계산
+        // 해당 건물을 시공할 수 있는 시공사 필터링 (모두 unaffordable로 표시)
         const availableConstructors = gameState.availableConstructors.filter(
             c => c.canBuild.includes(building.name) && gameState.isConstructorAvailable(c.id)
         );
+
+        // 선점된 시공사
+        const claimedConstructors = gameState.availableConstructors.filter(
+            c => c.canBuild.includes(building.name) && !gameState.isConstructorAvailable(c.id)
+        );
+
+        // 가장 저렴한 시공사 비용 계산
         const cheapestCost = availableConstructors.length > 0
             ? Math.min(...availableConstructors.map(c => c.costMultiplier * building.constructionCost))
             : 0;
 
+        // 모든 시공사 카드를 unaffordable 또는 claimed로 표시
+        const allConstructors = [
+            ...availableConstructors.map(c => ({ ...c, isUnaffordable: true })),
+            ...claimedConstructors.map(c => ({ ...c, isClaimed: true }))
+        ];
+
+        // 카드 그리드 렌더링 (클릭해도 경고 메시지만 표시)
+        renderCardGrid(allConstructors, 'constructor', (index, constructor) => {
+            if (constructor.isClaimed) {
+                showNotification(`${constructor.name}은(는) 이미 다른 플레이어가 선택했습니다.`, 'warning');
+            } else if (constructor.isUnaffordable) {
+                showNotification(`자금이 부족하여 ${constructor.name}을(를) 선택할 수 없습니다.`, 'warning');
+            }
+        });
+
+        // 액션 영역에 자금 부족 안내 + 버튼 표시
+        const actionArea = document.getElementById('action-area');
+        if (!actionArea) return;
+
+        const pmIncome = 200000000; // 고정 2억
+        const landSellPrice = player.currentProject?.land
+            ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1)
+            : 0;
+
         const insufficientHtml = `
-            <div class="money-options-panel insufficient-funds">
-                <div class="insufficient-header">
+            <div class="insufficient-funds-notice">
+                <div class="notice-header">
                     <span class="notice-icon">💸</span>
-                    <h4>시공 자금 부족</h4>
+                    <span class="notice-text">시공 자금 부족</span>
                 </div>
-                <p class="insufficient-info">
-                    필요 시공비: 약 <strong>${gameState.formatMoney(cheapestCost)}</strong><br>
-                    현재 보유: <strong>${gameState.formatMoney(player.money)}</strong>
-                </p>
-                <p class="insufficient-warning">시공사를 선택할 수 없습니다. 다음 옵션 중 선택하세요:</p>
-                <div class="money-action-buttons">
-                    <button class="action-btn pm" id="btn-pm-insufficient">
-                        💼 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})
-                    </button>
-                    ${player.currentProject?.land ? `
-                        <button class="action-btn sell" id="btn-sell-land-insufficient">
-                            🏞️ 대지 매각 (+${gameState.formatMoney(landSellPrice)})
-                        </button>
-                    ` : ''}
-                    ${player.buildings.length > 0 ? `
-                        <button class="action-btn sell" id="btn-sell-building-insufficient">
-                            🏢 건물 매각
-                        </button>
-                    ` : ''}
-                    <button class="action-btn skip" id="btn-skip-insufficient">
-                        ⏭️ 턴 넘기기 (휴식)
-                    </button>
+                <div class="notice-details">
+                    <span>필요 시공비: 약 <strong>${gameState.formatMoney(cheapestCost)}</strong></span>
+                    <span>현재 보유: <strong>${gameState.formatMoney(player.money)}</strong></span>
                 </div>
+            </div>
+            <div class="insufficient-action-buttons">
+                <button class="action-btn pm-btn" id="btn-pm-insufficient">
+                    <span class="btn-icon">💼</span>
+                    <span class="btn-label">PM 컨설팅</span>
+                    <span class="btn-value">+${gameState.formatMoney(pmIncome)}</span>
+                </button>
+                ${player.currentProject?.land ? `
+                    <button class="action-btn sell-btn" id="btn-sell-land-insufficient">
+                        <span class="btn-icon">🏞️</span>
+                        <span class="btn-label">대지 매각</span>
+                        <span class="btn-value">+${gameState.formatMoney(landSellPrice)}</span>
+                    </button>
+                ` : ''}
+                ${player.buildings.length > 0 ? `
+                    <button class="action-btn sell-btn" id="btn-sell-building-insufficient">
+                        <span class="btn-icon">🏢</span>
+                        <span class="btn-label">건물 매각</span>
+                        <span class="btn-value">${player.buildings.length}개 보유</span>
+                    </button>
+                ` : ''}
+                <button class="action-btn skip-btn" id="btn-skip-insufficient">
+                    <span class="btn-icon">⏭️</span>
+                    <span class="btn-label">턴 넘기기</span>
+                    <span class="btn-value">휴식</span>
+                </button>
             </div>
         `;
 
@@ -1662,13 +1693,15 @@ class GameApp {
             };
         }
 
-        // 턴 넘기기 버튼
+        // 턴 넘기기 버튼 - 시공사 미선택 상태로 다음 플레이어로 넘어감
         const skipBtn = document.getElementById('btn-skip-insufficient');
         if (skipBtn) {
             skipBtn.onclick = () => {
                 gameState.addLog(`${player.name}: 자금 부족으로 시공 포기 (다음 라운드까지 휴식)`);
                 showNotification(`${player.name}님이 시공을 포기하고 휴식합니다.`, 'info');
+                // 시공사 미선택 상태 명시
                 player.currentProject.constructor = null;
+                player.currentProject.skippedConstruction = true; // 시공 스킵 표시
                 this.nextPlayerOrPhase('constructor');
             };
         }
