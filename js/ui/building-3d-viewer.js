@@ -1,6 +1,8 @@
 // 3D 건물 뷰어 모듈 (Three.js)
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { buildings, BUILDING_TYPES } from '../data/buildings.js';
 
 // 플레이어 색상
@@ -10,6 +12,22 @@ const PLAYER_COLORS = [
     0x22c55e, // 초록
     0xa855f7  // 보라
 ];
+
+// GLB 모델 경로 설정 (사용자가 GLB 파일을 추가하면 여기에 경로 설정)
+// null이면 절차적 모델 사용
+export const BUILDING_GLB_MODELS = {
+    '단독주택': null,      // 예: 'assets/models/house.glb'
+    '전원주택': null,
+    '상가주택': null,
+    '카페': null,
+    '풀빌라': null,
+    '호텔': null,
+    '대형카페': null,
+    '상가': null,
+    '복합몰': null,
+    '펜션': null,
+    '대형빌딩': null
+};
 
 // 건물 타입별 3D 설정
 const BUILDING_3D_CONFIG = {
@@ -151,6 +169,17 @@ export class Building3DViewer {
         this.controls = null;
         this.animationId = null;
 
+        // GLB 로더 초기화
+        this.gltfLoader = new GLTFLoader();
+
+        // DRACO 압축 지원 (선택적)
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        this.gltfLoader.setDRACOLoader(dracoLoader);
+
+        // 로드된 GLB 모델 캐시
+        this.modelCache = new Map();
+
         this.init();
     }
 
@@ -264,7 +293,7 @@ export class Building3DViewer {
         this.scene.add(roadV);
     }
 
-    // 건물 생성
+    // 건물 생성 (GLB 또는 절차적 모델)
     createBuilding(buildingType, position = { x: 0, z: 0 }, playerIndex = 0, status = 'completed') {
         const config = BUILDING_3D_CONFIG[buildingType];
         if (!config) {
@@ -272,8 +301,134 @@ export class Building3DViewer {
             return null;
         }
 
+        const glbPath = BUILDING_GLB_MODELS[buildingType];
+
+        // GLB 파일이 설정되어 있으면 GLB 로드
+        if (glbPath) {
+            return this.createBuildingFromGLB(buildingType, glbPath, position, playerIndex, status);
+        }
+
+        // 아니면 절차적 모델 생성
+        return this.createProceduralBuilding(buildingType, position, playerIndex, status);
+    }
+
+    // GLB 파일에서 건물 로드
+    async createBuildingFromGLB(buildingType, glbPath, position, playerIndex, status) {
+        const config = BUILDING_3D_CONFIG[buildingType];
         const buildingGroup = new THREE.Group();
-        buildingGroup.userData = { buildingType, playerIndex, status };
+        buildingGroup.userData = { buildingType, playerIndex, status, isGLB: true };
+
+        try {
+            let gltf;
+
+            // 캐시 확인
+            if (this.modelCache.has(glbPath)) {
+                gltf = this.modelCache.get(glbPath);
+            } else {
+                gltf = await this.loadGLBModel(glbPath);
+                this.modelCache.set(glbPath, gltf);
+            }
+
+            // 모델 복제
+            const model = gltf.scene.clone();
+
+            // 모델 스케일 및 위치 조정
+            const scale = config.glbScale || 1;
+            model.scale.set(scale, scale, scale);
+
+            // 모델 회전 (필요시)
+            if (config.glbRotation) {
+                model.rotation.y = config.glbRotation;
+            }
+
+            // 그림자 설정
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+
+                    // 설계/시공 중 투명도 적용
+                    if (status === 'design' || status === 'construction') {
+                        if (child.material) {
+                            child.material = child.material.clone();
+                            child.material.transparent = true;
+                            child.material.opacity = 0.5;
+                        }
+                    }
+                }
+            });
+
+            buildingGroup.add(model);
+
+            // 플레이어 깃발 추가
+            const totalHeight = config.glbHeight || config.floors * 3;
+            this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
+
+            // 시공 중 크레인 추가
+            if (status === 'construction') {
+                this.addConstructionElements(buildingGroup, totalHeight);
+            }
+
+        } catch (error) {
+            console.warn(`Failed to load GLB model for ${buildingType}, using procedural model:`, error);
+            // GLB 로드 실패 시 절차적 모델로 폴백
+            return this.createProceduralBuilding(buildingType, position, playerIndex, status);
+        }
+
+        // 위치 설정
+        buildingGroup.position.set(position.x, 0, position.z);
+
+        this.scene.add(buildingGroup);
+        this.buildings.push(buildingGroup);
+
+        return buildingGroup;
+    }
+
+    // GLB 모델 로드 (Promise 기반)
+    loadGLBModel(path) {
+        return new Promise((resolve, reject) => {
+            this.gltfLoader.load(
+                path,
+                (gltf) => resolve(gltf),
+                (progress) => {
+                    // 로딩 진행률 (선택적)
+                    // console.log(`Loading: ${(progress.loaded / progress.total * 100).toFixed(0)}%`);
+                },
+                (error) => reject(error)
+            );
+        });
+    }
+
+    // 커스텀 GLB 모델 설정
+    setGLBModel(buildingType, glbPath, options = {}) {
+        if (BUILDING_3D_CONFIG[buildingType]) {
+            BUILDING_GLB_MODELS[buildingType] = glbPath;
+
+            // 추가 옵션 설정
+            if (options.scale) {
+                BUILDING_3D_CONFIG[buildingType].glbScale = options.scale;
+            }
+            if (options.rotation) {
+                BUILDING_3D_CONFIG[buildingType].glbRotation = options.rotation;
+            }
+            if (options.height) {
+                BUILDING_3D_CONFIG[buildingType].glbHeight = options.height;
+            }
+
+            // 캐시 무효화
+            this.modelCache.delete(glbPath);
+
+            return true;
+        }
+        return false;
+    }
+
+    // 절차적 건물 모델 생성
+    createProceduralBuilding(buildingType, position = { x: 0, z: 0 }, playerIndex = 0, status = 'completed') {
+        const config = BUILDING_3D_CONFIG[buildingType];
+
+        const buildingGroup = new THREE.Group();
+        buildingGroup.userData = { buildingType, playerIndex, status, isGLB: false };
 
         const floorHeight = 3;
         const totalHeight = config.floors * floorHeight;
@@ -634,13 +789,13 @@ export class Building3DViewer {
     }
 
     // 여러 건물 표시 (그리드 배치)
-    displayBuildings(buildingDataList) {
+    async displayBuildings(buildingDataList) {
         this.clearBuildings();
 
         const gridSize = Math.ceil(Math.sqrt(buildingDataList.length));
         const spacing = 40;
 
-        buildingDataList.forEach((data, index) => {
+        const promises = buildingDataList.map(async (data, index) => {
             const row = Math.floor(index / gridSize);
             const col = index % gridSize;
             const position = {
@@ -648,13 +803,15 @@ export class Building3DViewer {
                 z: (row - gridSize / 2) * spacing + spacing / 2
             };
 
-            this.createBuilding(
+            return this.createBuilding(
                 data.buildingType,
                 position,
                 data.playerIndex || 0,
                 data.status || 'completed'
             );
         });
+
+        await Promise.all(promises);
 
         // 카메라 위치 조정
         const distance = gridSize * spacing * 0.8;
@@ -663,16 +820,17 @@ export class Building3DViewer {
     }
 
     // 단일 건물 상세 뷰
-    focusOnBuilding(buildingType, playerIndex = 0, status = 'completed') {
+    async focusOnBuilding(buildingType, playerIndex = 0, status = 'completed') {
         this.clearBuildings();
-        this.createBuilding(buildingType, { x: 0, z: 0 }, playerIndex, status);
+        await this.createBuilding(buildingType, { x: 0, z: 0 }, playerIndex, status);
 
         // 카메라를 건물에 맞춤
         const config = BUILDING_3D_CONFIG[buildingType];
         if (config) {
-            const distance = Math.max(config.width, config.depth, config.floors * 3) * 2;
+            const height = config.glbHeight || config.floors * 3;
+            const distance = Math.max(config.width, config.depth, height) * 2;
             this.camera.position.set(distance, distance * 0.8, distance);
-            this.camera.lookAt(0, config.floors * 1.5, 0);
+            this.camera.lookAt(0, height / 2, 0);
         }
     }
 
@@ -892,4 +1050,4 @@ export function getGlobalViewer() {
     return globalViewer;
 }
 
-export { BUILDING_3D_CONFIG, PLAYER_COLORS as PLAYER_3D_COLORS };
+export { BUILDING_3D_CONFIG, BUILDING_GLB_MODELS, PLAYER_COLORS as PLAYER_3D_COLORS };
