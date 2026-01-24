@@ -1461,11 +1461,14 @@ class GameApp {
                     <button class="action-btn pm" id="btn-pm-construction">
                         💼 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})
                     </button>
-                    ${player.currentProject?.land && !player.currentProject?.constructor ? `
+                    ${player.currentProject?.land ? `
                         <button class="action-btn sell" id="btn-sell-land-construction">
-                            🏞️ 대지 매각 (${gameState.formatMoney(player.currentProject.building
-                                ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee) * 0.9)
-                                : Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1))})
+                            🏞️ ${player.currentProject.constructor ? '시공중 프로젝트' : '대지'} 매각 (${gameState.formatMoney(
+                                player.currentProject.constructor
+                                    ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee + (player.currentProject.constructionCost || 0)) * 0.8)
+                                    : player.currentProject.building
+                                        ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee) * 0.9)
+                                        : Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1))})
                         </button>
                     ` : ''}
                     ${player.buildings.length > 0 ? `
@@ -1557,15 +1560,28 @@ class GameApp {
             };
         }
 
-        // 대지 매각 버튼 (설계중인 프로젝트 포함)
+        // 대지 매각 버튼 (설계중/시공중 프로젝트 포함)
         const sellLandBtn = document.getElementById('btn-sell-land-construction');
         if (sellLandBtn) {
             sellLandBtn.onclick = () => {
                 const currentPlayer = gameState.getCurrentPlayer();
                 const hasBuilding = currentPlayer.currentProject?.building;
+                const hasConstructor = currentPlayer.currentProject?.constructor;
 
-                // 설계중인 프로젝트면 확인 메시지 표시
-                if (hasBuilding) {
+                // 시공중인 프로젝트면 확인 메시지 표시
+                if (hasConstructor) {
+                    if (!confirm('시공중인 프로젝트를 매각하면 투자비의 80%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
+
+                    const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        this.updateUI();
+                        this.nextPlayerOrPhase('constructor');
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                } else if (hasBuilding) {
+                    // 설계만 완료된 프로젝트
                     if (!confirm('설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
 
                     const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
@@ -1642,11 +1658,14 @@ class GameApp {
         if (!actionArea) return;
 
         const pmIncome = 200000000; // 고정 2억
-        // 설계 완료 시 설계비 포함, 90% 회수 / 설계 전이면 110% 회수
+        // 시공중: 80%, 설계 완료: 90%, 대지만: 110% 회수
+        const hasConstructor = !!player.currentProject?.constructor;
         const landSellPrice = player.currentProject?.land
-            ? (player.currentProject.building
-                ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee) * 0.9)
-                : Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1))
+            ? (hasConstructor
+                ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee + (player.currentProject.constructionCost || 0)) * 0.8)
+                : player.currentProject.building
+                    ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee) * 0.9)
+                    : Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1))
             : 0;
 
         // 대출 관련 계산
@@ -1693,10 +1712,10 @@ class GameApp {
                     <span class="btn-label">PM 컨설팅</span>
                     <span class="btn-value">+${gameState.formatMoney(pmIncome)}</span>
                 </button>
-                ${player.currentProject?.land && !player.currentProject?.constructor ? `
+                ${player.currentProject?.land ? `
                     <button class="action-btn sell-btn" id="btn-sell-land-insufficient">
                         <span class="btn-icon">🏞️</span>
-                        <span class="btn-label">대지 매각</span>
+                        <span class="btn-label">${hasConstructor ? '시공중 프로젝트' : '대지'} 매각</span>
                         <span class="btn-value">+${gameState.formatMoney(landSellPrice)}</span>
                     </button>
                 ` : ''}
@@ -1780,15 +1799,28 @@ class GameApp {
             };
         }
 
-        // 대지 매각 버튼 (설계중인 프로젝트 포함)
+        // 대지 매각 버튼 (설계중/시공중 프로젝트 포함)
         const sellLandBtn = document.getElementById('btn-sell-land-insufficient');
         if (sellLandBtn) {
             sellLandBtn.onclick = () => {
                 const currentPlayer = gameState.getCurrentPlayer();
                 const hasBuilding = currentPlayer.currentProject?.building;
+                const hasConstructor = currentPlayer.currentProject?.constructor;
 
-                // 설계중인 프로젝트면 확인 메시지 표시
-                if (hasBuilding) {
+                // 시공중인 프로젝트면 확인 메시지 표시
+                if (hasConstructor) {
+                    if (!confirm('시공중인 프로젝트를 매각하면 투자비의 80%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
+
+                    const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        this.updateUI();
+                        this.nextPlayerOrPhase('constructor');
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                } else if (hasBuilding) {
+                    // 설계만 완료된 프로젝트
                     if (!confirm('설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
 
                     const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
@@ -3337,17 +3369,32 @@ class GameApp {
         const wildcardsList = player.wildcards.map((card, index) => {
             const effectDescription = this.getWildcardEffectDescription(card.effect);
             const usagePhase = this.getWildcardUsagePhase(card.effect.type);
-            const actionBtn = isCurrentPlayer ? `<div class="wildcard-actions"><button class="btn-use-card" data-index="${index}">사용</button></div>` : '';
-            return `<div class="wildcard-list-item" data-player="${playerIndex}" data-card="${index}">
-<div class="wildcard-card-mini"><div class="card-icon">🃏</div></div>
-<div class="wildcard-info">
-<div class="wildcard-name">${card.name}</div>
-<div class="wildcard-desc">${card.description}</div>
-<div class="wildcard-effect">✨ ${effectDescription}</div>
-<div class="wildcard-phase">⏰ ${usagePhase}</div>
-</div>
-${actionBtn}
-</div>`;
+            // 카드 아이콘 선택 (카드 타입에 따라)
+            const cardIcon = card.effect.type === 'bonus_dice' || card.effect.type === 'extra_dice' ? '🎲' :
+                             card.effect.type === 'risk_block' ? '🛡️' :
+                             card.effect.type === 'land_discount' ? '🎫' :
+                             card.effect.type === 'design_free' ? '🎫' :
+                             card.effect.type === 'loan_rate_cut' ? '💰' : '🃏';
+            const cardImage = card.effect.type === 'bonus_dice' || card.effect.type === 'extra_dice'
+                ? '<img src="assets/images/cards/bonus-dice.png" alt="행운 주사위" class="wildcard-img" onerror="this.style.display=\'none\'">'
+                : '';
+
+            return `<div class="wildcard-list-item ${isCurrentPlayer ? 'can-use' : ''}" data-player="${playerIndex}" data-card="${index}">
+                <div class="wildcard-card-icon">
+                    ${cardImage}
+                    <span class="card-emoji">${cardIcon}</span>
+                </div>
+                <div class="wildcard-details">
+                    <div class="wildcard-header">
+                        <span class="wildcard-icon">${cardIcon}</span>
+                        <span class="wildcard-name">${card.name}</span>
+                    </div>
+                    <div class="wildcard-desc">${card.description}</div>
+                    <div class="wildcard-effect">✨ ${effectDescription}</div>
+                    <div class="wildcard-phase">⏰ 🎯 ${usagePhase}</div>
+                </div>
+                ${isCurrentPlayer ? `<button class="btn-use-wildcard" data-index="${index}">사용</button>` : ''}
+            </div>`;
         }).join('');
 
         showResultModal(`🃏 ${player.name}의 와일드카드 (${player.wildcards.length}장)`,
@@ -3358,7 +3405,7 @@ ${actionBtn}
         // 와일드카드 사용 버튼 이벤트 바인딩
         if (isCurrentPlayer) {
             setTimeout(() => {
-                document.querySelectorAll('.btn-use-card').forEach(btn => {
+                document.querySelectorAll('.btn-use-wildcard').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const cardIndex = parseInt(btn.dataset.index);

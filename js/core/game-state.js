@@ -319,6 +319,9 @@ class GameState {
         this.selectedArchitects = new Set();
         this.selectedConstructors = new Set();
 
+        // 경매/급매 실패 기록 초기화 (새 라운드에서는 새 카드가 나오므로)
+        this.pendingLands = [];
+
         // 카드 8장씩 공개
         this.availableLands = this.drawCards(this.landDeck, 8);
         this.availableArchitects = this.drawCards(this.architectDeck, 8);
@@ -668,25 +671,30 @@ class GameState {
             return { success: false, message: '설계가 완료되지 않은 프로젝트입니다. 대지 매각을 이용하세요.' };
         }
 
-        if (project.constructor) {
-            return { success: false, message: '이미 시공이 시작된 프로젝트는 매각할 수 없습니다.' };
-        }
+        // 시공 중인 프로젝트도 매각 가능 (시공사가 선택되어 있어도 매각 허용)
+        const hasConstructor = !!project.constructor;
 
-        // 판매 가격: 토지 구매가 + 개발비 + 설계비의 90% (설계 프리미엄)
+        // 판매 가격 계산: 토지 + 개발비 + 설계비 + (시공비가 있으면 시공비도 포함)
         const landCost = project.landPrice + project.developmentCost;
         const designCost = project.designFee;
-        const totalInvestment = landCost + designCost;
-        const sellPrice = Math.floor(totalInvestment * 0.9); // 투자비의 90% 회수
+        const constructionCost = hasConstructor ? (project.constructionCost || 0) : 0;
+        const totalInvestment = landCost + designCost + constructionCost;
+
+        // 시공 중인 경우 80% 회수, 설계만 완료된 경우 90% 회수
+        const recoveryRate = hasConstructor ? 0.8 : 0.9;
+        const sellPrice = Math.floor(totalInvestment * recoveryRate);
         const loss = totalInvestment - sellPrice;
 
         player.money += sellPrice;
 
         // 매각 이력에 추가
         player.soldHistory.push({
-            type: 'designed_project',
+            type: hasConstructor ? 'construction_project' : 'designed_project',
             land: project.land,
             building: project.building,
             architect: project.architect,
+            constructor: project.constructor,
+            constructionCost: constructionCost,
             sellPrice,
             loss,
             soldAt: this.currentRound
@@ -700,7 +708,13 @@ class GameState {
             this.releaseArchitect(project.architect.id);
         }
 
+        // 시공사 선점 해제
+        if (project.constructor) {
+            this.selectedConstructors.delete(project.constructor.id);
+        }
+
         const projectName = `${project.land.name}/${project.building.name}`;
+        const phaseText = hasConstructor ? '시공 중 프로젝트' : '설계 프로젝트';
 
         // 프로젝트 초기화
         project.land = null;
@@ -709,16 +723,22 @@ class GameState {
         project.architect = null;
         project.designFee = 0;
         project.building = null;
+        project.constructor = null;
+        project.constructionCost = 0;
+        project.constructionProgress = 0;
+        project.risks = [];
+        project.totalLoss = 0;
 
         // 평가 단계까지 스킵 플래그 설정
         player.designSoldRound = this.currentRound;
 
-        this.addLog(`${player.name}: ${projectName} 설계 프로젝트 매각 (${this.formatMoney(sellPrice)}, 손실 -${this.formatMoney(loss)})`);
+        this.addLog(`${player.name}: ${projectName} ${phaseText} 매각 (${this.formatMoney(sellPrice)}, 손실 -${this.formatMoney(loss)})`);
 
         return {
             success: true,
             sellPrice,
             loss,
+            hasConstructor,
             message: `${projectName} 프로젝트를 ${this.formatMoney(sellPrice)}에 매각했습니다. (손실: -${this.formatMoney(loss)}, 평가까지 휴식)`
         };
     }
@@ -855,6 +875,8 @@ class GameState {
             availableLands: this.availableLands,
             availableArchitects: this.availableArchitects,
             availableConstructors: this.availableConstructors,
+            // 실패한 경매/급매 기록
+            pendingLands: this.pendingLands,
             // 선점 상태 (Set을 배열로 변환)
             selectedArchitects: Array.from(this.selectedArchitects || []),
             selectedConstructors: Array.from(this.selectedConstructors || []),
@@ -896,6 +918,9 @@ class GameState {
             this.availableLands = data.availableLands || [];
             this.availableArchitects = data.availableArchitects || [];
             this.availableConstructors = data.availableConstructors || [];
+
+            // 실패한 경매/급매 기록 복원
+            this.pendingLands = data.pendingLands || [];
 
             // 선점 상태 복원 (배열을 Set으로 변환)
             this.selectedArchitects = new Set(data.selectedArchitects || []);

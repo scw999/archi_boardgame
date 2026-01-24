@@ -7182,11 +7182,116 @@ body {
   transition: all 0.2s ease;
 }
 
-.wildcard-list-item .btn-use-card {
-  padding: 0.5rem 1.2rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+/* ===== 와일드카드 모달 스타일 ===== */
+.player-wildcards-modal {
+  padding: 1rem 0;
+}
+
+.wildcards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.wildcard-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.wildcard-list-item.can-use {
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.wildcard-list-item.can-use:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.wildcard-card-icon {
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.wildcard-card-icon .wildcard-img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.wildcard-card-icon .card-emoji {
+  font-size: 2rem;
+}
+
+.wildcard-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.wildcard-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wildcard-header .wildcard-icon {
+  font-size: 1.2rem;
+}
+
+.wildcard-header .wildcard-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #60a5fa;
+}
+
+.wildcard-details .wildcard-desc {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.wildcard-details .wildcard-effect {
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+}
+
+.wildcard-details .wildcard-phase {
+  font-size: 0.85rem;
+  color: #ef4444;
+}
+
+.btn-use-wildcard {
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-use-wildcard:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
 .insufficient-action-buttons .action-btn .btn-icon {
   font-size: 1.5rem;
 }
@@ -7207,10 +7312,6 @@ body {
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
-.wildcard-list-item .btn-use-card:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 .view-3d-btn:hover,
 #toggle-3d-city-btn:hover {
   transform: scale(1.08);
@@ -7229,8 +7330,8 @@ body {
 .city-3d-container {
   position: relative;
   width: 100%;
-  height: 500px;
-  min-height: 500px;
+  height: 600px;
+  min-height: 600px;
   background: linear-gradient(180deg, #87ceeb 0%, #b0e0e6 100%);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -7243,12 +7344,52 @@ body {
 #city-3d-canvas {
   width: 100%;
   height: 100%;
-  min-height: 500px;
+  min-height: 600px;
 }
 
 #city-3d-canvas canvas {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* 3D 컨트롤 버튼 */
+.city-3d-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.city-3d-btn {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.city-3d-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.city-3d-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}
+
 .insufficient-action-buttons .action-btn .btn-label {
   font-weight: 600;
   font-size: 0.9rem;

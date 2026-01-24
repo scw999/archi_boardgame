@@ -717,11 +717,16 @@ async function init3DCityView(ownedPlots) {
         cityViewer.dispose();
     }
 
-    // 컨테이너 크기 설정
+    // 컨테이너 크기 설정 - 더 큰 기본값 사용
     const container = document.getElementById('city-3d-container');
-    const width = container.clientWidth || 800;
-    const height = Math.max(500, container.clientHeight - 50);
+    const wrapper = document.querySelector('.iso-city-map-wrapper');
+    const width = Math.max(wrapper?.clientWidth || container.clientWidth || 1000, 800);
+    const height = Math.max(600, container.clientHeight || 600);
 
+    // 컨테이너 스타일 강제 설정
+    container.style.width = '100%';
+    container.style.height = height + 'px';
+    container.style.minHeight = height + 'px';
     canvas.style.width = '100%';
     canvas.style.height = height + 'px';
 
