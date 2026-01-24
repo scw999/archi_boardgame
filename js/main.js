@@ -3047,7 +3047,10 @@ class GameApp {
                 <div class="final-rankings-panel">
                     <h3>🏆 최종 순위 및 성과</h3>
                     <div class="final-rankings-list">
-                        ${results.rankings.map((r, i) => `
+                        ${results.rankings.map((r, i) => {
+                            const player = gameState.players.find(p => p.name === r.name);
+                            const playerHistory = this.getPlayerHistory(player);
+                            return `
                             <div class="final-rank-item ${i === 0 ? 'winner' : ''}" style="border-left: 4px solid ${playerColors[i] || playerColors[0]}">
                                 <div class="rank-header">
                                     <span class="rank-medal">${medalEmojis[i] || (i + 1) + '위'}</span>
@@ -3087,8 +3090,14 @@ class GameApp {
                                     ${r.awards.map(a => `<span class="award-badge">${a}</span>`).join('')}
                                 </div>
                                 ` : ''}
+                                <div class="rank-history">
+                                    <button class="btn-toggle-history" onclick="this.parentElement.querySelector('.history-details').classList.toggle('hidden'); this.textContent = this.textContent === '📜 상세 내역 보기' ? '📜 상세 내역 접기' : '📜 상세 내역 보기';">📜 상세 내역 보기</button>
+                                    <div class="history-details hidden">
+                                        ${playerHistory}
+                                    </div>
+                                </div>
                             </div>
-                        `).join('')}
+                        `;}).join('')}
                     </div>
                 </div>
                 <div class="final-map-footer">
@@ -3350,6 +3359,121 @@ class GameApp {
             `;
             document.head.appendChild(style);
         }
+    }
+
+    // 플레이어 히스토리 생성
+    getPlayerHistory(player) {
+        if (!player) return '<p class="no-history">데이터 없음</p>';
+
+        let historyHtml = '';
+
+        // 1. 완성된 건물 목록
+        if (player.buildings && player.buildings.length > 0) {
+            historyHtml += `
+                <div class="history-section">
+                    <h5>🏢 완성 건물 (${player.buildings.length}채)</h5>
+                    <ul class="history-list">
+                        ${player.buildings.map(b => {
+                            const totalCost = (b.landPrice || 0) + (b.designFee || 0) + (b.constructionCost || 0);
+                            return `
+                            <li class="history-item building-item">
+                                <span class="item-icon">${getBuildingImage(b.building?.name || '건물', '20px')}</span>
+                                <span class="item-name">${b.building?.name || '건물'}</span>
+                                <span class="item-location">@ ${b.land?.name || '토지'}</span>
+                                <span class="item-value">${gameState.formatMoney(b.salePrice || 0)}</span>
+                                <span class="item-cost">(투자: ${gameState.formatMoney(totalCost)})</span>
+                            </li>
+                        `;}).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // 2. 매각 이력
+        if (player.soldHistory && player.soldHistory.length > 0) {
+            const buildingSales = player.soldHistory.filter(s => s.type === 'building');
+            const projectSales = player.soldHistory.filter(s => s.type !== 'building' && s.type !== 'land');
+            const landSales = player.soldHistory.filter(s => s.type === 'land');
+
+            if (buildingSales.length > 0) {
+                historyHtml += `
+                    <div class="history-section">
+                        <h5>💰 건물 매각 (${buildingSales.length}건)</h5>
+                        <ul class="history-list">
+                            ${buildingSales.map(s => {
+                                const profitClass = (s.profitLoss || 0) >= 0 ? 'profit' : 'loss';
+                                const profitSign = (s.profitLoss || 0) >= 0 ? '+' : '';
+                                return `
+                                <li class="history-item sale-item">
+                                    <span class="item-icon">${getBuildingImage(s.building?.name || '건물', '20px')}</span>
+                                    <span class="item-name">${s.building?.name || '건물'}</span>
+                                    <span class="item-round">R${s.soldAt || '?'}</span>
+                                    <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
+                                    <span class="item-profit ${profitClass}">(${profitSign}${gameState.formatMoney(Math.abs(s.profitLoss || 0))})</span>
+                                </li>
+                            `;}).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (projectSales.length > 0) {
+                historyHtml += `
+                    <div class="history-section">
+                        <h5>📦 프로젝트 매각 (${projectSales.length}건)</h5>
+                        <ul class="history-list">
+                            ${projectSales.map(s => `
+                                <li class="history-item project-sale-item">
+                                    <span class="item-icon">📋</span>
+                                    <span class="item-name">${s.building?.name || s.land?.name || '프로젝트'}</span>
+                                    <span class="item-round">R${s.soldAt || '?'}</span>
+                                    <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
+                                    <span class="item-loss">(-${gameState.formatMoney(s.loss || 0)})</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (landSales.length > 0) {
+                historyHtml += `
+                    <div class="history-section">
+                        <h5>🏞️ 토지 매각 (${landSales.length}건)</h5>
+                        <ul class="history-list">
+                            ${landSales.map(s => `
+                                <li class="history-item land-sale-item">
+                                    <span class="item-icon">🏞️</span>
+                                    <span class="item-name">${s.land?.name || '토지'}</span>
+                                    <span class="item-round">R${s.soldAt || '?'}</span>
+                                    <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
+                                    <span class="item-profit profit">(+${gameState.formatMoney(s.profit || 0)})</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // 3. 대출 현황
+        if (player.loan > 0) {
+            historyHtml += `
+                <div class="history-section">
+                    <h5>🏦 대출 현황</h5>
+                    <div class="loan-info">
+                        <span class="loan-amount">현재 대출: ${gameState.formatMoney(player.loan)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 히스토리가 비어있는 경우
+        if (!historyHtml) {
+            historyHtml = '<p class="no-history">활동 내역 없음</p>';
+        }
+
+        return historyHtml;
     }
 
     // 최종 지도 건물 클릭 이벤트 바인딩

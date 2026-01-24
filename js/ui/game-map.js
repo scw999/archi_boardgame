@@ -315,6 +315,9 @@ function collectOwnedPlots() {
         // 매각 이력 (건물은 지도에 남음)
         if (player.soldHistory) {
             player.soldHistory.forEach(sold => {
+                // 대지만 매각한 경우는 건물이 없으므로 제외
+                if (sold.type === 'land') return;
+
                 const landId = sold.land.instanceId || sold.land.id;
                 const assignedPlot = getOrAssignPlotForLand(landId, sold.land.region, sold.land.name);
 
@@ -324,8 +327,8 @@ function collectOwnedPlots() {
                     playerName: player.name,
                     land: sold.land,
                     building: sold.building,
-                    architect: sold.architect,
-                    constructor: sold.constructor,
+                    architect: sold.architect || sold.originalProject?.architect,
+                    constructor: sold.constructor || sold.originalProject?.constructor,
                     sellPrice: sold.sellPrice,
                     soldAt: sold.soldAt,
                     landPrice: sold.originalProject?.landPrice || sold.landPrice || 0,
@@ -1123,9 +1126,9 @@ function showBuildingDetailModal(plotIndex) {
         `;
     }
 
-    // 팀 정보 (건축가, 시공사)
+    // 팀 정보 (건축가, 시공사) - 건물이 있을 때만 표시
     let teamInfo = '';
-    if (owned.architect || owned.constructor) {
+    if (owned.building && (owned.architect || owned.constructor)) {
         teamInfo = `
             <div class="modal-section team-info">
                 ${owned.architect ? `
