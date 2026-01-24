@@ -2,6 +2,7 @@
 import { gameState } from '../core/game-state.js';
 import { REGIONS } from '../data/lands.js';
 import { buildings, BUILDING_IMAGES } from '../data/buildings.js';
+import { Building3DViewer, create3DViewerModal, BUILDING_3D_CONFIG } from './building-3d-viewer.js';
 
 // 건물 이미지 HTML 생성 헬퍼 함수
 function getBuildingImageHTML(buildingName, size = '32px') {
@@ -16,6 +17,8 @@ function getBuildingImageHTML(buildingName, size = '32px') {
 let is3DView = false;
 let selectedPlotIndex = null;
 let isDevMode = false; // 개발자 모드 (좌표 조정용)
+let is3DCityView = false; // 3D 도시 뷰 모드
+let cityViewer = null; // 3D 뷰어 인스턴스
 
 // 토지별 고정 플롯 인덱스 저장 (토지 ID -> 플롯 인덱스)
 const landPlotAssignments = new Map();
@@ -145,6 +148,9 @@ export function renderCityGrid() {
                             <span class="legend-dot"></span>${p.name}
                         </span>
                     `).join('')}
+                    <button id="toggle-3d-city-btn" class="view-3d-btn ${is3DCityView ? 'active' : ''}" title="3D 도시 뷰">
+                        🏙️ 3D
+                    </button>
                     <button id="toggle-dev-mode-btn" class="dev-mode-btn ${isDevMode ? 'active' : ''}" title="좌표 조정 모드">
                         🔧
                     </button>
@@ -152,7 +158,8 @@ export function renderCityGrid() {
             </div>
 
             <div class="iso-city-map-wrapper">
-                <div class="iso-city-map" id="iso-city-map">
+                <!-- 2D 아이소메트릭 맵 -->
+                <div class="iso-city-map ${is3DCityView ? 'hidden' : ''}" id="iso-city-map">
                     <img src="assets/images/city-map.png" alt="개발 지도" class="iso-map-bg"
                          onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
 
@@ -168,6 +175,16 @@ export function renderCityGrid() {
                     <div class="owned-plots-overlay">
                         ${ownedPlots.map(plot => renderOwnedPlotMarker(plot)).join('')}
                     </div>
+                </div>
+
+                <!-- 3D 도시 뷰 -->
+                <div class="city-3d-container ${is3DCityView ? '' : 'hidden'}" id="city-3d-container">
+                    <div class="city-3d-controls">
+                        <button id="btn-3d-rotate-city" class="city-3d-btn" title="자동 회전">🔄</button>
+                        <button id="btn-3d-reset-city" class="city-3d-btn" title="카메라 리셋">🎯</button>
+                    </div>
+                    <div id="city-3d-canvas"></div>
+                    <div class="city-3d-hint">마우스 드래그: 회전 | 스크롤: 확대/축소</div>
                 </div>
             </div>
 
@@ -204,6 +221,19 @@ export function renderCityGrid() {
         devModeBtn.addEventListener('click', () => {
             toggleDevMode();
         });
+    }
+
+    // 3D 도시 뷰 버튼 이벤트
+    const toggle3DBtn = document.getElementById('toggle-3d-city-btn');
+    if (toggle3DBtn) {
+        toggle3DBtn.addEventListener('click', () => {
+            toggle3DCityView(ownedPlots);
+        });
+    }
+
+    // 3D 뷰가 활성화되어 있으면 초기화
+    if (is3DCityView) {
+        init3DCityView(ownedPlots);
     }
 }
 
@@ -611,6 +641,104 @@ function bindPlotEvents() {
     });
 }
 
+// 3D 도시 뷰 토글
+export function toggle3DCityView(ownedPlots = null) {
+    is3DCityView = !is3DCityView;
+
+    const isoMap = document.getElementById('iso-city-map');
+    const container3D = document.getElementById('city-3d-container');
+    const toggle3DBtn = document.getElementById('toggle-3d-city-btn');
+
+    if (!isoMap || !container3D) return;
+
+    if (is3DCityView) {
+        isoMap.classList.add('hidden');
+        container3D.classList.remove('hidden');
+        toggle3DBtn?.classList.add('active');
+        toggle3DBtn.textContent = '🗺️ 2D';
+
+        // 소유 플롯 정보 수집
+        if (!ownedPlots) {
+            ownedPlots = collectOwnedPlots();
+        }
+        init3DCityView(ownedPlots);
+    } else {
+        isoMap.classList.remove('hidden');
+        container3D.classList.add('hidden');
+        toggle3DBtn?.classList.remove('active');
+        toggle3DBtn.textContent = '🏙️ 3D';
+
+        // 3D 뷰어 정리
+        if (cityViewer) {
+            cityViewer.dispose();
+            cityViewer = null;
+        }
+    }
+
+    return is3DCityView;
+}
+
+// 3D 도시 뷰 초기화
+function init3DCityView(ownedPlots) {
+    const canvas = document.getElementById('city-3d-canvas');
+    if (!canvas) return;
+
+    // 기존 뷰어 정리
+    if (cityViewer) {
+        cityViewer.dispose();
+    }
+
+    // 컨테이너 크기 설정
+    const container = document.getElementById('city-3d-container');
+    const width = container.clientWidth;
+    const height = Math.max(400, container.clientHeight - 60);
+
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+
+    // 3D 뷰어 생성
+    cityViewer = new Building3DViewer(canvas, {
+        width,
+        height,
+        backgroundColor: 0x87ceeb,
+        autoRotate: false
+    });
+
+    // 건물 데이터 준비
+    const buildingDataList = ownedPlots
+        .filter(plot => plot.building)
+        .map(plot => ({
+            buildingType: plot.building.name,
+            playerIndex: plot.playerIndex,
+            status: plot.status
+        }));
+
+    if (buildingDataList.length > 0) {
+        cityViewer.displayBuildings(buildingDataList);
+    }
+
+    // 컨트롤 버튼 이벤트
+    const rotateBtn = document.getElementById('btn-3d-rotate-city');
+    if (rotateBtn) {
+        rotateBtn.onclick = () => {
+            if (cityViewer) {
+                const isRotating = cityViewer.toggleAutoRotate();
+                rotateBtn.textContent = isRotating ? '⏸️' : '🔄';
+            }
+        };
+    }
+
+    const resetBtn = document.getElementById('btn-3d-reset-city');
+    if (resetBtn) {
+        resetBtn.onclick = () => {
+            if (cityViewer && cityViewer.camera) {
+                cityViewer.camera.position.set(50, 40, 50);
+                cityViewer.camera.lookAt(0, 0, 0);
+            }
+        };
+    }
+}
+
 // 개발자 모드 토글
 export function toggleDevMode() {
     isDevMode = !isDevMode;
@@ -888,10 +1016,13 @@ function showBuildingDetailModal(plotIndex) {
     };
     const statusInfo = statusLabels[owned.status] || { text: owned.status, class: '' };
 
-    // 건물 정보
+    // 건물 정보 및 3D 버튼
     let buildingInfo = '';
+    let view3DButton = '';
     if (owned.building) {
         const buildingImage = BUILDING_IMAGES[owned.building.name];
+        const has3DConfig = BUILDING_3D_CONFIG[owned.building.name];
+
         buildingInfo = `
             <div class="modal-building-section">
                 <div class="modal-building-visual">
@@ -908,6 +1039,14 @@ function showBuildingDetailModal(plotIndex) {
                 </div>
             </div>
         `;
+
+        if (has3DConfig) {
+            view3DButton = `
+                <button class="btn-view-3d" data-building="${owned.building.name}" data-player="${owned.playerIndex}" data-status="${owned.status}">
+                    🏙️ 3D로 보기
+                </button>
+            `;
+        }
     }
 
     // 가치/가격 정보
@@ -938,6 +1077,7 @@ function showBuildingDetailModal(plotIndex) {
 
                 ${buildingInfo}
                 ${priceInfo}
+                ${view3DButton}
 
                 ${owned.status === 'sold' ? `
                     <div class="modal-sold-badge">
@@ -949,6 +1089,22 @@ function showBuildingDetailModal(plotIndex) {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // 3D 보기 버튼 이벤트
+    const view3DBtn = document.querySelector('.btn-view-3d');
+    if (view3DBtn) {
+        view3DBtn.addEventListener('click', () => {
+            const buildingName = view3DBtn.dataset.building;
+            const playerIdx = parseInt(view3DBtn.dataset.player);
+            const status = view3DBtn.dataset.status;
+
+            // 상세 모달 닫기
+            document.querySelector('.building-detail-modal')?.remove();
+
+            // 3D 뷰어 모달 열기
+            create3DViewerModal(buildingName, playerIdx);
+        });
+    }
 
     // 모달 외부 클릭시 닫기
     const modal = document.querySelector('.building-detail-modal');
