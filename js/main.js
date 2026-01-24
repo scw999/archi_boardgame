@@ -416,12 +416,13 @@ class GameApp {
         renderActionArea(actions);
 
         // PM 활동
+        const self = this; // this 바인딩 보존
         document.querySelector('[data-action="pm-activity"]')?.addEventListener('click', () => {
             showConfirmModal('PM 컨설팅', 'PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?', () => {
                 const result = gameState.doPMActivity(gameState.currentPlayerIndex);
                 showNotification(result.message, 'success');
-                this.updateUI();
-                this.nextPlayerOrPhase('land');
+                self.updateUI();
+                self.nextPlayerOrPhase('land');
             });
         });
 
@@ -955,17 +956,20 @@ class GameApp {
         // 기존 공통 액션 패널 제거 (중복 방지)
         document.getElementById('common-action-panel')?.remove();
 
+        // this 바인딩 보존
+        const self = this;
+
         // 액션 버튼 이벤트 바인딩
         document.getElementById('design-pm')?.addEventListener('click', () => {
             showConfirmModal('PM 컨설팅', 'PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?', () => {
                 // 모달 닫기
-                this.hideDesignPanel();
+                self.hideDesignPanel();
 
                 const result = gameState.doPMActivity(gameState.currentPlayerIndex);
                 if (result.success) {
                     showNotification(result.message, 'success');
-                    this.updateUI();
-                    this.nextPlayerOrPhase('architect');
+                    self.updateUI();
+                    self.nextPlayerOrPhase('architect');
                 }
             });
         });
@@ -986,16 +990,16 @@ class GameApp {
                         </div>
                     `, () => {
                         showNotification(result.message, 'success');
-                        this.nextPlayerOrPhase('architect');
+                        self.nextPlayerOrPhase('architect');
                     });
                 }
             });
         });
 
         document.getElementById('design-sell-building')?.addEventListener('click', () => {
-            this.showBuildingSellModal(() => {
+            self.showBuildingSellModal(() => {
                 // 매각 후 설계 패널 갱신 (건물 목록의 자금 부족 상태 업데이트)
-                this.showDesignPanel(architect);
+                self.showDesignPanel(architect);
             });
         });
 
@@ -1003,7 +1007,7 @@ class GameApp {
             showConfirmModal('턴 넘기기', '이번 턴을 넘기시겠습니까?', () => {
                 gameState.addLog(`${player.name}: 턴 패스`);
                 showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
-                this.nextPlayerOrPhase('architect');
+                self.nextPlayerOrPhase('architect');
             });
         });
 
@@ -1540,6 +1544,7 @@ class GameApp {
         if (pmBtn) {
             // 현재 플레이어 인덱스를 클로저로 저장
             const currentPlayerIdx = gameState.currentPlayerIndex;
+            const self = this; // this 바인딩 보존
             pmBtn.onclick = () => {
                 // 현재 턴인 플레이어만 PM 컨설팅 실행 가능
                 if (gameState.currentPlayerIndex !== currentPlayerIdx) {
@@ -1551,9 +1556,9 @@ class GameApp {
                     const result = gameState.doPMActivity(gameState.currentPlayerIndex);
                     if (result.success) {
                         showNotification(result.message, 'success');
-                        this.updateUI();
+                        self.updateUI();
                         // PM 컨설팅 후 다음 플레이어로 이동
-                        this.nextPlayerOrPhase('constructor');
+                        self.nextPlayerOrPhase('constructor');
                     }
                 });
             };
@@ -1562,6 +1567,7 @@ class GameApp {
         // 대지 매각 버튼 (설계중/시공중 프로젝트 포함)
         const sellLandBtn = document.getElementById('btn-sell-land-construction');
         if (sellLandBtn) {
+            const self = this; // this 바인딩 보존
             sellLandBtn.onclick = () => {
                 const currentPlayer = gameState.getCurrentPlayer();
                 const hasBuilding = currentPlayer.currentProject?.building;
@@ -1573,8 +1579,8 @@ class GameApp {
                         const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
                         if (result.success) {
                             showNotification(result.message, 'success');
-                            this.updateUI();
-                            this.nextPlayerOrPhase('constructor');
+                            self.updateUI();
+                            self.nextPlayerOrPhase('constructor');
                         } else {
                             showNotification(result.message, 'error');
                         }
@@ -1585,8 +1591,8 @@ class GameApp {
                         const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
                         if (result.success) {
                             showNotification(result.message, 'success');
-                            this.updateUI();
-                            this.nextPlayerOrPhase('constructor');
+                            self.updateUI();
+                            self.nextPlayerOrPhase('constructor');
                         } else {
                             showNotification(result.message, 'error');
                         }
@@ -1595,9 +1601,9 @@ class GameApp {
                     const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
                     if (result.success) {
                         showNotification(result.message, 'success');
-                        this.updateUI();
+                        self.updateUI();
                         // 대지를 팔면 시공 불가, 다음 플레이어로
-                        this.nextPlayerOrPhase('constructor');
+                        self.nextPlayerOrPhase('constructor');
                     } else {
                         showNotification(result.message, 'error');
                     }
@@ -1801,6 +1807,7 @@ class GameApp {
         // 대지 매각 버튼 (설계중/시공중 프로젝트 포함)
         const sellLandBtn = document.getElementById('btn-sell-land-insufficient');
         if (sellLandBtn) {
+            const self = this; // this 바인딩 보존
             sellLandBtn.onclick = () => {
                 const currentPlayer = gameState.getCurrentPlayer();
                 const hasBuilding = currentPlayer.currentProject?.building;
@@ -1812,8 +1819,8 @@ class GameApp {
                         const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
                         if (result.success) {
                             showNotification(result.message, 'success');
-                            this.updateUI();
-                            this.nextPlayerOrPhase('constructor');
+                            self.updateUI();
+                            self.nextPlayerOrPhase('constructor');
                         } else {
                             showNotification(result.message, 'error');
                         }
@@ -1824,8 +1831,8 @@ class GameApp {
                         const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
                         if (result.success) {
                             showNotification(result.message, 'success');
-                            this.updateUI();
-                            this.nextPlayerOrPhase('constructor');
+                            self.updateUI();
+                            self.nextPlayerOrPhase('constructor');
                         } else {
                             showNotification(result.message, 'error');
                         }
@@ -1834,9 +1841,9 @@ class GameApp {
                     const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
                     if (result.success) {
                         showNotification(result.message, 'success');
-                        this.updateUI();
+                        self.updateUI();
                         // 대지를 팔면 시공 불가, 다음 플레이어로
-                        this.nextPlayerOrPhase('constructor');
+                        self.nextPlayerOrPhase('constructor');
                     } else {
                         showNotification(result.message, 'error');
                     }
@@ -3649,6 +3656,7 @@ class GameApp {
 
     // 자산 매각 확인
     confirmPropertySale(project, estimatedValue) {
+        const self = this; // this 바인딩 보존
         showConfirmModal('건물 매각', `정말로 ${project.building.name}을(를) ${gameState.formatMoney(estimatedValue)}에 매각하시겠습니까?`, () => {
             const player = gameState.getCurrentPlayer();
 
@@ -3706,11 +3714,11 @@ class GameApp {
 
             // 모달 닫기 및 UI 업데이트
             document.querySelector('.modal-overlay')?.remove();
-            this.updateUI();
+            self.updateUI();
 
             // 시공 단계에서 매각한 경우 턴 넘기기
             if (gameState.phase === GAME_PHASES.CONSTRUCTION && !player.currentProject) {
-                this.nextPlayerOrPhase('constructor');
+                self.nextPlayerOrPhase('constructor');
             }
         });
     }
@@ -3832,6 +3840,7 @@ class GameApp {
 
     // 대지 매각 확인
     confirmLandSale(project) {
+        const self = this; // this 바인딩 보존
         const totalInvestment = (project.landPrice || 0) + (project.developmentCost || 0) + (project.designFee || 0);
         const salePrice = Math.floor(totalInvestment * 0.8);
         const profit = salePrice - totalInvestment;
@@ -3857,7 +3866,7 @@ class GameApp {
 
             // 모달 닫기 및 UI 업데이트
             document.querySelector('.modal-overlay')?.remove();
-            this.updateUI();
+            self.updateUI();
         });
     }
 
@@ -4258,6 +4267,7 @@ class GameApp {
             'evaluation': '평가'
         };
 
+        const self = this; // this 바인딩 보존
         const savedDate = saveInfo.savedAt ? new Date(saveInfo.savedAt).toLocaleString('ko-KR') : '알 수 없음';
         const confirmMsg = `저장된 게임을 불러올까요?\n\n` +
             `📅 저장 시간: ${savedDate}\n` +
@@ -4269,8 +4279,8 @@ class GameApp {
             if (gameState.load()) {
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
-                this.updateUI();
-                this.runPhase();
+                self.updateUI();
+                self.runPhase();
                 showNotification('게임을 불러왔습니다! 🎮', 'success');
             } else {
                 showNotification('게임 불러오기에 실패했습니다.', 'error');
