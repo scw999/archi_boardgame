@@ -655,6 +655,74 @@ class GameState {
         };
     }
 
+    // 설계 완료된 프로젝트 매각 (시공 단계에서 설계비 포함 매각)
+    sellDesignedProject(playerIndex) {
+        const player = this.players[playerIndex];
+        const project = player.currentProject;
+
+        if (!project || !project.land) {
+            return { success: false, message: '판매할 프로젝트가 없습니다.' };
+        }
+
+        if (!project.building) {
+            return { success: false, message: '설계가 완료되지 않은 프로젝트입니다. 대지 매각을 이용하세요.' };
+        }
+
+        if (project.constructor) {
+            return { success: false, message: '이미 시공이 시작된 프로젝트는 매각할 수 없습니다.' };
+        }
+
+        // 판매 가격: 토지 구매가 + 개발비 + 설계비의 90% (설계 프리미엄)
+        const landCost = project.landPrice + project.developmentCost;
+        const designCost = project.designFee;
+        const totalInvestment = landCost + designCost;
+        const sellPrice = Math.floor(totalInvestment * 0.9); // 투자비의 90% 회수
+        const loss = totalInvestment - sellPrice;
+
+        player.money += sellPrice;
+
+        // 매각 이력에 추가
+        player.soldHistory.push({
+            type: 'designed_project',
+            land: project.land,
+            building: project.building,
+            architect: project.architect,
+            sellPrice,
+            loss,
+            soldAt: this.currentRound
+        });
+
+        // 개발 지도에서 제거
+        this.removeProjectFromMap(playerIndex);
+
+        // 건축가 선점 해제
+        if (project.architect) {
+            this.releaseArchitect(project.architect.id);
+        }
+
+        const projectName = `${project.land.name}/${project.building.name}`;
+
+        // 프로젝트 초기화
+        project.land = null;
+        project.landPrice = 0;
+        project.developmentCost = 0;
+        project.architect = null;
+        project.designFee = 0;
+        project.building = null;
+
+        // 평가 단계까지 스킵 플래그 설정
+        player.designSoldRound = this.currentRound;
+
+        this.addLog(`${player.name}: ${projectName} 설계 프로젝트 매각 (${this.formatMoney(sellPrice)}, 손실 -${this.formatMoney(loss)})`);
+
+        return {
+            success: true,
+            sellPrice,
+            loss,
+            message: `${projectName} 프로젝트를 ${this.formatMoney(sellPrice)}에 매각했습니다. (손실: -${this.formatMoney(loss)}, 평가까지 휴식)`
+        };
+    }
+
     // 완성된 건물 매각 (평가 반영, 시장 상황에 따라 변동)
     sellBuilding(playerIndex, buildingIndex) {
         const player = this.players[playerIndex];
