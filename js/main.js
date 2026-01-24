@@ -422,6 +422,13 @@ class GameApp {
             return;
         }
 
+        // 이미 이번 라운드에 토지를 구매한 플레이어는 스킵
+        if (player.currentProject && player.currentProject.land) {
+            showNotification(`${player.name}님은 이미 토지를 구매했습니다. 다음 플레이어로 넘어갑니다.`, 'info');
+            this.nextPlayerOrPhase('land');
+            return;
+        }
+
         renderCardGrid(gameState.availableLands, 'land', (index, land) => {
             this.selectedCardIndex = index;
             highlightCard(index);
@@ -655,6 +662,7 @@ class GameApp {
 
         const info = getLandDisplayInfo(land);
         const currentPlayerIndex = gameState.currentPlayerIndex;
+        const player = gameState.getCurrentPlayer();
 
         // 현재 플레이어가 이 토지에서 경매/급매 실패한 적 있는지 확인
         const failedAttempt = gameState.pendingLands.find(
@@ -663,31 +671,57 @@ class GameApp {
         const canUseUrgent = land.prices.urgent && !failedAttempt;
         const canUseAuction = land.prices.auction && !failedAttempt;
 
+        // 와일드카드 할인 적용 여부 확인
+        const discountRate = player.landDiscountActive || 0;
+        const hasDiscount = discountRate > 0;
+
+        // 할인 적용된 가격 계산
+        const marketPrice = land.prices.market;
+        const urgentPrice = land.prices.urgent;
+        const auctionPrice = land.prices.auction;
+
+        const discountedMarketPrice = hasDiscount ? Math.floor(marketPrice * (1 - discountRate)) : marketPrice;
+        const discountedUrgentPrice = urgentPrice && hasDiscount ? Math.floor(urgentPrice * (1 - discountRate)) : urgentPrice;
+        const discountedAuctionPrice = auctionPrice && hasDiscount ? Math.floor(auctionPrice * (1 - discountRate)) : auctionPrice;
+
+        // 가격 표시 포맷 (할인 시 원래 가격과 할인가 모두 표시)
+        const formatPriceDisplay = (originalPrice, discountedPrice, hasDiscount) => {
+            if (hasDiscount) {
+                return `<span class="original-price">${gameState.formatMoney(originalPrice)}</span> → <span class="discounted-price">${gameState.formatMoney(discountedPrice)}</span>`;
+            }
+            return gameState.formatMoney(originalPrice);
+        };
+
         optionsContainer.innerHTML = `
       <div class="purchase-panel">
         <div class="purchase-panel-header">
           <h3>${land.name} 구매</h3>
           <button class="purchase-panel-close" id="close-purchase-panel">&times;</button>
         </div>
+        ${hasDiscount ? `
+          <div class="discount-notice">
+            🎫 토지 할인권 적용 중 (${discountRate * 100}% 할인)
+          </div>
+        ` : ''}
         ${failedAttempt ? `
           <div class="failed-attempt-notice">
             ⚠️ 이전에 매매 불발된 토지입니다. 시세로만 구매 가능합니다.
           </div>
         ` : ''}
         <div class="price-options">
-          <button class="price-btn market" data-type="market">
-            시세: ${info.marketPrice}
+          <button class="price-btn market" data-type="market" data-price="${discountedMarketPrice}">
+            시세: ${formatPriceDisplay(marketPrice, discountedMarketPrice, hasDiscount)}
             <span class="prob">100%</span>
           </button>
           ${canUseUrgent ? `
-            <button class="price-btn urgent" data-type="urgent">
-              급매: ${info.urgentPrice}
+            <button class="price-btn urgent" data-type="urgent" data-price="${discountedUrgentPrice}">
+              급매: ${formatPriceDisplay(urgentPrice, discountedUrgentPrice, hasDiscount)}
               <span class="prob">${((land.diceRequired.urgent.length / 6) * 100).toFixed(0)}%</span>
             </button>
           ` : ''}
           ${canUseAuction ? `
-            <button class="price-btn auction" data-type="auction">
-              경매: ${info.auctionPrice}
+            <button class="price-btn auction" data-type="auction" data-price="${discountedAuctionPrice}">
+              경매: ${formatPriceDisplay(auctionPrice, discountedAuctionPrice, hasDiscount)}
               <span class="prob">${((land.diceRequired.auction.length / 6) * 100).toFixed(0)}%</span>
             </button>
           ` : ''}
@@ -706,16 +740,30 @@ class GameApp {
         // 외부 클릭 시 닫기
         this.setupPurchaseOptionsOutsideClick(optionsContainer);
 
-        // 가격 타입 선택
+        // 개발 비용 계산
+        const developmentCost = info.developmentCost;
+
+        // 가격 타입 선택 시 자금 체크
         optionsContainer.querySelectorAll('.price-btn').forEach(btn => {
             btn.addEventListener('click', () => {
+                const priceType = btn.dataset.type;
+                const landPrice = parseInt(btn.dataset.price);
+                const totalCost = landPrice + developmentCost;
+
+                // 현금 부족 체크 (대출 가능 금액 제외 - 순수 현금만 체크)
+                if (player.money < totalCost) {
+                    // 자금 부족 시 매각 안내 모달 표시
+                    this.showInsufficientFundsForLandModal(totalCost, priceType, land);
+                    return;
+                }
+
                 optionsContainer.querySelectorAll('.price-btn').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
-                this.selectedPriceType = btn.dataset.type;
+                this.selectedPriceType = priceType;
             });
         });
 
-        // 기본 선택
+        // 기본 선택 (시세로 시작하되, 자금 체크는 클릭 시에만)
         optionsContainer.querySelector('.price-btn.market')?.classList.add('selected');
 
         // 구매 시도 - 이벤트 버블링 방지
@@ -730,6 +778,70 @@ class GameApp {
 
             await this.attemptPurchase();
         });
+    }
+
+    // 토지 구매 시 자금 부족 모달 표시
+    showInsufficientFundsForLandModal(totalCost, priceType, land) {
+        const player = gameState.getCurrentPlayer();
+        const shortage = totalCost - player.money;
+        const priceTypeLabel = priceType === 'market' ? '시세' : priceType === 'urgent' ? '급매' : '경매';
+
+        const hasBuildings = player.buildings.length > 0;
+        const hasLand = player.currentProject && player.currentProject.land;
+
+        let sellOptions = '';
+        if (hasBuildings) {
+            sellOptions += `<button class="action-btn sell-building-btn" id="btn-sell-building-land">🏢 건물 매각하기</button>`;
+        }
+        if (hasLand) {
+            sellOptions += `<button class="action-btn" id="btn-sell-land-land">🏞️ 대지 매각하기</button>`;
+        }
+
+        if (!hasBuildings && !hasLand) {
+            sellOptions = `<p class="no-assets-msg">매각할 건물이나 대지가 없습니다.</p>`;
+        }
+
+        showResultModal('💰 자금 부족', `
+            <div class="insufficient-funds-modal">
+                <div class="funds-info">
+                    <p><strong>${land.name}</strong> ${priceTypeLabel} 구매에 필요한 금액:</p>
+                    <p class="required-amount">${gameState.formatMoney(totalCost)}</p>
+                    <p>현재 보유 현금: <span class="current-money">${gameState.formatMoney(player.money)}</span></p>
+                    <p class="shortage">부족액: <span class="shortage-amount">${gameState.formatMoney(shortage)}</span></p>
+                </div>
+                <div class="sell-options">
+                    <p>💡 건물 또는 대지를 매각하여 자금을 확보하세요.</p>
+                    ${sellOptions}
+                </div>
+            </div>
+        `, () => { });
+
+        // 건물 매각 버튼 이벤트
+        const sellBuildingBtn = document.getElementById('btn-sell-building-land');
+        if (sellBuildingBtn) {
+            sellBuildingBtn.onclick = () => {
+                document.querySelector('.modal-overlay')?.remove();
+                this.showBuildingSellModal(() => {
+                    this.updateUI();
+                    // 매각 후 다시 구매 옵션 표시
+                    if (this.selectedCardIndex !== null) {
+                        const updatedLand = gameState.availableLands[this.selectedCardIndex];
+                        if (updatedLand) {
+                            this.showLandPurchaseOptions(updatedLand);
+                        }
+                    }
+                });
+            };
+        }
+
+        // 대지 매각 버튼 이벤트
+        const sellLandBtn = document.getElementById('btn-sell-land-land');
+        if (sellLandBtn) {
+            sellLandBtn.onclick = () => {
+                document.querySelector('.modal-overlay')?.remove();
+                this.showLandSellConfirm();
+            };
+        }
     }
 
     // 구매 옵션 패널 닫기
