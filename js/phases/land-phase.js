@@ -177,7 +177,17 @@ export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResu
         result.message = `${getDiceEmoji(diceResult)} 낙찰 성공! ${land.name} 구매 완료`;
         gameState.addLog(`${player.name}: ${result.message}`);
     } else {
-        // 구매 실패
+        // 구매 실패 - pendingLands에 실패 정보 기록 (같은 플레이어가 다시 경매/급매 시도 방지)
+        const existingPending = gameState.pendingLands.find(
+            p => p.land.id === land.id && p.failedPlayer === playerIndex
+        );
+        if (!existingPending) {
+            gameState.pendingLands.push({
+                land: land,
+                failedPlayer: playerIndex,
+                priceType: priceType
+            });
+        }
         result.message = `${getDiceEmoji(diceResult)} 매매 불발! 다른 토지를 선택하거나 대기하세요.`;
         gameState.addLog(`${player.name}: ${land.name} 매매 불발`);
     }

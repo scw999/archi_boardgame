@@ -620,6 +620,14 @@ class GameApp {
         if (!optionsContainer) return;
 
         const info = getLandDisplayInfo(land);
+        const currentPlayerIndex = gameState.currentPlayerIndex;
+
+        // 현재 플레이어가 이 토지에서 경매/급매 실패한 적 있는지 확인
+        const failedAttempt = gameState.pendingLands.find(
+            p => p.land.id === land.id && p.failedPlayer === currentPlayerIndex
+        );
+        const canUseUrgent = land.prices.urgent && !failedAttempt;
+        const canUseAuction = land.prices.auction && !failedAttempt;
 
         optionsContainer.innerHTML = `
       <div class="purchase-panel">
@@ -627,18 +635,23 @@ class GameApp {
           <h3>${land.name} 구매</h3>
           <button class="purchase-panel-close" id="close-purchase-panel">&times;</button>
         </div>
+        ${failedAttempt ? `
+          <div class="failed-attempt-notice">
+            ⚠️ 이전에 매매 불발된 토지입니다. 시세로만 구매 가능합니다.
+          </div>
+        ` : ''}
         <div class="price-options">
           <button class="price-btn market" data-type="market">
             시세: ${info.marketPrice}
             <span class="prob">100%</span>
           </button>
-          ${land.prices.urgent ? `
+          ${canUseUrgent ? `
             <button class="price-btn urgent" data-type="urgent">
               급매: ${info.urgentPrice}
               <span class="prob">${((land.diceRequired.urgent.length / 6) * 100).toFixed(0)}%</span>
             </button>
           ` : ''}
-          ${land.prices.auction ? `
+          ${canUseAuction ? `
             <button class="price-btn auction" data-type="auction">
               경매: ${info.auctionPrice}
               <span class="prob">${((land.diceRequired.auction.length / 6) * 100).toFixed(0)}%</span>
@@ -1447,9 +1460,14 @@ class GameApp {
                     <button class="action-btn pm" id="btn-pm-construction">
                         💼 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})
                     </button>
-                    ${player.currentProject?.land ? `
+                    ${player.currentProject?.land && !player.currentProject?.building ? `
                         <button class="action-btn sell" id="btn-sell-land-construction">
                             🏞️ 대지 매각 (${gameState.formatMoney(Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1))})
+                        </button>
+                    ` : ''}
+                    ${player.currentProject?.building && !player.currentProject?.constructor ? `
+                        <button class="action-btn sell designed" id="btn-sell-designed-project">
+                            📐 설계 프로젝트 매각 (${gameState.formatMoney(Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost + player.currentProject.designFee) * 0.9))})
                         </button>
                     ` : ''}
                     ${player.buildings.length > 0 ? `
@@ -1550,6 +1568,24 @@ class GameApp {
                     showNotification(result.message, 'success');
                     this.updateUI();
                     // 대지를 팔면 시공 불가, 다음 플레이어로
+                    this.nextPlayerOrPhase('constructor');
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            };
+        }
+
+        // 설계 프로젝트 매각 버튼
+        const sellDesignedBtn = document.getElementById('btn-sell-designed-project');
+        if (sellDesignedBtn) {
+            sellDesignedBtn.onclick = () => {
+                if (!confirm('설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
+
+                const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    this.updateUI();
+                    // 설계 프로젝트 매각 후 다음 플레이어로
                     this.nextPlayerOrPhase('constructor');
                 } else {
                     showNotification(result.message, 'error');
@@ -2291,6 +2327,13 @@ class GameApp {
         // PM 컨설팅으로 라운드 스킵한 플레이어는 자동 스킵
         if (player.pmSkippedRound === gameState.currentRound) {
             showNotification(`${player.name}님은 PM 컨설팅으로 이번 라운드를 스킵합니다.`, 'info');
+            this.nextPlayerOrPhase('salePrice');
+            return;
+        }
+
+        // 설계 프로젝트 매각한 플레이어는 자동 스킵
+        if (player.designSoldRound === gameState.currentRound) {
+            showNotification(`${player.name}님은 설계 프로젝트를 매각하여 이번 라운드를 스킵합니다.`, 'info');
             this.nextPlayerOrPhase('salePrice');
             return;
         }

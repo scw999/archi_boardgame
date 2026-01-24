@@ -306,6 +306,10 @@ export function checkConstructionPhaseComplete() {
         if (player.pmSkippedRound === gameState.currentRound) {
             return true;
         }
+        // 설계 프로젝트 매각한 플레이어는 완료로 처리
+        if (player.designSoldRound === gameState.currentRound) {
+            return true;
+        }
         // 토지가 없는 플레이어는 시공 완료로 처리 (스킵)
         if (!player.currentProject || !player.currentProject.land) {
             return true;

@@ -182,7 +182,7 @@ export async function showLandPurchaseDice(landName, priceType, requiredDice, on
             const diceEl = container.querySelector('.dice');
             const resultEl = container.querySelector('.dice-result');
 
-            rollBtn.disabled = true;
+            if (rollBtn) rollBtn.disabled = true;
             if (rerollBtn) rerollBtn.disabled = true;
 
             // 재굴림 시 초기화

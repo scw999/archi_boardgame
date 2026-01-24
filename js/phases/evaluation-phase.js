@@ -287,6 +287,14 @@ export function completeEvaluation(playerIndex) {
 // 페이즈 완료 체크
 export function checkEvaluationPhaseComplete() {
     return gameState.players.every(player => {
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 완료로 처리
+        if (player.pmSkippedRound === gameState.currentRound) {
+            return true;
+        }
+        // 설계 프로젝트 매각한 플레이어는 완료로 처리
+        if (player.designSoldRound === gameState.currentRound) {
+            return true;
+        }
         // 토지나 건물이 없는 플레이어는 평가 완료로 처리 (스킵)
         if (!player.currentProject || !player.currentProject.land || !player.currentProject.building) {
             return true;
