@@ -6976,207 +6976,157 @@ body {
   color: #f87171;
 }
 
-/* ===== 플레이어 건물 목록 모달 ===== */
-.player-buildings-modal {
-  max-height: 400px;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+/* ===== 시공 자금 부족 패널 ===== */
+.money-options-panel.insufficient-funds {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-.player-buildings-modal::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-.buildings-list {
+.insufficient-header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.building-list-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--bg-tertiary);
+.insufficient-header .notice-icon {
+  font-size: 2rem;
+}
+
+.insufficient-header h4 {
+  margin: 0;
+  color: #f87171;
+  font-size: 1.3rem;
+}
+
+.insufficient-info {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
 }
 
-.building-list-item:hover {
-  border-color: var(--accent-gold);
-  background: rgba(212, 175, 55, 0.1);
-  transform: translateX(4px);
+.insufficient-info strong {
+  color: var(--accent-orange);
 }
 
-.building-list-item .building-icon {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.building-list-item .building-icon img {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-}
-
-.building-list-item .building-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.building-list-item .building-name {
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
-}
-
-.building-list-item .building-land {
-  font-size: 0.85rem;
+.insufficient-warning {
   color: var(--text-secondary);
-  margin-bottom: 0.25rem;
-}
-
-.building-list-item .building-value {
   font-size: 0.9rem;
-  color: var(--accent-gold);
-  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
-.building-list-item .building-arrow {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  transition: transform 0.2s ease;
+.action-btn.skip {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
 }
 
-.building-list-item:hover .building-arrow {
-  transform: translateX(4px);
-  color: var(--accent-gold);
+.action-btn.skip:hover {
+  background: linear-gradient(135deg, #7c8290, #5c6573);
 }
 
-/* ===== 플레이어 와일드카드 목록 모달 ===== */
-.player-wildcards-modal {
-  max-height: 450px;
-  overflow-y: auto;
+/* ===== 자금 부족 카드 스타일 ===== */
+.game-card.unaffordable {
+  opacity: 0.6;
+  cursor: not-allowed;
+  position: relative;
 }
 
-.wildcards-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.game-card.unaffordable .card-body {
+  position: relative;
 }
 
-.wildcard-list-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  border: 2px solid rgba(212, 175, 55, 0.3);
-  transition: all 0.2s ease;
+.unaffordable-badge {
+  background: #f97316;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: auto;
 }
 
-.wildcard-list-item:hover {
-  border-color: var(--accent-gold);
-  background: rgba(212, 175, 55, 0.1);
-}
-
-.wildcard-list-item .wildcard-card-mini {
-  flex-shrink: 0;
-  width: 50px;
-  height: 70px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  border: 2px solid var(--accent-gold);
-  border-radius: 8px;
+.unaffordable-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #f97316;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  z-index: 10;
 }
 
-.wildcard-list-item .wildcard-card-mini .card-icon {
+/* ===== 자금 부족 시 액션 영역 스타일 ===== */
+.insufficient-funds-notice {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(239, 68, 68, 0.1));
+  border: 2px solid rgba(249, 115, 22, 0.5);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.insufficient-funds-notice .notice-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.insufficient-funds-notice .notice-icon {
   font-size: 1.5rem;
 }
 
-.wildcard-list-item .wildcard-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.wildcard-list-item .wildcard-name {
+.insufficient-funds-notice .notice-text {
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--accent-gold);
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
+  color: #f97316;
 }
 
-.wildcard-list-item .wildcard-desc {
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  line-height: 1.4;
-}
-
-.wildcard-list-item .wildcard-effect {
-  font-size: 0.8rem;
-  color: var(--accent-blue);
-  margin-bottom: 0.25rem;
-}
-
-.wildcard-list-item .wildcard-phase {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.wildcard-list-item .wildcard-actions {
-  flex-shrink: 0;
+.insufficient-funds-notice .notice-details {
   display: flex;
+  gap: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.insufficient-funds-notice .notice-details strong {
+  color: var(--text-primary);
+}
+
+.insufficient-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.insufficient-action-buttons .action-btn {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-}
-
-.wildcard-list-item .btn-use-card {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, var(--accent-gold) 0%, #b8860b 100%);
-  color: #000;
+  gap: 0.3rem;
+  padding: 1rem 1.5rem;
   border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: 0.85rem;
+  border-radius: var(--radius-lg);
   cursor: pointer;
+  font-family: inherit;
+  min-width: 120px;
   transition: all 0.2s ease;
 }
 
-.wildcard-list-item .btn-use-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
-}
-
-/* 클릭 가능한 stat-item 스타일 */
-.stat-item.clickable-building,
-.stat-item.clickable-wildcard {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: var(--radius-sm);
-}
-
-.stat-item.clickable-building:hover,
-.stat-item.clickable-wildcard:hover {
-  background: rgba(212, 175, 55, 0.2);
-  transform: scale(1.05);
-}
-
-.stat-item.clickable-building:hover .stat-icon,
-.stat-item.clickable-wildcard:hover .stat-icon {
-  transform: scale(1.2);
+.insufficient-action-buttons .action-btn .btn-icon {
+  font-size: 1.5rem;
 }
 
 /* ===== 3D 도시 뷰 스타일 ===== */
@@ -7233,97 +7183,45 @@ body {
 #city-3d-canvas canvas {
   width: 100% !important;
   height: 100% !important;
-}
-
-/* 3D 컨트롤 버튼 */
-.city-3d-controls {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 100;
-  display: flex;
-  gap: 8px;
-}
-
-.city-3d-btn {
-  width: 36px;
-  height: 36px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-sm);
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.city-3d-btn:hover {
-  background: rgba(0, 0, 0, 0.8);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: scale(1.1);
-}
-
-/* 3D 힌트 텍스트 */
-.city-3d-hint {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.6);
-  color: rgba(255, 255, 255, 0.8);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  pointer-events: none;
-}
-
-/* 3D 보기 버튼 (건물 상세 모달 내) */
-.btn-view-3d {
-  width: 100%;
-  margin-top: 12px;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: var(--radius-md);
-  color: white;
-  font-size: 0.9rem;
+.insufficient-action-buttons .action-btn .btn-label {
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
-.btn-view-3d:hover {
+.insufficient-action-buttons .action-btn .btn-value {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.insufficient-action-buttons .pm-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.insufficient-action-buttons .pm-btn:hover {
+  background: linear-gradient(135deg, #4b8af6, #3570ec);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
-/* 아이소메트릭 맵 숨김 */
-.iso-city-map.hidden {
-  display: none;
+.insufficient-action-buttons .sell-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
 }
 
-/* ===== 플레이어 색상 인디케이터 ===== */
-.player-color-indicator {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  margin-right: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  vertical-align: middle;
+.insufficient-action-buttons .sell-btn:hover {
+  background: linear-gradient(135deg, #34d86d, #1cb356);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
 }
 
-.player-panel {
-  border-left-width: 4px;
-  border-left-style: solid;
+.insufficient-action-buttons .skip-btn {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
 }
 
-.panel-header {
-  display: flex;
-  align-items: center;
-}
-
-.panel-header .player-name {
-  flex: 1;
+.insufficient-action-buttons .skip-btn:hover {
+  background: linear-gradient(135deg, #7c8290, #5c6573);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
 }
