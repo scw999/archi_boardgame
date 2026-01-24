@@ -1351,7 +1351,7 @@ class GameApp {
             return;
         }
 
-        // 자금 부족 확인: 어떤 시공사도 선택할 수 없는 경우 자동 스킵
+        // 자금 부족 확인: 어떤 시공사도 선택할 수 없는 경우 옵션 표시
         const canAffordAny = availableConstructors.some(c => {
             const constructorIndex = gameState.availableConstructors.findIndex(gc => gc.id === c.id);
             const check = canSelectConstructor(gameState.currentPlayerIndex, constructorIndex);
@@ -1359,23 +1359,8 @@ class GameApp {
         });
 
         if (availableConstructors.length > 0 && !canAffordAny) {
-            // 자금 부족으로 시공 불가 - 다음 라운드까지 휴식
-            gameState.addLog(`${player.name}: 자금 부족으로 시공 포기 (다음 라운드까지 휴식)`);
-            showResultModal('💸 자금 부족', `
-                <div class="insufficient-funds-notice">
-                    <div class="notice-icon">😔</div>
-                    <h3>${player.name}님</h3>
-                    <p>시공에 필요한 자금이 부족합니다.</p>
-                    <p>현재 보유: <strong>${gameState.formatMoney(player.money)}</strong></p>
-                    <p class="notice-detail">다음 라운드까지 휴식합니다.</p>
-                </div>
-            `, () => {
-                // 설계만 완료된 상태로 턴 넘기기 (건물은 없어지지 않음)
-                player.currentProject.constructor = null;
-                // 이번 라운드 시공 스킵 기록 (무한 반복 방지)
-                player.currentProject.constructionSkippedRound = gameState.currentRound;
-                this.nextPlayerOrPhase('constructor');
-            });
+            // 자금 부족으로 시공 불가 - 옵션 제공
+            this.showInsufficientFundsOptions(player, building);
             return;
         }
 
@@ -1579,6 +1564,112 @@ class GameApp {
                 this.showBuildingSellModal(() => {
                     this.runConstructionPhase();
                 });
+            };
+        }
+    }
+
+    // 자금 부족 시 옵션 표시 (시공 불가)
+    showInsufficientFundsOptions(player, building) {
+        const actionArea = document.getElementById('action-area');
+        if (!actionArea) return;
+
+        // 기존 패널 제거
+        document.querySelectorAll('.money-options-panel').forEach(el => el.remove());
+
+        const pmIncome = 100000000; // 고정 1억
+        const landSellPrice = player.currentProject?.land
+            ? Math.floor((player.currentProject.landPrice + player.currentProject.developmentCost) * 1.1)
+            : 0;
+
+        // 가장 저렴한 시공사 비용 계산
+        const availableConstructors = gameState.availableConstructors.filter(
+            c => c.canBuild.includes(building.name) && gameState.isConstructorAvailable(c.id)
+        );
+        const cheapestCost = availableConstructors.length > 0
+            ? Math.min(...availableConstructors.map(c => c.costMultiplier * building.constructionCost))
+            : 0;
+
+        const insufficientHtml = `
+            <div class="money-options-panel insufficient-funds">
+                <div class="insufficient-header">
+                    <span class="notice-icon">💸</span>
+                    <h4>시공 자금 부족</h4>
+                </div>
+                <p class="insufficient-info">
+                    필요 시공비: 약 <strong>${gameState.formatMoney(cheapestCost)}</strong><br>
+                    현재 보유: <strong>${gameState.formatMoney(player.money)}</strong>
+                </p>
+                <p class="insufficient-warning">시공사를 선택할 수 없습니다. 다음 옵션 중 선택하세요:</p>
+                <div class="money-action-buttons">
+                    <button class="action-btn pm" id="btn-pm-insufficient">
+                        💼 PM 컨설팅 (+${gameState.formatMoney(pmIncome)})
+                    </button>
+                    ${player.currentProject?.land ? `
+                        <button class="action-btn sell" id="btn-sell-land-insufficient">
+                            🏞️ 대지 매각 (+${gameState.formatMoney(landSellPrice)})
+                        </button>
+                    ` : ''}
+                    ${player.buildings.length > 0 ? `
+                        <button class="action-btn sell" id="btn-sell-building-insufficient">
+                            🏢 건물 매각
+                        </button>
+                    ` : ''}
+                    <button class="action-btn skip" id="btn-skip-insufficient">
+                        ⏭️ 턴 넘기기 (휴식)
+                    </button>
+                </div>
+            </div>
+        `;
+
+        actionArea.innerHTML = insufficientHtml;
+
+        // PM 활동 버튼
+        const pmBtn = document.getElementById('btn-pm-insufficient');
+        if (pmBtn) {
+            pmBtn.onclick = () => {
+                const result = gameState.doPMActivity(gameState.currentPlayerIndex);
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    this.updateUI();
+                    this.runConstructionPhase(); // 다시 시공 단계 시도
+                }
+            };
+        }
+
+        // 대지 매각 버튼
+        const sellLandBtn = document.getElementById('btn-sell-land-insufficient');
+        if (sellLandBtn) {
+            sellLandBtn.onclick = () => {
+                const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    this.updateUI();
+                    // 대지를 팔면 시공 불가, 다음 플레이어로
+                    this.nextPlayerOrPhase('constructor');
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            };
+        }
+
+        // 건물 매각 버튼
+        const sellBuildingBtn = document.getElementById('btn-sell-building-insufficient');
+        if (sellBuildingBtn) {
+            sellBuildingBtn.onclick = () => {
+                this.showBuildingSellModal(() => {
+                    this.runConstructionPhase(); // 다시 시공 단계 시도
+                });
+            };
+        }
+
+        // 턴 넘기기 버튼
+        const skipBtn = document.getElementById('btn-skip-insufficient');
+        if (skipBtn) {
+            skipBtn.onclick = () => {
+                gameState.addLog(`${player.name}: 자금 부족으로 시공 포기 (다음 라운드까지 휴식)`);
+                showNotification(`${player.name}님이 시공을 포기하고 휴식합니다.`, 'info');
+                player.currentProject.constructor = null;
+                this.nextPlayerOrPhase('constructor');
             };
         }
     }
