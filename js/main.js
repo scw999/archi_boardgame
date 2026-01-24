@@ -789,6 +789,14 @@ class GameApp {
         const hasBuildings = player.buildings.length > 0;
         const hasLand = player.currentProject && player.currentProject.land;
 
+        // 대기 중인 구매 정보 저장
+        this._pendingLandPurchase = {
+            landIndex: this.selectedCardIndex,
+            land: { ...land },
+            priceType: priceType,
+            totalCost: totalCost
+        };
+
         let sellOptions = '';
         if (hasBuildings) {
             sellOptions += `<button class="action-btn sell-building-btn" id="btn-sell-building-land">🏢 건물 매각하기</button>`;
@@ -811,10 +819,15 @@ class GameApp {
                 </div>
                 <div class="sell-options">
                     <p>💡 건물 또는 대지를 매각하여 자금을 확보하세요.</p>
-                    ${sellOptions}
+                    <div class="sell-buttons">
+                        ${sellOptions}
+                    </div>
                 </div>
             </div>
-        `, () => { });
+        `, () => {
+            // 모달 닫힐 때 대기 중인 구매 정보 초기화
+            this._pendingLandPurchase = null;
+        });
 
         // 건물 매각 버튼 이벤트
         const sellBuildingBtn = document.getElementById('btn-sell-building-land');
@@ -823,13 +836,8 @@ class GameApp {
                 document.querySelector('.modal-overlay')?.remove();
                 this.showBuildingSellModal(() => {
                     this.updateUI();
-                    // 매각 후 다시 구매 옵션 표시
-                    if (this.selectedCardIndex !== null) {
-                        const updatedLand = gameState.availableLands[this.selectedCardIndex];
-                        if (updatedLand) {
-                            this.showLandPurchaseOptions(updatedLand);
-                        }
-                    }
+                    // 매각 후 자금 확인 및 자동 구매 시도
+                    this.checkAndAutoPurchaseLand();
                 });
             };
         }
@@ -841,6 +849,41 @@ class GameApp {
                 document.querySelector('.modal-overlay')?.remove();
                 this.showLandSellConfirm();
             };
+        }
+    }
+
+    // 건물 매각 후 자금 확인 및 자동 구매
+    checkAndAutoPurchaseLand() {
+        if (!this._pendingLandPurchase) return;
+
+        const player = gameState.getCurrentPlayer();
+        const { landIndex, land, priceType, totalCost } = this._pendingLandPurchase;
+
+        // 자금이 충분한지 확인
+        if (player.money >= totalCost) {
+            // 자금 충분 - 자동으로 구매 진행
+            showNotification('💰 자금이 확보되었습니다. 구매를 진행합니다.', 'success');
+
+            // 선택 정보 복원
+            this.selectedCardIndex = landIndex;
+            this.selectedPriceType = priceType;
+
+            // 대기 정보 초기화
+            this._pendingLandPurchase = null;
+
+            // 약간의 딜레이 후 구매 진행
+            setTimeout(async () => {
+                await this.attemptPurchase();
+            }, 500);
+        } else {
+            // 아직 자금 부족 - 다시 구매 옵션 표시
+            const updatedLand = gameState.availableLands[landIndex];
+            if (updatedLand) {
+                this.selectedCardIndex = landIndex;
+                this.selectedPriceType = priceType;
+                this.showLandPurchaseOptions(updatedLand);
+            }
+            this._pendingLandPurchase = null;
         }
     }
 
@@ -915,6 +958,23 @@ class GameApp {
 
         // 토지 객체를 완전히 복사해서 저장 (참조 문제 방지)
         const savedLand = { ...land };
+
+        // 자금 체크 - 구매 시도 버튼 클릭 시에도 자금 부족 체크
+        const info = getLandDisplayInfo(land);
+        const developmentCost = info.developmentCost;
+        const discountRate = player.landDiscountActive || 0;
+        const landPrice = land.prices[priceType];
+        const discountedPrice = discountRate > 0 ? Math.floor(landPrice * (1 - discountRate)) : landPrice;
+        const totalCost = discountedPrice + developmentCost;
+
+        if (player.money < totalCost) {
+            // 자금 부족 시 매각 안내 모달 표시
+            this.showInsufficientFundsForLandModal(totalCost, priceType, land);
+            // 구매 시도 버튼 다시 활성화
+            const purchaseBtn = document.getElementById('confirm-purchase');
+            if (purchaseBtn) purchaseBtn.disabled = false;
+            return;
+        }
 
         // 외부 클릭 핸들러 제거 (주사위 모달 중 오작동 방지)
         if (this._outsideClickHandler) {
