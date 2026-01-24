@@ -111,8 +111,41 @@ class GameApp {
         // 유틸리티 버튼
         document.getElementById('btn-budget-table')?.addEventListener('click', () => this.showBudgetTable());
         document.getElementById('btn-game-manual')?.addEventListener('click', () => this.showGameManual());
-        document.getElementById('btn-save-game')?.addEventListener('click', () => this.saveGame());
-        document.getElementById('btn-load-game-utility')?.addEventListener('click', () => this.loadGame());
+
+        // 메뉴 드롭다운
+        const menuBtn = document.getElementById('btn-game-menu');
+        const menuDropdown = document.getElementById('game-menu-dropdown');
+
+        menuBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuDropdown?.classList.toggle('show');
+        });
+
+        // 메뉴 외부 클릭 시 닫기
+        document.addEventListener('click', () => {
+            menuDropdown?.classList.remove('show');
+        });
+
+        // 메뉴 항목 클릭
+        document.getElementById('btn-save-game')?.addEventListener('click', () => {
+            menuDropdown?.classList.remove('show');
+            this.saveGame();
+        });
+        document.getElementById('btn-load-game-utility')?.addEventListener('click', () => {
+            menuDropdown?.classList.remove('show');
+            this.loadGame();
+        });
+        document.getElementById('btn-new-game')?.addEventListener('click', () => {
+            menuDropdown?.classList.remove('show');
+            this.confirmNewGame();
+        });
+    }
+
+    // 새 게임 확인
+    confirmNewGame() {
+        showConfirmModal('새 게임', '현재 게임을 종료하고 새 게임을 시작하시겠습니까?\n저장하지 않은 진행 상황은 사라집니다.', () => {
+            this.showMainMenu();
+        });
     }
 
     // 게임 저장

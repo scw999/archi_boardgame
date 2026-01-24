@@ -7722,3 +7722,75 @@ body {
   font-size: 0.9rem;
   color: var(--text-muted);
 }
+
+/* ===== 게임 메뉴 드롭다운 ===== */
+.menu-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.menu-dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  min-width: 140px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.menu-dropdown-content.show {
+  display: block;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-dropdown-content button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+}
+
+.menu-dropdown-content button:hover {
+  background: var(--bg-tertiary);
+}
+
+.menu-dropdown-content button:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+}
+
+#btn-game-menu::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 0.3rem;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  vertical-align: middle;
+}
