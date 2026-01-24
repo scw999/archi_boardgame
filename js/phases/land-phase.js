@@ -272,9 +272,13 @@ export function useWildcard(playerIndex, targetPlayerIndex) {
 
 // 페이즈 완료 체크
 export function checkLandPhaseComplete() {
-    return gameState.players.every(player =>
-        player.currentProject && player.currentProject.land !== null
-    );
+    return gameState.players.every(player => {
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 완료로 처리
+        if (player.pmSkippedRound === gameState.currentRound) {
+            return true;
+        }
+        return player.currentProject && player.currentProject.land !== null;
+    });
 }
 
 // 토지 정보 표시용 데이터

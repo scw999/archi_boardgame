@@ -196,18 +196,18 @@ export function createRiskDeck() {
     const deck = [];
 
     risks.forEach(risk => {
-        // 중립/긍정 카드는 더 많이 넣음
+        // 중립/긍정 카드는 더 많이 넣어 부정적 리스크 비율 낮춤
         let count = 1;
         if (risk.type === RISK_TYPES.NEUTRAL) {
-            count = 4;  // 무사 통과 카드 4장씩
+            count = 6;  // 무사 통과 카드 6장씩 (기존 4장)
         } else if (risk.type === RISK_TYPES.POSITIVE) {
-            count = 2;  // 긍정 카드 2장
+            count = 3;  // 긍정 카드 3장 (기존 2장)
         } else if (risk.severity === 'critical') {
             count = 1;  // 치명적 카드 1장
         } else if (risk.severity === 'high') {
-            count = 2;  // 높은 심각도 2장
+            count = 1;  // 높은 심각도 1장 (기존 2장)
         } else {
-            count = 3;  // 일반 카드 3장
+            count = 2;  // 일반 카드 2장 (기존 3장)
         }
 
         for (let i = 0; i < count; i++) {
@@ -220,6 +220,8 @@ export function createRiskDeck() {
 }
 
 // 리스크 효과 적용
+// 주의: 방어 여부는 UI에서 risk.isBlocked로 설정됨
+// 이 함수는 방어되지 않은 리스크의 효과만 적용
 export function applyRiskEffect(risk, gameState, constructor) {
     const result = {
         costIncrease: 0,
@@ -230,13 +232,9 @@ export function applyRiskEffect(risk, gameState, constructor) {
         message: ''
     };
 
-    // 시공사가 막을 수 있는지 체크
-    if (constructor.riskBlocks > 0 && risk.type !== RISK_TYPES.NEUTRAL && risk.type !== RISK_TYPES.POSITIVE) {
-        if (risk.severity !== 'critical' || !risk.smallConstructorOnly) {
-            result.isBlocked = true;
-            result.message = `${constructor.name}이(가) 리스크를 방어했습니다!`;
-            return result;
-        }
+    // 중립/긍정 카드는 부정적 효과 없음
+    if (risk.type === RISK_TYPES.NEUTRAL || risk.type === RISK_TYPES.POSITIVE) {
+        // 효과 적용은 switch문에서 처리
     }
 
     switch (risk.effect) {
@@ -280,8 +278,10 @@ export function applyRiskEffect(risk, gameState, constructor) {
             break;
 
         case 'conditional_delay':
-            // 50% 이전이면 1달 지연 (게임 로직에서 처리)
-            result.message = `${risk.name}: ${risk.description}`;
+            // 50% 이전이면 1달 지연 (건설 초반에 뽑힌 카드에만 적용)
+            // 카드가 시공 기간 전반부에 뽑히면 지연 적용
+            result.delayMonths = 1;
+            result.message = `${risk.name}: 공사 1달 지연!`;
             break;
     }
 
