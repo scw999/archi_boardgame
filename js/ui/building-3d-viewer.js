@@ -38,8 +38,8 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x8b4513,
         wallColor: 0xfaf0e6,
         hasGarden: true,
-        glbScale: 10,
-        glbHeight: 20
+        glbScale: 30,
+        glbHeight: 60
     },
     '전원주택': {
         floors: 2,
@@ -50,8 +50,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0xf5deb3,
         hasGarden: true,
         hasPorch: true,
-        glbScale: 10,
-        glbHeight: 20
+        glbScale: 30,
+        glbHeight: 60
     },
     '상가주택': {
         floors: 4,
@@ -61,8 +61,8 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x555555,
         wallColor: 0xe8e8e8,
         hasStorefront: true,
-        glbScale: 12,
-        glbHeight: 36
+        glbScale: 36,
+        glbHeight: 108
     },
     '카페': {
         floors: 1,
@@ -73,8 +73,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0xdaa520,
         hasAwning: true,
         hasTerrace: true,
-        glbScale: 10,
-        glbHeight: 10
+        glbScale: 30,
+        glbHeight: 30
     },
     '풀빌라': {
         floors: 2,
@@ -85,8 +85,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0xffffff,
         hasPool: true,
         modern: true,
-        glbScale: 12,
-        glbHeight: 20
+        glbScale: 36,
+        glbHeight: 60
     },
     '호텔': {
         floors: 8,
@@ -97,8 +97,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0x87ceeb,
         hasEntrance: true,
         hasBalconies: true,
-        glbScale: 15,
-        glbHeight: 72
+        glbScale: 45,
+        glbHeight: 216
     },
     '대형카페': {
         floors: 2,
@@ -109,8 +109,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0xf4a460,
         hasAwning: true,
         hasTerrace: true,
-        glbScale: 12,
-        glbHeight: 18
+        glbScale: 36,
+        glbHeight: 54
     },
     '상가': {
         floors: 5,
@@ -121,8 +121,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0xd3d3d3,
         hasStorefront: true,
         hasSigns: true,
-        glbScale: 12,
-        glbHeight: 45
+        glbScale: 36,
+        glbHeight: 135
     },
     '복합몰': {
         floors: 4,
@@ -133,8 +133,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0x4169e1,
         hasGlassFacade: true,
         hasEntrance: true,
-        glbScale: 15,
-        glbHeight: 36
+        glbScale: 45,
+        glbHeight: 108
     },
     '펜션': {
         floors: 2,
@@ -145,8 +145,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0xdeb887,
         hasGarden: true,
         cabinStyle: true,
-        glbScale: 10,
-        glbHeight: 18
+        glbScale: 30,
+        glbHeight: 54
     },
     '대형빌딩': {
         floors: 15,
@@ -157,8 +157,8 @@ const BUILDING_3D_CONFIG = {
         wallColor: 0x4682b4,
         hasGlassFacade: true,
         hasHelipad: true,
-        glbScale: 15,
-        glbHeight: 135
+        glbScale: 45,
+        glbHeight: 405
     }
 };
 
@@ -282,8 +282,8 @@ export class Building3DViewer {
     }
 
     createGround() {
-        // 지면
-        const groundGeometry = new THREE.PlaneGeometry(200, 200);
+        // 지면 (더 큰 영역)
+        const groundGeometry = new THREE.PlaneGeometry(400, 400);
         const groundMaterial = new THREE.MeshLambertMaterial({
             color: 0x7cfc00,
             side: THREE.DoubleSide
@@ -298,19 +298,19 @@ export class Building3DViewer {
         const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
 
         const roadH = new THREE.Mesh(
-            new THREE.PlaneGeometry(200, 8),
+            new THREE.PlaneGeometry(400, 10),
             roadMaterial
         );
         roadH.rotation.x = -Math.PI / 2;
-        roadH.position.y = 0;
+        roadH.position.y = 0.01;
         this.scene.add(roadH);
 
         const roadV = new THREE.Mesh(
-            new THREE.PlaneGeometry(8, 200),
+            new THREE.PlaneGeometry(10, 400),
             roadMaterial
         );
         roadV.rotation.x = -Math.PI / 2;
-        roadV.position.y = 0;
+        roadV.position.y = 0.01;
         this.scene.add(roadV);
     }
 
@@ -362,6 +362,13 @@ export class Building3DViewer {
                 model.rotation.y = config.glbRotation;
             }
 
+            // 바운딩 박스 계산하여 지면 위에 배치
+            const box = new THREE.Box3().setFromObject(model);
+            const minY = box.min.y;
+            if (minY < 0) {
+                model.position.y = -minY; // 지면 위로 올림
+            }
+
             // 그림자 설정
             model.traverse((child) => {
                 if (child.isMesh) {
@@ -381,9 +388,19 @@ export class Building3DViewer {
 
             buildingGroup.add(model);
 
-            // 플레이어 깃발 추가
-            const totalHeight = config.glbHeight || config.floors * 3;
-            this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
+            // 실제 높이 재계산
+            const finalBox = new THREE.Box3().setFromObject(buildingGroup);
+            const totalHeight = finalBox.max.y - finalBox.min.y;
+
+            // 플레이어 깃발 추가 (매각된 건물은 제외)
+            if (status !== 'sold') {
+                this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
+            }
+
+            // 상태 라벨 추가 (설계중/시공중)
+            if (status === 'design' || status === 'construction') {
+                this.addStatusLabel(buildingGroup, status, totalHeight);
+            }
 
             // 시공 중 크레인 추가
             if (status === 'construction') {
@@ -494,10 +511,17 @@ export class Building3DViewer {
         if (config.hasEntrance) this.addEntrance(buildingGroup, config, totalHeight);
         if (config.hasHelipad) this.addHelipad(buildingGroup, config, totalHeight);
 
-        // 플레이어 색상 표시 (깃발)
-        this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
+        // 플레이어 색상 표시 (깃발) - 매각 건물은 제외
+        if (status !== 'sold') {
+            this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
+        }
 
-        // 시공 중 표시
+        // 상태 라벨 추가 (설계중/시공중)
+        if (status === 'design' || status === 'construction') {
+            this.addStatusLabel(buildingGroup, status, totalHeight);
+        }
+
+        // 시공 중 크레인 표시
         if (status === 'construction') {
             this.addConstructionElements(buildingGroup, totalHeight);
         }
@@ -766,6 +790,82 @@ export class Building3DViewer {
         buildingGroup.add(flagGroup);
     }
 
+    // 상태 라벨 추가 (설계중/시공중)
+    addStatusLabel(buildingGroup, status, totalHeight) {
+        const labelGroup = new THREE.Group();
+
+        // 라벨 배경
+        const labelWidth = status === 'design' ? 12 : 10;
+        const bgGeometry = new THREE.PlaneGeometry(labelWidth, 4);
+        const bgColor = status === 'design' ? 0x3b82f6 : 0xf59e0b; // 파랑/주황
+        const bgMaterial = new THREE.MeshBasicMaterial({
+            color: bgColor,
+            side: THREE.DoubleSide
+        });
+        const bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
+        labelGroup.add(bgMesh);
+
+        // 테두리
+        const borderGeometry = new THREE.EdgesGeometry(bgGeometry);
+        const borderMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const border = new THREE.LineSegments(borderGeometry, borderMaterial);
+        labelGroup.add(border);
+
+        // 텍스트 대신 아이콘으로 표시
+        const iconGeometry = new THREE.PlaneGeometry(3, 3);
+        const iconCanvas = document.createElement('canvas');
+        iconCanvas.width = 128;
+        iconCanvas.height = 128;
+        const ctx = iconCanvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 80px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(status === 'design' ? '📐' : '🔨', 64, 64);
+
+        const iconTexture = new THREE.CanvasTexture(iconCanvas);
+        const iconMaterial = new THREE.MeshBasicMaterial({
+            map: iconTexture,
+            transparent: true,
+            side: THREE.DoubleSide
+        });
+        const iconMesh = new THREE.Mesh(iconGeometry, iconMaterial);
+        iconMesh.position.x = -labelWidth / 2 + 2;
+        labelGroup.add(iconMesh);
+
+        // 한글 텍스트
+        const textCanvas = document.createElement('canvas');
+        textCanvas.width = 256;
+        textCanvas.height = 64;
+        const textCtx = textCanvas.getContext('2d');
+        textCtx.fillStyle = 'white';
+        textCtx.font = 'bold 40px sans-serif';
+        textCtx.textAlign = 'center';
+        textCtx.textBaseline = 'middle';
+        textCtx.fillText(status === 'design' ? '설계중' : '시공중', 128, 32);
+
+        const textTexture = new THREE.CanvasTexture(textCanvas);
+        const textMaterial = new THREE.MeshBasicMaterial({
+            map: textTexture,
+            transparent: true,
+            side: THREE.DoubleSide
+        });
+        const textGeometry = new THREE.PlaneGeometry(8, 2);
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+        textMesh.position.x = 2;
+        labelGroup.add(textMesh);
+
+        // 라벨 위치 설정 (건물 위)
+        labelGroup.position.set(0, totalHeight + 8, 0);
+
+        // 카메라를 향하도록 설정 (빌보드)
+        labelGroup.userData.isBillboard = true;
+        this.billboards = this.billboards || [];
+        this.billboards.push(labelGroup);
+
+        buildingGroup.add(labelGroup);
+    }
+
     addConstructionElements(buildingGroup, totalHeight) {
         // 크레인
         const craneGroup = new THREE.Group();
@@ -809,35 +909,98 @@ export class Building3DViewer {
         this.buildings = [];
     }
 
-    // 여러 건물 표시 (그리드 배치)
+    // 여러 건물 표시 (4등분 플레이어별 배치)
     async displayBuildings(buildingDataList) {
         this.clearBuildings();
 
-        const gridSize = Math.ceil(Math.sqrt(buildingDataList.length));
-        const spacing = 40;
+        // 플레이어별로 건물 그룹화
+        const playerBuildings = [[], [], [], []];
+        buildingDataList.forEach(data => {
+            const playerIdx = data.playerIndex || 0;
+            if (playerIdx >= 0 && playerIdx < 4) {
+                playerBuildings[playerIdx].push(data);
+            }
+        });
 
-        const promises = buildingDataList.map(async (data, index) => {
-            const row = Math.floor(index / gridSize);
-            const col = index % gridSize;
-            const position = {
-                x: (col - gridSize / 2) * spacing + spacing / 2,
-                z: (row - gridSize / 2) * spacing + spacing / 2
-            };
+        // 4등분 영역 정의 (플레이어별)
+        // 플레이어 0: 좌상단, 플레이어 1: 우상단, 플레이어 2: 좌하단, 플레이어 3: 우하단
+        const quadrantOffsets = [
+            { x: -60, z: -60 },  // 플레이어 0: 좌상단
+            { x: 60, z: -60 },   // 플레이어 1: 우상단
+            { x: -60, z: 60 },   // 플레이어 2: 좌하단
+            { x: 60, z: 60 }     // 플레이어 3: 우하단
+        ];
 
-            return this.createBuilding(
-                data.buildingType,
-                position,
-                data.playerIndex || 0,
-                data.status || 'completed'
-            );
+        const spacing = 50;
+        const promises = [];
+
+        playerBuildings.forEach((buildings, playerIdx) => {
+            const offset = quadrantOffsets[playerIdx];
+            const gridSize = Math.ceil(Math.sqrt(Math.max(buildings.length, 1)));
+
+            buildings.forEach((data, index) => {
+                const row = Math.floor(index / gridSize);
+                const col = index % gridSize;
+                const position = {
+                    x: offset.x + (col - gridSize / 2) * spacing,
+                    z: offset.z + (row - gridSize / 2) * spacing
+                };
+
+                promises.push(
+                    this.createBuilding(
+                        data.buildingType,
+                        position,
+                        data.playerIndex || 0,
+                        data.status || 'completed'
+                    )
+                );
+            });
         });
 
         await Promise.all(promises);
 
+        // 플레이어 영역 표시 (바닥에 색상)
+        this.addPlayerZones();
+
         // 카메라 위치 조정
-        const distance = gridSize * spacing * 0.8;
-        this.camera.position.set(distance, distance * 0.8, distance);
+        this.camera.position.set(200, 150, 200);
         this.camera.lookAt(0, 0, 0);
+    }
+
+    // 플레이어 영역 표시
+    addPlayerZones() {
+        const zoneSize = 100;
+        const quadrants = [
+            { x: -55, z: -55, color: PLAYER_COLORS[0] },
+            { x: 55, z: -55, color: PLAYER_COLORS[1] },
+            { x: -55, z: 55, color: PLAYER_COLORS[2] },
+            { x: 55, z: 55, color: PLAYER_COLORS[3] }
+        ];
+
+        quadrants.forEach(q => {
+            const zoneGeometry = new THREE.PlaneGeometry(zoneSize, zoneSize);
+            const zoneMaterial = new THREE.MeshLambertMaterial({
+                color: q.color,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide
+            });
+            const zone = new THREE.Mesh(zoneGeometry, zoneMaterial);
+            zone.rotation.x = -Math.PI / 2;
+            zone.position.set(q.x, 0.05, q.z);
+            this.scene.add(zone);
+
+            // 영역 테두리
+            const borderGeometry = new THREE.EdgesGeometry(zoneGeometry);
+            const borderMaterial = new THREE.LineBasicMaterial({
+                color: q.color,
+                linewidth: 2
+            });
+            const border = new THREE.LineSegments(borderGeometry, borderMaterial);
+            border.rotation.x = -Math.PI / 2;
+            border.position.set(q.x, 0.1, q.z);
+            this.scene.add(border);
+        });
     }
 
     // 단일 건물 상세 뷰
@@ -871,6 +1034,15 @@ export class Building3DViewer {
 
         if (this.controls) {
             this.controls.update();
+        }
+
+        // 빌보드 업데이트 (라벨이 항상 카메라를 향하도록)
+        if (this.billboards && this.billboards.length > 0) {
+            this.billboards.forEach(billboard => {
+                if (billboard.parent) {
+                    billboard.lookAt(this.camera.position);
+                }
+            });
         }
 
         this.renderer.render(this.scene, this.camera);
