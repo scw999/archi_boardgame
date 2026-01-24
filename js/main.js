@@ -1187,16 +1187,13 @@ class GameApp {
                     modalOverlay.classList.add('closing');
                     setTimeout(() => modalOverlay.remove(), 300);
 
-                    // 쉬어야 합니다 알림 표시
-                    showResultModal('😴 휴식 알림', `
-                        <div style="text-align: center; padding: 1rem;">
-                            <p style="font-size: 1.2rem; margin-bottom: 1rem;">대지를 매각하여 설계/시공 단계를 스킵합니다.</p>
-                            <p style="color: var(--text-muted);">평가 단계까지 자동으로 진행됩니다.</p>
-                        </div>
-                    `, () => {
-                        showNotification(result.message, 'success');
+                    // 알림 표시
+                    showNotification(`${result.message} 평가 단계까지 쉽니다.`, 'success');
+
+                    // 바로 다음 플레이어/단계로 진행
+                    setTimeout(() => {
                         self.nextPlayerOrPhase('architect');
-                    });
+                    }, 400);
                 }
             });
         });

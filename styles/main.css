@@ -7150,6 +7150,121 @@ body {
   font-weight: 600;
 }
 
+.building-detail-modal .modal-section {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.building-detail-modal .modal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.building-detail-modal .modal-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--accent-gold);
+}
+
+.building-detail-modal .modal-land {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.building-detail-modal .modal-land-region {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.building-detail-modal .land-area {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.building-detail-modal .modal-building {
+  margin-top: 0.5rem;
+}
+
+.building-detail-modal .team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.building-detail-modal .modal-architect,
+.building-detail-modal .modal-constructor {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.building-detail-modal .team-info .label {
+  color: var(--text-muted);
+}
+
+.building-detail-modal .team-info .value {
+  font-weight: 500;
+}
+
+.building-detail-modal .cost-breakdown {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.building-detail-modal .cost-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  font-size: 0.85rem;
+}
+
+.building-detail-modal .cost-row.total {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.building-detail-modal .result-info {
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.building-detail-modal .result-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.building-detail-modal .result-row .final-price {
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.building-detail-modal .result-row.profit {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.building-detail-modal .profit-positive {
+  color: var(--accent-emerald);
+}
+
+.building-detail-modal .profit-negative {
+  color: var(--accent-red);
+}
+
 /* ===== 자금 부족 알림 ===== */
 .insufficient-funds-notice {
   text-align: center;

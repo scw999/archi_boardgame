@@ -278,7 +278,11 @@ function collectOwnedPlots() {
                 playerName: player.name,
                 land: project.land,
                 building: project.building,
+                architect: project.architect,
                 constructor: project.constructor,
+                landPrice: project.landPrice || 0,
+                designFee: project.designFee || 0,
+                constructionCost: project.constructionCost || 0,
                 plotIndex: assignedPlot,
                 status: getProjectStatus(project)
             });
@@ -296,7 +300,12 @@ function collectOwnedPlots() {
                     playerName: player.name,
                     land: building.land,
                     building: building.building,
+                    architect: building.architect,
+                    constructor: building.constructor,
                     salePrice: building.salePrice,
+                    landPrice: building.landPrice || 0,
+                    designFee: building.designFee || 0,
+                    constructionCost: building.constructionCost || 0,
                     plotIndex: assignedPlot,
                     status: 'completed'
                 });
@@ -315,7 +324,13 @@ function collectOwnedPlots() {
                     playerName: player.name,
                     land: sold.land,
                     building: sold.building,
+                    architect: sold.architect,
+                    constructor: sold.constructor,
                     sellPrice: sold.sellPrice,
+                    soldAt: sold.soldAt,
+                    landPrice: sold.originalProject?.landPrice || sold.landPrice || 0,
+                    designFee: sold.originalProject?.designFee || sold.designFee || 0,
+                    constructionCost: sold.originalProject?.constructionCost || sold.constructionCost || 0,
                     plotIndex: assignedPlot,
                     status: 'sold'
                 });
@@ -1088,44 +1103,88 @@ function showBuildingDetailModal(plotIndex) {
     };
     const statusInfo = statusLabels[owned.status] || { text: owned.status, class: '' };
 
-    // 건물 정보 및 3D 버튼
-    let buildingInfo = '';
-    let view3DButton = '';
-    if (owned.building) {
-        const buildingImage = BUILDING_IMAGES[owned.building.name];
+    // 비용 계산
+    const totalInvestment = (owned.landPrice || 0) + (owned.designFee || 0) + (owned.constructionCost || 0);
+    const isSold = owned.status === 'sold';
+    const finalPrice = isSold ? (owned.sellPrice || 0) : (owned.salePrice || 0);
+    const profit = finalPrice - totalInvestment;
+    const profitClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
+    const profitSign = profit >= 0 ? '+' : '';
 
+    // 건물 정보
+    let buildingInfo = '';
+    if (owned.building) {
         buildingInfo = `
-            <div class="modal-building-section">
-                <div class="modal-building-visual">
-                    ${buildingImage ?
-                        `<img src="${buildingImage}" alt="${owned.building.name}" class="modal-building-img">` :
-                        `<span class="modal-building-emoji">${owned.building.emoji}</span>`
-                    }
-                </div>
-                <div class="modal-building-info">
-                    <div class="modal-building-name">${getBuildingImageHTML(owned.building.name, '24px')} ${owned.building.name}</div>
-                    <div class="modal-building-stat">면적: ${owned.building.area || '-'}평</div>
-                    <div class="modal-building-stat">설계비: ${gameState.formatMoney(owned.building.designFee || 0)}</div>
-                    <div class="modal-building-stat">시공비: ${gameState.formatMoney(owned.building.constructionCost || 0)}</div>
+            <div class="modal-section">
+                <div class="modal-building">
+                    <strong>🏢 ${owned.building.name}</strong>
                 </div>
             </div>
         `;
+    }
 
-        // 3D 버튼 항상 표시 (동적 로드)
-        view3DButton = `
-            <button class="btn-view-3d" data-building="${owned.building.name}" data-player="${owned.playerIndex}" data-status="${owned.status}">
-                🏙️ 3D로 보기
-            </button>
+    // 팀 정보 (건축가, 시공사)
+    let teamInfo = '';
+    if (owned.architect || owned.constructor) {
+        teamInfo = `
+            <div class="modal-section team-info">
+                ${owned.architect ? `
+                    <div class="modal-architect">
+                        <span class="label">건축가</span>
+                        <span class="value">${owned.architect.portrait || '👤'} ${owned.architect.name}</span>
+                    </div>
+                ` : ''}
+                ${owned.constructor ? `
+                    <div class="modal-constructor">
+                        <span class="label">시공사</span>
+                        <span class="value">${owned.constructor.emoji || '🏗️'} ${owned.constructor.name}</span>
+                    </div>
+                ` : ''}
+            </div>
         `;
     }
 
-    // 가치/가격 정보
-    let priceInfo = '';
-    if (owned.salePrice) {
-        priceInfo = `<div class="modal-price">건물 가치: ${gameState.formatMoney(owned.salePrice)}</div>`;
+    // 투자 내역 (완공 또는 매각된 건물만)
+    let costBreakdown = '';
+    if ((owned.status === 'completed' || owned.status === 'sold') && totalInvestment > 0) {
+        costBreakdown = `
+            <div class="modal-section cost-breakdown">
+                <h4>💰 투자 내역</h4>
+                <div class="cost-row">
+                    <span>토지 구입비</span>
+                    <span>${gameState.formatMoney(owned.landPrice || 0)}</span>
+                </div>
+                <div class="cost-row">
+                    <span>설계비</span>
+                    <span>${gameState.formatMoney(owned.designFee || 0)}</span>
+                </div>
+                <div class="cost-row">
+                    <span>시공비</span>
+                    <span>${gameState.formatMoney(owned.constructionCost || 0)}</span>
+                </div>
+                <div class="cost-row total">
+                    <span>총 투자금</span>
+                    <span>${gameState.formatMoney(totalInvestment)}</span>
+                </div>
+            </div>
+        `;
     }
-    if (owned.sellPrice) {
-        priceInfo = `<div class="modal-price sold">매각가: ${gameState.formatMoney(owned.sellPrice)}</div>`;
+
+    // 결과 정보 (완공 또는 매각된 건물만)
+    let resultInfo = '';
+    if ((owned.status === 'completed' || owned.status === 'sold') && finalPrice > 0) {
+        resultInfo = `
+            <div class="modal-section result-info">
+                <div class="result-row">
+                    <span>${isSold ? '매각가' : '건물 가치'}</span>
+                    <span class="final-price">${gameState.formatMoney(finalPrice)}${isSold && owned.soldAt ? ` (R${owned.soldAt})` : ''}</span>
+                </div>
+                <div class="result-row profit ${profitClass}">
+                    <span>수익</span>
+                    <span>${profitSign}${gameState.formatMoney(Math.abs(profit))}</span>
+                </div>
+            </div>
+        `;
     }
 
     const modalHtml = `
@@ -1138,49 +1197,23 @@ function showBuildingDetailModal(plotIndex) {
                     <span class="modal-owner">${owned.playerName}</span>
                 </div>
 
-                <div class="modal-land-section">
-                    <div class="modal-land-name">${plot.label}</div>
-                    <div class="modal-land-actual">${owned.land.name}</div>
+                <div class="modal-section">
+                    <div class="modal-land">
+                        <strong>📍 ${owned.land.name}</strong>
+                        <span class="land-area">${owned.land.area}평</span>
+                    </div>
                     <div class="modal-land-region">${owned.land.region?.name || ''} ${owned.land.region?.emoji || ''}</div>
-                    <div class="modal-land-area">면적: ${owned.land.area}평</div>
                 </div>
 
                 ${buildingInfo}
-                ${priceInfo}
-                ${view3DButton}
-
-                ${owned.status === 'sold' ? `
-                    <div class="modal-sold-badge">
-                        💰 매각 완료
-                    </div>
-                ` : ''}
+                ${teamInfo}
+                ${costBreakdown}
+                ${resultInfo}
             </div>
         </div>
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    // 3D 보기 버튼 이벤트
-    const view3DBtn = document.querySelector('.btn-view-3d');
-    if (view3DBtn) {
-        view3DBtn.addEventListener('click', async () => {
-            const buildingName = view3DBtn.dataset.building;
-            const playerIdx = parseInt(view3DBtn.dataset.player);
-
-            // 3D 모듈 동적 로드
-            const loaded = await load3DModule();
-            if (!loaded) {
-                alert('3D 뷰어를 로드할 수 없습니다.');
-                return;
-            }
-
-            // 상세 모달 닫기
-            document.querySelector('.building-detail-modal')?.remove();
-
-            // 3D 뷰어 모달 열기
-            create3DViewerModal(buildingName, playerIdx);
-        });
-    }
 
     // 모달 외부 클릭시 닫기
     const modal = document.querySelector('.building-detail-modal');
