@@ -666,6 +666,32 @@ function bindPlotEvents() {
     });
 }
 
+// 3D 로딩 오버레이 표시
+function show3DLoadingOverlay() {
+    // 기존 로딩 오버레이 제거
+    document.getElementById('loading-3d-overlay')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'loading-3d-overlay';
+    overlay.innerHTML = `
+        <div class="loading-3d-content">
+            <div class="loading-3d-spinner"></div>
+            <div class="loading-3d-text">3D 도시 로딩 중...</div>
+            <div class="loading-3d-subtext">건물을 배치하고 있습니다</div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// 3D 로딩 오버레이 숨기기
+function hide3DLoadingOverlay() {
+    const overlay = document.getElementById('loading-3d-overlay');
+    if (overlay) {
+        overlay.classList.add('fade-out');
+        setTimeout(() => overlay.remove(), 300);
+    }
+}
+
 // 3D 도시 뷰 토글
 export async function toggle3DCityView(ownedPlots = null) {
     is3DCityView = !is3DCityView;
@@ -677,10 +703,14 @@ export async function toggle3DCityView(ownedPlots = null) {
     if (!isoMap || !container3D) return;
 
     if (is3DCityView) {
+        // 로딩 화면 표시
+        show3DLoadingOverlay();
+
         // 3D 모듈 동적 로드
         const loaded = await load3DModule();
         if (!loaded) {
             is3DCityView = false;
+            hide3DLoadingOverlay();
             alert('3D 뷰어를 로드할 수 없습니다.');
             return;
         }
@@ -695,6 +725,9 @@ export async function toggle3DCityView(ownedPlots = null) {
             ownedPlots = collectOwnedPlots();
         }
         await init3DCityView(ownedPlots);
+
+        // 로딩 완료 후 오버레이 숨기기
+        hide3DLoadingOverlay();
     } else {
         isoMap.classList.remove('hidden');
         container3D.classList.add('hidden');
