@@ -209,20 +209,21 @@ export class Building3DViewer {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(this.options.backgroundColor);
 
-        // Camera 설정
+        // Camera 설정 (near 값을 높여 z-fighting 방지)
         this.camera = new THREE.PerspectiveCamera(
             45,
             this.options.width / this.options.height,
-            0.1,
-            1000
+            1,
+            2000
         );
         this.camera.position.set(50, 40, 50);
         this.camera.lookAt(0, 0, 0);
 
-        // Renderer 생성
+        // Renderer 생성 (logarithmicDepthBuffer로 z-fighting 방지)
         this.renderer = new THREE.WebGLRenderer({
             antialias: true,
-            alpha: true
+            alpha: true,
+            logarithmicDepthBuffer: true
         });
         this.renderer.setSize(this.options.width, this.options.height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -282,35 +283,31 @@ export class Building3DViewer {
     }
 
     createGround() {
-        // 지면 (확장된 영역에 맞게 더 큰 크기)
-        const groundGeometry = new THREE.PlaneGeometry(550, 550);
+        // 지면 (두꺼운 박스로 z-fighting 방지)
+        const groundGeometry = new THREE.BoxGeometry(550, 2, 550);
         const groundMaterial = new THREE.MeshLambertMaterial({
-            color: 0x7cfc00,
-            side: THREE.DoubleSide
+            color: 0x7cfc00
         });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = -Math.PI / 2;
-        ground.position.y = -0.1;
+        ground.position.y = -1; // 박스 중심이 -1이므로 상단이 0
         ground.receiveShadow = true;
         this.scene.add(ground);
 
-        // 도로 (십자 형태)
+        // 도로 (십자 형태) - 두꺼운 박스로 변경
         const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
 
         const roadH = new THREE.Mesh(
-            new THREE.PlaneGeometry(550, 12),
+            new THREE.BoxGeometry(550, 0.5, 12),
             roadMaterial
         );
-        roadH.rotation.x = -Math.PI / 2;
-        roadH.position.y = 0.01;
+        roadH.position.y = 0.25;
         this.scene.add(roadH);
 
         const roadV = new THREE.Mesh(
-            new THREE.PlaneGeometry(12, 550),
+            new THREE.BoxGeometry(12, 0.5, 550),
             roadMaterial
         );
-        roadV.rotation.x = -Math.PI / 2;
-        roadV.position.y = 0.01;
+        roadV.position.y = 0.25;
         this.scene.add(roadV);
     }
 
@@ -1000,24 +997,55 @@ export class Building3DViewer {
             const zoneMaterial = new THREE.MeshLambertMaterial({
                 color: q.color,
                 transparent: true,
-                opacity: 0.2,
-                side: THREE.DoubleSide
+                opacity: 0.25,
+                side: THREE.DoubleSide,
+                depthWrite: false // 투명 객체 z-fighting 방지
             });
             const zone = new THREE.Mesh(zoneGeometry, zoneMaterial);
             zone.rotation.x = -Math.PI / 2;
-            zone.position.set(q.x, 0.05, q.z);
+            zone.position.set(q.x, 0.1, q.z);
+            zone.renderOrder = 1; // 렌더 순서 지정
             this.scene.add(zone);
 
-            // 영역 테두리
-            const borderGeometry = new THREE.EdgesGeometry(zoneGeometry);
-            const borderMaterial = new THREE.LineBasicMaterial({
+            // 영역 테두리 (3D 박스로 변경하여 더 잘 보이게)
+            const borderThickness = 1;
+            const borderMaterial = new THREE.MeshBasicMaterial({
                 color: q.color,
-                linewidth: 3
+                transparent: true,
+                opacity: 0.8
             });
-            const border = new THREE.LineSegments(borderGeometry, borderMaterial);
-            border.rotation.x = -Math.PI / 2;
-            border.position.set(q.x, 0.1, q.z);
-            this.scene.add(border);
+
+            // 상단 테두리
+            const borderTop = new THREE.Mesh(
+                new THREE.BoxGeometry(zoneSize, 0.5, borderThickness),
+                borderMaterial
+            );
+            borderTop.position.set(q.x, 0.3, q.z - zoneSize/2);
+            this.scene.add(borderTop);
+
+            // 하단 테두리
+            const borderBottom = new THREE.Mesh(
+                new THREE.BoxGeometry(zoneSize, 0.5, borderThickness),
+                borderMaterial
+            );
+            borderBottom.position.set(q.x, 0.3, q.z + zoneSize/2);
+            this.scene.add(borderBottom);
+
+            // 좌측 테두리
+            const borderLeft = new THREE.Mesh(
+                new THREE.BoxGeometry(borderThickness, 0.5, zoneSize),
+                borderMaterial
+            );
+            borderLeft.position.set(q.x - zoneSize/2, 0.3, q.z);
+            this.scene.add(borderLeft);
+
+            // 우측 테두리
+            const borderRight = new THREE.Mesh(
+                new THREE.BoxGeometry(borderThickness, 0.5, zoneSize),
+                borderMaterial
+            );
+            borderRight.position.set(q.x + zoneSize/2, 0.3, q.z);
+            this.scene.add(borderRight);
         });
     }
 
