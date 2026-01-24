@@ -4426,7 +4426,7 @@ class GameApp {
                 // 버튼 클릭은 제외
                 if (e.target.classList.contains('btn-use-wildcard')) return;
                 const index = parseInt(item.dataset.index);
-                this.showWildcardDetail(player.wildcards[index]);
+                this.showWildcardDetail(player.wildcards[index], index);
             });
         });
 
@@ -4473,40 +4473,145 @@ class GameApp {
     }
 
     // 와일드카드 상세 보기
-    showWildcardDetail(card) {
+    showWildcardDetail(card, cardIndex) {
         if (!card) return;
 
         const effectDescription = this.getWildcardEffectDescription(card.effect);
         const usagePhase = this.getWildcardUsagePhase(card.effect.type);
+        const canUseNow = this.canUseWildcardNow(card);
+        const player = gameState.getCurrentPlayer();
+        const isCurrentPlayer = player && player.wildcards && player.wildcards.includes(card);
 
-        showResultModal(`🃏 ${card.name}`, `
-            <div class="wildcard-detail-modal">
-                <div class="wildcard-card-display">
-                    <div class="card-glow"></div>
-                    <div class="card-face">
-                        <div class="card-icon">🃏</div>
-                        <div class="card-title">${card.name}</div>
+        // 기존 모달 제거
+        document.querySelector('.modal-overlay')?.remove();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML = `
+            <div class="result-modal wildcard-detail-result-modal">
+                <div class="modal-header">
+                    <h2>🃏 ${card.name}</h2>
+                    <button class="modal-close">×</button>
+                </div>
+                <div class="modal-content">
+                    <div class="wildcard-detail-modal">
+                        <div class="wildcard-card-display">
+                            <div class="card-glow"></div>
+                            <div class="card-face">
+                                <div class="card-icon">🃏</div>
+                                <div class="card-title">${card.name}</div>
+                            </div>
+                        </div>
+
+                        <div class="wildcard-info">
+                            <div class="info-section">
+                                <h4>📝 카드 설명</h4>
+                                <p class="card-description">${card.description}</p>
+                            </div>
+
+                            <div class="info-section">
+                                <h4>✨ 효과</h4>
+                                <p class="effect-description">${effectDescription}</p>
+                            </div>
+
+                            <div class="info-section">
+                                <h4>⏰ 사용 가능 시점</h4>
+                                <p class="usage-phase">${usagePhase}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div class="wildcard-info">
-                    <div class="info-section">
-                        <h4>📝 카드 설명</h4>
-                        <p class="card-description">${card.description}</p>
-                    </div>
-
-                    <div class="info-section">
-                        <h4>✨ 효과</h4>
-                        <p class="effect-description">${effectDescription}</p>
-                    </div>
-
-                    <div class="info-section">
-                        <h4>⏰ 사용 가능 시점</h4>
-                        <p class="usage-phase">${usagePhase}</p>
-                    </div>
+                <div class="modal-footer wildcard-modal-footer">
+                    ${isCurrentPlayer && cardIndex !== undefined ? `
+                        <button class="btn-use-wildcard-detail ${canUseNow.canUse ? '' : 'disabled'}"
+                                data-index="${cardIndex}"
+                                ${canUseNow.canUse ? '' : 'disabled'}>
+                            ${canUseNow.canUse ? '🎴 사용하기' : `❌ ${canUseNow.reason}`}
+                        </button>
+                    ` : ''}
+                    <button class="btn-close">닫기</button>
                 </div>
             </div>
-        `);
+        `;
+
+        document.body.appendChild(overlay);
+
+        const closeModal = () => {
+            overlay.classList.add('closing');
+            setTimeout(() => overlay.remove(), 300);
+        };
+
+        overlay.querySelector('.modal-close').addEventListener('click', closeModal);
+        overlay.querySelector('.btn-close').addEventListener('click', closeModal);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
+        });
+
+        // 사용하기 버튼 이벤트
+        const useBtn = overlay.querySelector('.btn-use-wildcard-detail');
+        if (useBtn && canUseNow.canUse) {
+            useBtn.addEventListener('click', () => {
+                closeModal();
+                setTimeout(() => {
+                    this.useWildcard(cardIndex);
+                }, 350);
+            });
+        }
+    }
+
+    // 와일드카드 현재 사용 가능 여부 체크
+    canUseWildcardNow(card) {
+        if (!card || !card.effect) return { canUse: false, reason: '카드 정보 없음' };
+
+        const player = gameState.getCurrentPlayer();
+
+        switch (card.effect.type) {
+            case 'land_discount':
+                if (gameState.phase !== GAME_PHASES.LAND_PURCHASE) {
+                    return { canUse: false, reason: '대지 구매 단계에서만' };
+                }
+                if (player.landDiscountUsedRound === gameState.currentRound) {
+                    return { canUse: false, reason: '라운드당 1회 제한' };
+                }
+                return { canUse: true, reason: '' };
+
+            case 'design_free':
+                if (gameState.phase !== GAME_PHASES.DESIGN) {
+                    return { canUse: false, reason: '설계 단계에서만' };
+                }
+                return { canUse: true, reason: '' };
+
+            case 'construction_discount':
+                if (gameState.phase !== GAME_PHASES.CONSTRUCTION) {
+                    return { canUse: false, reason: '시공 단계에서만' };
+                }
+                return { canUse: true, reason: '' };
+
+            case 'risk_block':
+                if (gameState.phase !== GAME_PHASES.CONSTRUCTION) {
+                    return { canUse: false, reason: '시공 단계에서만' };
+                }
+                return { canUse: true, reason: '' };
+
+            case 'evaluation_boost':
+                if (gameState.phase !== GAME_PHASES.EVALUATION) {
+                    return { canUse: false, reason: '평가 단계에서만' };
+                }
+                return { canUse: true, reason: '' };
+
+            case 'extra_dice':
+            case 'bonus_dice':
+                if (gameState.phase !== GAME_PHASES.LAND_PURCHASE) {
+                    return { canUse: false, reason: '대지 구매 단계에서만' };
+                }
+                return { canUse: true, reason: '' };
+
+            case 'loan_rate_cut':
+                return { canUse: true, reason: '' };
+
+            default:
+                return { canUse: false, reason: '알 수 없는 효과' };
+        }
     }
 
     // 와일드카드 효과 설명

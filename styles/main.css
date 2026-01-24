@@ -4765,6 +4765,41 @@ body {
   color: var(--accent-blue);
 }
 
+/* 와일드카드 상세 모달 footer */
+.wildcard-modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.btn-use-wildcard-detail {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--accent-gold), #d97706);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-use-wildcard-detail:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-use-wildcard-detail.disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  font-size: 0.85rem;
+}
+
+.wildcard-detail-result-modal .modal-footer {
+  flex-wrap: wrap;
+}
+
 /* ===== 대지 상세 모달 ===== */
 .land-detail {
   text-align: left;
