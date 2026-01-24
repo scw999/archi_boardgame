@@ -2670,6 +2670,15 @@ class GameApp {
 
     // 다음 플레이어 또는 다음 페이즈
     nextPlayerOrPhase(checkField) {
+        // 현재 플레이어의 턴이 끝나므로 사용하지 않은 턴 한정 와일드카드 효과 초기화
+        const currentPlayer = gameState.getCurrentPlayer();
+        if (currentPlayer) {
+            // 대지 할인 와일드카드: 해당 턴에 사용 안하면 초기화
+            if (currentPlayer.landDiscountActive) {
+                currentPlayer.landDiscountActive = null;
+            }
+        }
+
         // 모든 플레이어가 완료했는지 확인
         let allComplete = false;
 
@@ -4213,9 +4222,15 @@ class GameApp {
             case 'land_discount':
                 // 대지 구매 단계에서만 사용 가능
                 if (gameState.phase === GAME_PHASES.LAND_PURCHASE) {
-                    player.landDiscountActive = card.effect.value;
-                    canUse = true;
-                    message = `다음 토지 구매 시 ${card.effect.value * 100}% 할인이 적용됩니다!`;
+                    // 라운드당 1회만 사용 가능
+                    if (player.landDiscountUsedRound === gameState.currentRound) {
+                        message = '이번 라운드에 이미 대지 할인 와일드카드를 사용했습니다. (라운드당 1회)';
+                    } else {
+                        player.landDiscountActive = card.effect.value;
+                        player.landDiscountUsedRound = gameState.currentRound;
+                        canUse = true;
+                        message = `이번 턴 토지 구매 시 ${card.effect.value * 100}% 할인이 적용됩니다!`;
+                    }
                 } else {
                     message = '대지 구매 단계에서만 사용할 수 있습니다.';
                 }
