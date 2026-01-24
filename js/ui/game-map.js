@@ -1,5 +1,5 @@
 // 아이소메트릭 개발 지도 UI
-import { gameState } from '../core/game-state.js';
+import { gameState, GAME_PHASES } from '../core/game-state.js';
 import { REGIONS } from '../data/lands.js';
 import { buildings, BUILDING_IMAGES } from '../data/buildings.js';
 
@@ -442,6 +442,8 @@ function getProjectStatus(project) {
     if (!project) return 'empty';
     if (project.salePrice > 0) return 'completed';
     if (project.constructor) return 'construction';
+    // 시공 단계에서 건물이 있으면 "설계완료" (construction status)
+    if (project.building && gameState.phase === GAME_PHASES.CONSTRUCTION) return 'construction';
     if (project.building) return 'design';
     if (project.land) return 'land';
     return 'empty';
