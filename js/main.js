@@ -2981,8 +2981,7 @@ class GameApp {
         finalMapView.innerHTML = `
             <div class="final-map-container">
                 <div class="final-map-header">
-                    <h2>🏙️ 개발 완료 지도</h2>
-                    <p>총 ${gameState.maxRounds}라운드 동안 건설된 모든 건물들</p>
+                    <h2>🏆 최종 결과 화면</h2>
                 </div>
                 <div class="final-map-content">
                     <div id="final-city-grid" class="final-map-grid"></div>
@@ -3102,7 +3101,7 @@ class GameApp {
                     background: var(--bg-primary);
                     z-index: 1000;
                     overflow-y: auto;
-                    padding: 2rem;
+                    padding: 1rem 2rem;
                 }
                 .final-map-container {
                     max-width: 1400px;
@@ -3110,15 +3109,12 @@ class GameApp {
                 }
                 .final-map-header {
                     text-align: center;
-                    margin-bottom: 2rem;
-                }
-                .final-map-header h2 {
-                    font-size: 2rem;
-                    color: var(--accent-gold);
                     margin-bottom: 0.5rem;
                 }
-                .final-map-header p {
-                    color: var(--text-secondary);
+                .final-map-header h2 {
+                    font-size: 1.75rem;
+                    color: var(--accent-gold);
+                    margin-bottom: 0;
                 }
                 .final-map-content {
                     background: var(--bg-secondary);
@@ -3149,10 +3145,17 @@ class GameApp {
                 }
                 .final-map-content .plot-marker {
                     cursor: pointer;
+                    pointer-events: auto !important;
                 }
-                .final-map-content .plot-marker:hover {
-                    /* 애니메이션 비활성화 - 움직이지 않음 */
+                .final-map-content .plot-marker.owned {
+                    cursor: pointer;
+                }
+                .final-map-content .plot-marker.owned:hover {
                     z-index: 100;
+                    filter: brightness(1.2);
+                }
+                .final-map-content .plot-marker * {
+                    pointer-events: none;
                 }
                 .final-map-grid .map-grid .plot-marker,
                 .final-map-grid .map-grid .plot-marker:hover {
@@ -3288,19 +3291,23 @@ class GameApp {
 
     // 최종 지도 건물 클릭 이벤트 바인딩
     bindFinalMapPlotEvents(container) {
-        const plotMarkers = container.querySelectorAll('.plot-marker.owned');
+        // plot-markers 컨테이너에 이벤트 위임 사용
+        const plotMarkersContainer = container.querySelector('.plot-markers');
+        if (plotMarkersContainer) {
+            // 기존 이벤트 리스너 제거
+            const newContainer = plotMarkersContainer.cloneNode(true);
+            plotMarkersContainer.parentNode.replaceChild(newContainer, plotMarkersContainer);
 
-        plotMarkers.forEach(marker => {
-            // 기존 이벤트 리스너 제거를 위해 마커 복제
-            const newMarker = marker.cloneNode(true);
-            marker.parentNode.replaceChild(newMarker, marker);
-
-            newMarker.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const plotIndex = parseInt(newMarker.dataset.plotIndex);
-                this.showFinalMapBuildingDetail(plotIndex, newMarker);
+            // 이벤트 위임으로 모든 플롯 마커 클릭 처리
+            newContainer.addEventListener('click', (e) => {
+                const marker = e.target.closest('.plot-marker.owned');
+                if (marker) {
+                    e.stopPropagation();
+                    const plotIndex = parseInt(marker.dataset.plotIndex);
+                    this.showFinalMapBuildingDetail(plotIndex, marker);
+                }
             });
-        });
+        }
     }
 
     // 최종 지도 건물 상세 정보 표시
