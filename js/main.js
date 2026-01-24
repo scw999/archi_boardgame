@@ -3384,7 +3384,6 @@ class GameApp {
                 </div>
                 <div class="wildcard-details">
                     <div class="wildcard-header">
-                        <span class="wildcard-icon">${cardIcon}</span>
                         <span class="wildcard-name">${card.name}</span>
                     </div>
                     <div class="wildcard-desc">${card.description}</div>

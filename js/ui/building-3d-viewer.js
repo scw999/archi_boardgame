@@ -394,8 +394,8 @@ export class Building3DViewer {
                 this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
             }
 
-            // 상태 라벨 추가 (설계중/시공중)
-            if (status === 'design' || status === 'construction') {
+            // 상태 라벨 추가 (설계중/시공중/시공완료)
+            if (status === 'design' || status === 'construction' || status === 'constructionComplete') {
                 this.addStatusLabel(buildingGroup, status, totalHeight);
             }
 
@@ -513,8 +513,8 @@ export class Building3DViewer {
             this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
         }
 
-        // 상태 라벨 추가 (설계중/시공중)
-        if (status === 'design' || status === 'construction') {
+        // 상태 라벨 추가 (설계중/시공중/시공완료)
+        if (status === 'design' || status === 'construction' || status === 'constructionComplete') {
             this.addStatusLabel(buildingGroup, status, totalHeight);
         }
 
@@ -801,12 +801,28 @@ export class Building3DViewer {
         // 3배 크기로 확대 (사용자 요청)
         const scale = 3;
 
+        // 상태별 텍스트와 색상 설정
+        let labelText, bgColor, iconEmoji;
+        if (status === 'design') {
+            labelText = '설계중';
+            bgColor = 0x3b82f6; // 파랑
+            iconEmoji = '📐';
+        } else if (status === 'construction') {
+            labelText = '시공중';
+            bgColor = 0xf59e0b; // 주황
+            iconEmoji = '🏗️';
+        } else if (status === 'constructionComplete') {
+            labelText = '시공완료';
+            bgColor = 0x22c55e; // 초록
+            iconEmoji = '✅';
+        } else {
+            return; // 알 수 없는 상태는 라벨 표시 안함
+        }
+
         // 라벨 배경 (3배 크기)
-        const labelWidth = (status === 'design' ? 12 : 14) * scale;
+        const labelWidth = 14 * scale;
         const labelHeight = 4 * scale;
         const bgGeometry = new THREE.PlaneGeometry(labelWidth, labelHeight);
-        // 설계중: 파랑, 설계 완료(시공단계): 초록
-        const bgColor = status === 'design' ? 0x3b82f6 : 0x22c55e;
         const bgMaterial = new THREE.MeshBasicMaterial({
             color: bgColor,
             side: THREE.DoubleSide,
@@ -833,7 +849,7 @@ export class Building3DViewer {
         ctx.font = 'bold 160px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(status === 'design' ? '📐' : '✅', 128, 128);
+        ctx.fillText(iconEmoji, 128, 128);
 
         const iconTexture = new THREE.CanvasTexture(iconCanvas);
         const iconMaterial = new THREE.MeshBasicMaterial({
@@ -857,8 +873,7 @@ export class Building3DViewer {
         textCtx.font = 'bold 80px sans-serif';
         textCtx.textAlign = 'center';
         textCtx.textBaseline = 'middle';
-        // 설계 단계: "설계중", 시공 단계: "설계 완료"
-        textCtx.fillText(status === 'design' ? '설계중' : '설계 완료', 256, 64);
+        textCtx.fillText(labelText, 256, 64);
 
         const textTexture = new THREE.CanvasTexture(textCanvas);
         const textMaterial = new THREE.MeshBasicMaterial({
@@ -874,8 +889,8 @@ export class Building3DViewer {
         textMesh.renderOrder = 3;
         labelGroup.add(textMesh);
 
-        // 라벨 위치 설정 (건물 위, 높이도 조정)
-        labelGroup.position.set(0, totalHeight + 15, 0);
+        // 라벨 위치 설정 - 깃발과 겹치지 않게 오른쪽으로 오프셋
+        labelGroup.position.set(25, totalHeight + 20, 0);
 
         // 카메라를 향하도록 설정 (빌보드)
         labelGroup.userData.isBillboard = true;
