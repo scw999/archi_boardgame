@@ -413,6 +413,11 @@ class GameState {
         return { success: true };
     }
 
+    // 건축가 선점 해제
+    releaseArchitect(architectId) {
+        this.selectedArchitects.delete(architectId);
+    }
+
     // 시공사 선점 확인
     isConstructorAvailable(constructorId) {
         return !this.selectedConstructors.has(constructorId);
