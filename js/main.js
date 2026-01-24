@@ -1008,7 +1008,7 @@ class GameApp {
         });
 
         document.getElementById('design-sell-land')?.addEventListener('click', () => {
-            showConfirmModal('대지 매각', '⚠️ 주의: 설계 단계에서 대지를 매각하면 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?', () => {
+            showConfirmModal('대지 매각', '⚠️ 주의: 대지를 매각하면 설계/시공 단계를 스킵하고 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?', () => {
                 const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
                 if (result.success) {
                     // 설계 모달 먼저 닫기
@@ -1018,7 +1018,7 @@ class GameApp {
                     // 쉬어야 합니다 알림 표시
                     showResultModal('😴 휴식 알림', `
                         <div style="text-align: center; padding: 1rem;">
-                            <p style="font-size: 1.2rem; margin-bottom: 1rem;">대지를 매각하여 이번 라운드는 쉬어야 합니다.</p>
+                            <p style="font-size: 1.2rem; margin-bottom: 1rem;">대지를 매각하여 설계/시공 단계를 스킵합니다.</p>
                             <p style="color: var(--text-muted);">평가 단계까지 자동으로 진행됩니다.</p>
                         </div>
                     `, () => {
