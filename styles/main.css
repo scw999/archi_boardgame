@@ -1266,7 +1266,7 @@ body {
 /* ===== 알림 ===== */
 #notifications {
   position: fixed;
-  top: 1rem;
+  top: 5rem;
   right: 1rem;
   z-index: 2000;
   display: flex;
