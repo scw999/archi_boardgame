@@ -7129,6 +7129,60 @@ body {
   font-size: 1.5rem;
 }
 
+/* ===== 3D 도시 뷰 스타일 ===== */
+.view-3d-btn,
+#toggle-3d-city-btn {
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.view-3d-btn:hover,
+#toggle-3d-city-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.view-3d-btn.active,
+#toggle-3d-city-btn.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.6);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* 3D 도시 컨테이너 */
+.city-3d-container {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  min-height: 500px;
+  background: linear-gradient(180deg, #87ceeb 0%, #b0e0e6 100%);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.city-3d-container.hidden {
+  display: none;
+}
+
+#city-3d-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+}
+
+#city-3d-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
 .insufficient-action-buttons .action-btn .btn-label {
   font-weight: 600;
   font-size: 0.9rem;
