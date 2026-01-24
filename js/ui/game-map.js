@@ -618,6 +618,7 @@ function getStatusLabel(status) {
         'land': '대지 확보',
         'design': '설계 중',
         'construction': '설계 완료',  // 시공 단계 진입 = 설계 완료
+        'constructionComplete': '시공 완료',  // 시공사 선정 후 시공 완료
         'completed': '완료',
         'sold': '매각됨'
     };

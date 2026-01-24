@@ -2295,7 +2295,8 @@ body {
 
 .tile-phase.land { background: var(--accent-emerald); color: white; }
 .tile-phase.design { background: var(--accent-blue); color: white; }
-.tile-phase.construction { background: var(--accent-orange); color: white; }
+.tile-phase.construction { background: #22c55e; color: white; }  /* 설계 완료 - 초록색 */
+.tile-phase.constructionComplete { background: #f97316; color: white; }  /* 시공 완료 - 오렌지색 */
 .tile-phase.complete { background: var(--accent-gold); color: #1a1a2e; }
 .tile-phase.sold { background: #6b7280; color: white; }
 
@@ -2568,7 +2569,8 @@ body {
 
 .progress-fill.land { background: var(--accent-emerald); width: 25%; }
 .progress-fill.design { background: var(--accent-blue); width: 50%; }
-.progress-fill.construction { background: var(--accent-orange); width: 75%; }
+.progress-fill.construction { background: #22c55e; width: 75%; }  /* 설계 완료 - 초록색 */
+.progress-fill.constructionComplete { background: #f97316; width: 90%; }  /* 시공 완료 - 오렌지색 */
 .progress-fill.complete { background: var(--accent-gold); width: 100%; }
 
 /* ===== 매각 모달 ===== */
