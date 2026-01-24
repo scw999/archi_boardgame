@@ -7028,3 +7028,139 @@ body {
 .action-btn.skip:hover {
   background: linear-gradient(135deg, #7c8290, #5c6573);
 }
+
+/* ===== 3D 도시 뷰 스타일 ===== */
+.view-3d-btn {
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-3d-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.view-3d-btn.active {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 0 12px rgba(118, 75, 162, 0.6);
+}
+
+/* 3D 도시 컨테이너 */
+.city-3d-container {
+  position: relative;
+  width: 100%;
+  min-height: 400px;
+  background: linear-gradient(180deg, #87ceeb 0%, #b0e0e6 100%);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.city-3d-container.hidden {
+  display: none;
+}
+
+#city-3d-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+/* 3D 컨트롤 버튼 */
+.city-3d-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+}
+
+.city-3d-btn {
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.city-3d-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+/* 3D 힌트 텍스트 */
+.city-3d-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+/* 3D 보기 버튼 (건물 상세 모달 내) */
+.btn-view-3d {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-view-3d:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* 아이소메트릭 맵 숨김 */
+.iso-city-map.hidden {
+  display: none;
+}
+
+/* ===== 플레이어 색상 인디케이터 ===== */
+.player-color-indicator {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-right: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  vertical-align: middle;
+}
+
+.player-panel {
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+}
+
+.panel-header .player-name {
+  flex: 1;
+}
