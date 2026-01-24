@@ -813,7 +813,7 @@ export class Building3DViewer {
             iconEmoji = '✅';
         } else if (status === 'constructionComplete') {
             labelText = '시공완료';
-            bgColor = 0x10b981; // 진한 초록
+            bgColor = 0xf97316; // 오렌지
             iconEmoji = '🏢';
         } else {
             return; // 알 수 없는 상태는 라벨 표시 안함

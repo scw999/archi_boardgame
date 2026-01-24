@@ -441,8 +441,8 @@ function getTierFromZone(zone) {
 function getProjectStatus(project) {
     if (!project) return 'empty';
     if (project.salePrice > 0) return 'completed';
-    // 평가 단계에서 시공사가 있으면 시공 완료
-    if (project.constructor && gameState.phase === GAME_PHASES.EVALUATION) return 'constructionComplete';
+    // 시공 단계 또는 평가 단계에서 시공사가 있으면 시공 완료 (오렌지색 박스)
+    if (project.constructor && (gameState.phase === GAME_PHASES.CONSTRUCTION || gameState.phase === GAME_PHASES.EVALUATION)) return 'constructionComplete';
     if (project.constructor) return 'construction';
     // 시공 단계에서 건물이 있으면 "설계완료" (construction status)
     if (project.building && gameState.phase === GAME_PHASES.CONSTRUCTION) return 'construction';
