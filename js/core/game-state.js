@@ -825,6 +825,7 @@ class GameState {
             building: building.building,
             land: building.land,
             architect: building.architect,
+            constructor: building.constructorData || building.constructor,
             sellPrice,
             profitLoss,
             marketFactor,

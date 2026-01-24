@@ -135,7 +135,7 @@ class GameApp {
             menuDropdown?.classList.remove('show');
             this.loadGame();
         });
-        document.getElementById('btn-new-game')?.addEventListener('click', () => {
+        document.getElementById('btn-new-game-menu')?.addEventListener('click', () => {
             menuDropdown?.classList.remove('show');
             this.confirmNewGame();
         });
@@ -143,9 +143,25 @@ class GameApp {
 
     // 새 게임 확인
     confirmNewGame() {
-        showConfirmModal('새 게임', '현재 게임을 종료하고 새 게임을 시작하시겠습니까?\n저장하지 않은 진행 상황은 사라집니다.', () => {
-            this.showMainMenu();
-        });
+        // 게임이 진행 중인지 확인 (setup 단계가 아니고 게임이 시작된 경우)
+        if (gameState.phase && gameState.phase !== 'setup' && gameState.currentRound > 0) {
+            showConfirmModal('새 게임', '현재 게임을 종료하고 새 게임을 시작하시겠습니까?\n저장하지 않은 진행 상황은 사라집니다.', () => {
+                this.resetAndStartNewGame();
+            });
+        } else {
+            // 게임이 진행 중이 아니면 바로 새 게임 시작
+            this.resetAndStartNewGame();
+        }
+    }
+
+    // 게임 리셋 후 새 게임 시작
+    resetAndStartNewGame() {
+        // 게임 상태 초기화
+        gameState.reset();
+        // 플롯 할당 초기화
+        resetPlotAssignments();
+        // 플레이어 설정 화면으로 이동
+        this.showPlayerSetup();
     }
 
     // 게임 저장
@@ -3580,7 +3596,7 @@ class GameApp {
                         land: sold.land,
                         building: sold.building,
                         architect: sold.architect,
-                        constructorInfo: sold.constructor || sold.originalProject?.constructorData,
+                        constructorInfo: sold.constructor || sold.originalProject?.constructorData || sold.originalProject?.constructor,
                         sellPrice: sold.sellPrice,
                         soldAt: sold.soldAt,
                         landPrice: sold.originalProject.landPrice || sold.landPrice || 0,
@@ -3674,7 +3690,7 @@ class GameApp {
                     <div class="modal-section result-info">
                         <div class="result-row">
                             <span>${isSold ? '매각가' : '건물 가치'}</span>
-                            <span class="final-price">${gameState.formatMoney(finalPrice)}${isSold ? ` (R${owned.soldAt})` : ''}</span>
+                            <span class="final-price">${gameState.formatMoney(finalPrice)}</span>
                         </div>
                         <div class="result-row profit ${profitClass}">
                             <span>수익</span>

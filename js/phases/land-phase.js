@@ -1,7 +1,7 @@
 // 대지 구매 페이즈 로직
 import { gameState, GAME_PHASES } from '../core/game-state.js';
 import { rollDice, checkLandPurchase, getDiceEmoji } from '../core/dice.js';
-import { calculateLandDevelopmentCost } from '../data/lands.js';
+import { calculateLandDevelopmentCost, getRegionByPrice } from '../data/lands.js';
 
 // 토지 선택
 export function selectLand(playerIndex, landIndex, priceType) {
@@ -177,9 +177,11 @@ export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResu
 
         // 프로젝트에 토지 정보 저장 (고유 인스턴스 ID 부여)
         const project = player.currentProject;
+        const region = getRegionByPrice(land.prices.market);
         project.land = {
             ...land,
-            instanceId: `${land.id}_${Date.now()}_${playerIndex}`  // 고유 인스턴스 ID
+            instanceId: `${land.id}_${Date.now()}_${playerIndex}`,  // 고유 인스턴스 ID
+            region: region
         };
         project.landPrice = discountedPrice;
         project.priceType = priceType;
@@ -237,9 +239,12 @@ function completeLandPurchase(playerIndex, landIndex, priceType, selection) {
     gameState.payMoney(playerIndex, selection.totalCost);
 
     // 프로젝트에 토지 정보 저장 (고유 인스턴스 ID 부여)
+    // 지역 정보 계산 (시세 기준)
+    const region = getRegionByPrice(selection.land.prices.market);
     project.land = {
         ...selection.land,
-        instanceId: `${selection.land.id}_${Date.now()}_${playerIndex}`
+        instanceId: `${selection.land.id}_${Date.now()}_${playerIndex}`,
+        region: region
     };
     project.landPrice = selection.price;
     project.priceType = priceType;
