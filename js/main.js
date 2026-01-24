@@ -620,6 +620,14 @@ class GameApp {
         if (!optionsContainer) return;
 
         const info = getLandDisplayInfo(land);
+        const currentPlayerIndex = gameState.currentPlayerIndex;
+
+        // 현재 플레이어가 이 토지에서 경매/급매 실패한 적 있는지 확인
+        const failedAttempt = gameState.pendingLands.find(
+            p => p.land.id === land.id && p.failedPlayer === currentPlayerIndex
+        );
+        const canUseUrgent = land.prices.urgent && !failedAttempt;
+        const canUseAuction = land.prices.auction && !failedAttempt;
 
         optionsContainer.innerHTML = `
       <div class="purchase-panel">
@@ -627,18 +635,23 @@ class GameApp {
           <h3>${land.name} 구매</h3>
           <button class="purchase-panel-close" id="close-purchase-panel">&times;</button>
         </div>
+        ${failedAttempt ? `
+          <div class="failed-attempt-notice">
+            ⚠️ 이전에 매매 불발된 토지입니다. 시세로만 구매 가능합니다.
+          </div>
+        ` : ''}
         <div class="price-options">
           <button class="price-btn market" data-type="market">
             시세: ${info.marketPrice}
             <span class="prob">100%</span>
           </button>
-          ${land.prices.urgent ? `
+          ${canUseUrgent ? `
             <button class="price-btn urgent" data-type="urgent">
               급매: ${info.urgentPrice}
               <span class="prob">${((land.diceRequired.urgent.length / 6) * 100).toFixed(0)}%</span>
             </button>
           ` : ''}
-          ${land.prices.auction ? `
+          ${canUseAuction ? `
             <button class="price-btn auction" data-type="auction">
               경매: ${info.auctionPrice}
               <span class="prob">${((land.diceRequired.auction.length / 6) * 100).toFixed(0)}%</span>

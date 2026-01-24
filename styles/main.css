@@ -982,6 +982,17 @@ body {
   margin-bottom: 1rem;
 }
 
+.failed-attempt-notice {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #fca5a5;
+  text-align: center;
+}
+
 .price-options {
   display: flex;
   gap: 0.5rem;
@@ -2278,6 +2289,21 @@ body {
 .tile-phase.construction { background: var(--accent-orange); color: white; }
 .tile-phase.complete { background: var(--accent-gold); color: #1a1a2e; }
 .tile-phase.sold { background: #6b7280; color: white; }
+
+/* 3D 보기에서 상태 라벨 크기 3배 & z-fighting 해결 */
+.map-grid.view-3d .tile-phase {
+  font-size: 1.95rem;
+  padding: 0.45rem 1.2rem;
+  position: relative;
+  z-index: 10;
+  transform: translateZ(20px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.map-grid.view-3d .tile-phase.design,
+.map-grid.view-3d .tile-phase.construction {
+  transform: translateZ(25px);
+}
 
 /* 매각 완료 타일 */
 .project-tile.sold {
