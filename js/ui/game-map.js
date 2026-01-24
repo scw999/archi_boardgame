@@ -353,7 +353,7 @@ function assignPlotByRegionAndName(region, landName) {
     const landNameMappings = {
         '판교 테크노밸리 필지': 'tech_1',   // 판교
         '강남 역세권 필지': 'tech_2',       // 강남
-        '청담동 고급 필지': 'extra_3',      // 반포/청담
+        '청담동 고급 필지': 'city_2',       // 반포/청담 (서울 핵심)
         '해운대 오션뷰 필지': 'coast_1',    // 마리나/해안
         '제주 서귀포 절경 필지': 'beach_1', // 해안가
         '양평 프리미엄 전원 필지': 'rural_1' // 양평/전원

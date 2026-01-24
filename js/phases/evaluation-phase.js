@@ -119,14 +119,15 @@ export function calculateSalePrice(playerIndex) {
     const constructionCost = project.constructionCost;
     const totalInvestment = landCost + designCost + constructionCost;
 
-    // 손실 비용
+    // 손실 비용 (표시용 - 이미 시공 단계에서 지불됨)
     const lossCost = project.totalLoss + project.interestCost;
 
     // 최종 평가 팩터
     const factorResult = calculateFinalFactor(project);
 
-    // 매각 금액 = 기본 투입 비용 × 평가 팩터 - 손실 비용
-    const salePrice = Math.round(totalInvestment * factorResult.finalFactor - lossCost);
+    // 매각 금액 = 기본 투입 비용 × 평가 팩터
+    // 주의: lossCost는 이미 시공 단계에서 지불되었으므로 여기서 차감하지 않음
+    const salePrice = Math.round(totalInvestment * factorResult.finalFactor);
 
     // 대출 상환
     const loanRepayment = player.loan;
@@ -232,7 +233,7 @@ export function completeEvaluation(playerIndex) {
     const adjacencyBonus = gameState.calculateAdjacencyBonus(playerIndex);
     if (adjacencyBonus > 0) {
         bd.finalFactor *= (1 + adjacencyBonus);
-        bd.salePrice = Math.round(bd.totalInvestment * bd.finalFactor - bd.lossCost);
+        bd.salePrice = Math.round(bd.totalInvestment * bd.finalFactor);
         bd.netProfit = bd.salePrice - bd.loanRepayment;
         gameState.addLog(`🏘️ 인접 보너스: +${(adjacencyBonus * 100).toFixed(0)}%`);
     }
@@ -240,6 +241,7 @@ export function completeEvaluation(playerIndex) {
     // 프로젝트에 평가 결과 저장 (건물 가치만 저장, 현금은 지급하지 않음)
     project.evaluationFactor = bd.finalFactor;
     project.salePrice = bd.salePrice;  // 대출 상환 전 매각 금액 저장
+    project.evaluationCompleted = true;  // 평가 완료 플래그
 
     // 대출은 유지 (건물 매각 시에만 상환)
     // player.loan = 0; // 자동 상환 제거
@@ -303,8 +305,9 @@ export function checkEvaluationPhaseComplete() {
         if (!player.currentProject.constructor) {
             return true;
         }
-        // 토지, 건물, 시공사가 있으면 매각가가 설정되어야 함
-        return player.currentProject.salePrice > 0;
+        // 토지, 건물, 시공사가 있으면 평가가 완료되어야 함
+        // salePrice가 0이나 음수일 수도 있으므로 evaluationCompleted 플래그 사용
+        return player.currentProject.evaluationCompleted === true;
     });
 }
 

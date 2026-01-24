@@ -2653,14 +2653,33 @@ class GameApp {
             document.body.appendChild(finalMapView);
         }
 
+        const results = getFinalResults();
+        const medalEmojis = ['🥇', '🥈', '🥉', '4️⃣'];
+
         finalMapView.innerHTML = `
             <div class="final-map-container">
                 <div class="final-map-header">
                     <h2>🏙️ 개발 완료 지도</h2>
                     <p>총 ${gameState.maxRounds}라운드 동안 건설된 모든 건물들</p>
+                    <div class="final-map-controls">
+                        <button id="final-3d-toggle" class="btn-3d-toggle">🎲 3D 보기</button>
+                    </div>
                 </div>
                 <div class="final-map-content">
-                    <div id="final-city-grid"></div>
+                    <div id="final-city-grid" class="final-map-grid"></div>
+                </div>
+                <div class="final-rankings-panel">
+                    <h3>🏆 최종 순위</h3>
+                    <div class="final-rankings-list">
+                        ${results.rankings.map((r, i) => `
+                            <div class="final-rank-item ${i === 0 ? 'winner' : ''}">
+                                <span class="rank-medal">${medalEmojis[i] || (i + 1) + '위'}</span>
+                                <span class="rank-name">${r.name}</span>
+                                <span class="rank-buildings">${r.buildingsCount}채</span>
+                                <span class="rank-assets">${gameState.formatMoney(r.totalAssets)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
                 <div class="final-map-footer">
                     <button id="end-game-btn" class="btn-end-game">🏠 게임 종료</button>
@@ -2681,6 +2700,21 @@ class GameApp {
                 // 최종 지도에서 건물 클릭 이벤트 바인딩
                 this.bindFinalMapPlotEvents(finalCityGrid);
             }
+        }
+
+        // 3D 토글 버튼 이벤트
+        const toggle3dBtn = document.getElementById('final-3d-toggle');
+        if (toggle3dBtn) {
+            toggle3dBtn.addEventListener('click', () => {
+                const grid = document.getElementById('final-city-grid');
+                if (grid) {
+                    const mapGrid = grid.querySelector('.map-grid');
+                    if (mapGrid) {
+                        mapGrid.classList.toggle('view-3d');
+                        toggle3dBtn.textContent = mapGrid.classList.contains('view-3d') ? '📍 2D 보기' : '🎲 3D 보기';
+                    }
+                }
+            });
         }
 
         // 게임 종료 버튼 이벤트
@@ -2755,8 +2789,74 @@ class GameApp {
                     cursor: pointer;
                 }
                 .final-map-content .plot-marker:hover {
-                    transform: scale(1.1);
+                    /* 애니메이션 비활성화 - 움직이지 않음 */
                     z-index: 100;
+                }
+                .final-map-grid .map-grid .plot-marker,
+                .final-map-grid .map-grid .plot-marker:hover {
+                    transform: none !important;
+                    transition: none !important;
+                }
+                .final-map-controls {
+                    margin-top: 1rem;
+                }
+                .btn-3d-toggle {
+                    padding: 0.5rem 1.5rem;
+                    font-size: 1rem;
+                    background: var(--bg-tertiary);
+                    color: var(--text-primary);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: var(--radius-md);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                .btn-3d-toggle:hover {
+                    background: var(--accent-blue);
+                    border-color: var(--accent-blue);
+                }
+                .final-rankings-panel {
+                    background: var(--bg-secondary);
+                    border-radius: var(--radius-lg);
+                    padding: 1.5rem;
+                    margin-bottom: 2rem;
+                }
+                .final-rankings-panel h3 {
+                    text-align: center;
+                    color: var(--accent-gold);
+                    margin-bottom: 1rem;
+                }
+                .final-rankings-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+                .final-rank-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    padding: 0.75rem 1rem;
+                    background: var(--bg-tertiary);
+                    border-radius: var(--radius-md);
+                }
+                .final-rank-item.winner {
+                    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+                    border: 1px solid var(--accent-gold);
+                }
+                .final-rank-item .rank-medal {
+                    font-size: 1.5rem;
+                    width: 40px;
+                    text-align: center;
+                }
+                .final-rank-item .rank-name {
+                    flex: 1;
+                    font-weight: 600;
+                }
+                .final-rank-item .rank-buildings {
+                    color: var(--text-secondary);
+                }
+                .final-rank-item .rank-assets {
+                    color: var(--accent-gold);
+                    font-weight: 700;
                 }
             `;
             document.head.appendChild(style);
@@ -2984,21 +3084,8 @@ class GameApp {
         // 와일드카드 패널 업데이트
         this.updateWildcardPanel();
 
-        // 플레이어 패널의 와일드카드 슬롯 클릭 이벤트
-        document.querySelectorAll('.clickable-wildcard').forEach(slot => {
-            slot.addEventListener('click', () => {
-                const playerIndex = parseInt(slot.dataset.playerIndex);
-                this.showPlayerWildcardsModal(playerIndex);
-            });
-        });
-
-        // 플레이어 패널의 건물 슬롯 클릭 이벤트
-        document.querySelectorAll('.clickable-building').forEach(slot => {
-            slot.addEventListener('click', () => {
-                const playerIndex = parseInt(slot.dataset.playerIndex);
-                this.showPlayerBuildingsModal(playerIndex);
-            });
-        });
+        // 플레이어 패널 클릭 이벤트 바인딩
+        this.bindPlayerPanelClickEvents();
     }
 
     // 플레이어 건물 목록 모달 표시
@@ -3011,26 +3098,21 @@ class GameApp {
 
         const buildingsList = player.buildings.map((building, index) => {
             const estimatedValue = building.salePrice || 0;
-            return `
-                <div class="building-list-item" data-player="${playerIndex}" data-building="${index}">
-                    <div class="building-icon">${getBuildingImage(building.building.name, '48px')}</div>
-                    <div class="building-info">
-                        <div class="building-name">${building.building.name}</div>
-                        <div class="building-land">📍 ${building.land.name}</div>
-                        <div class="building-value">💰 ${gameState.formatMoney(estimatedValue)}</div>
-                    </div>
-                    <div class="building-arrow">▶</div>
-                </div>
-            `;
+            return `<div class="building-list-item" data-player="${playerIndex}" data-building="${index}">
+<div class="building-icon">${getBuildingImage(building.building.name, '48px')}</div>
+<div class="building-info">
+<div class="building-name">${building.building.name}</div>
+<div class="building-land">📍 ${building.land.name}</div>
+<div class="building-value">💰 ${gameState.formatMoney(estimatedValue)}</div>
+</div>
+<div class="building-arrow">▶</div>
+</div>`;
         }).join('');
 
-        showResultModal(`🏢 ${player.name}의 건물 (${player.buildings.length}개)`, `
-            <div class="player-buildings-modal">
-                <div class="buildings-list">
-                    ${buildingsList}
-                </div>
-            </div>
-        `, null, true);
+        showResultModal(`🏢 ${player.name}의 건물 (${player.buildings.length}개)`,
+`<div class="player-buildings-modal">
+<div class="buildings-list">${buildingsList}</div>
+</div>`, null, true);
 
         // 건물 아이템 클릭 이벤트 바인딩
         setTimeout(() => {
@@ -3063,33 +3145,23 @@ class GameApp {
         const wildcardsList = player.wildcards.map((card, index) => {
             const effectDescription = this.getWildcardEffectDescription(card.effect);
             const usagePhase = this.getWildcardUsagePhase(card.effect.type);
-            return `
-                <div class="wildcard-list-item" data-player="${playerIndex}" data-card="${index}">
-                    <div class="wildcard-card-mini">
-                        <div class="card-icon">🃏</div>
-                    </div>
-                    <div class="wildcard-info">
-                        <div class="wildcard-name">${card.name}</div>
-                        <div class="wildcard-desc">${card.description}</div>
-                        <div class="wildcard-effect">✨ ${effectDescription}</div>
-                        <div class="wildcard-phase">⏰ ${usagePhase}</div>
-                    </div>
-                    ${isCurrentPlayer ? `
-                    <div class="wildcard-actions">
-                        <button class="btn-use-card" data-index="${index}">사용</button>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
+            const actionBtn = isCurrentPlayer ? `<div class="wildcard-actions"><button class="btn-use-card" data-index="${index}">사용</button></div>` : '';
+            return `<div class="wildcard-list-item" data-player="${playerIndex}" data-card="${index}">
+<div class="wildcard-card-mini"><div class="card-icon">🃏</div></div>
+<div class="wildcard-info">
+<div class="wildcard-name">${card.name}</div>
+<div class="wildcard-desc">${card.description}</div>
+<div class="wildcard-effect">✨ ${effectDescription}</div>
+<div class="wildcard-phase">⏰ ${usagePhase}</div>
+</div>
+${actionBtn}
+</div>`;
         }).join('');
 
-        showResultModal(`🃏 ${player.name}의 와일드카드 (${player.wildcards.length}장)`, `
-            <div class="player-wildcards-modal">
-                <div class="wildcards-list">
-                    ${wildcardsList}
-                </div>
-            </div>
-        `, null, true);
+        showResultModal(`🃏 ${player.name}의 와일드카드 (${player.wildcards.length}장)`,
+`<div class="player-wildcards-modal">
+<div class="wildcards-list">${wildcardsList}</div>
+</div>`, null, true);
 
         // 와일드카드 사용 버튼 이벤트 바인딩
         if (isCurrentPlayer) {
@@ -3893,11 +3965,31 @@ class GameApp {
             showNotification(`🃏 ${card.name} 사용! ${message}`, 'success');
             gameState.addLog(`${player.name}: ${card.name} 사용`);
             this.updateWildcardPanel();
-            // 플레이어 패널 즉시 업데이트 (카드 개수 반영)
+            // 플레이어 패널 즉시 업데이트 (카드 개수 반영) + 클릭 이벤트 재바인딩
             renderPlayerPanels();
+            this.bindPlayerPanelClickEvents();
         } else {
             showNotification(message, 'warning');
         }
+    }
+
+    // 플레이어 패널 클릭 이벤트 바인딩
+    bindPlayerPanelClickEvents() {
+        // 와일드카드 슬롯 클릭 이벤트
+        document.querySelectorAll('.clickable-wildcard').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const playerIndex = parseInt(slot.dataset.playerIndex);
+                this.showPlayerWildcardsModal(playerIndex);
+            });
+        });
+
+        // 건물 슬롯 클릭 이벤트
+        document.querySelectorAll('.clickable-building').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const playerIndex = parseInt(slot.dataset.playerIndex);
+                this.showPlayerBuildingsModal(playerIndex);
+            });
+        });
     }
 
     // 게임 불러오기
