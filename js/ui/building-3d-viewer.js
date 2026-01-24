@@ -912,6 +912,7 @@ export class Building3DViewer {
     // 여러 건물 표시 (4등분 플레이어별 배치)
     async displayBuildings(buildingDataList) {
         this.clearBuildings();
+        this.billboards = []; // 빌보드 초기화
 
         // 플레이어별로 건물 그룹화
         const playerBuildings = [[], [], [], []];
@@ -922,28 +923,38 @@ export class Building3DViewer {
             }
         });
 
-        // 4등분 영역 정의 (플레이어별)
-        // 플레이어 0: 좌상단, 플레이어 1: 우상단, 플레이어 2: 좌하단, 플레이어 3: 우하단
-        const quadrantOffsets = [
-            { x: -60, z: -60 },  // 플레이어 0: 좌상단
-            { x: 60, z: -60 },   // 플레이어 1: 우상단
-            { x: -60, z: 60 },   // 플레이어 2: 좌하단
-            { x: 60, z: 60 }     // 플레이어 3: 우하단
+        // 4등분 영역 중심점 (플레이어별)
+        const quadrantCenters = [
+            { x: -80, z: -80 },  // 플레이어 0: 좌상단
+            { x: 80, z: -80 },   // 플레이어 1: 우상단
+            { x: -80, z: 80 },   // 플레이어 2: 좌하단
+            { x: 80, z: 80 }     // 플레이어 3: 우하단
         ];
 
-        const spacing = 50;
+        const spacing = 60;
         const promises = [];
 
         playerBuildings.forEach((buildings, playerIdx) => {
-            const offset = quadrantOffsets[playerIdx];
-            const gridSize = Math.ceil(Math.sqrt(Math.max(buildings.length, 1)));
+            const center = quadrantCenters[playerIdx];
+            const count = buildings.length;
+
+            if (count === 0) return;
+
+            // 건물 개수에 따라 그리드 크기 계산
+            const cols = Math.ceil(Math.sqrt(count));
+            const rows = Math.ceil(count / cols);
 
             buildings.forEach((data, index) => {
-                const row = Math.floor(index / gridSize);
-                const col = index % gridSize;
+                const row = Math.floor(index / cols);
+                const col = index % cols;
+
+                // 중앙 정렬
+                const offsetX = (col - (cols - 1) / 2) * spacing;
+                const offsetZ = (row - (rows - 1) / 2) * spacing;
+
                 const position = {
-                    x: offset.x + (col - gridSize / 2) * spacing,
-                    z: offset.z + (row - gridSize / 2) * spacing
+                    x: center.x + offsetX,
+                    z: center.z + offsetZ
                 };
 
                 promises.push(
@@ -963,18 +974,18 @@ export class Building3DViewer {
         this.addPlayerZones();
 
         // 카메라 위치 조정
-        this.camera.position.set(200, 150, 200);
+        this.camera.position.set(250, 200, 250);
         this.camera.lookAt(0, 0, 0);
     }
 
     // 플레이어 영역 표시
     addPlayerZones() {
-        const zoneSize = 100;
+        const zoneSize = 140;
         const quadrants = [
-            { x: -55, z: -55, color: PLAYER_COLORS[0] },
-            { x: 55, z: -55, color: PLAYER_COLORS[1] },
-            { x: -55, z: 55, color: PLAYER_COLORS[2] },
-            { x: 55, z: 55, color: PLAYER_COLORS[3] }
+            { x: -80, z: -80, color: PLAYER_COLORS[0] },
+            { x: 80, z: -80, color: PLAYER_COLORS[1] },
+            { x: -80, z: 80, color: PLAYER_COLORS[2] },
+            { x: 80, z: 80, color: PLAYER_COLORS[3] }
         ];
 
         quadrants.forEach(q => {
@@ -982,7 +993,7 @@ export class Building3DViewer {
             const zoneMaterial = new THREE.MeshLambertMaterial({
                 color: q.color,
                 transparent: true,
-                opacity: 0.15,
+                opacity: 0.2,
                 side: THREE.DoubleSide
             });
             const zone = new THREE.Mesh(zoneGeometry, zoneMaterial);
@@ -994,7 +1005,7 @@ export class Building3DViewer {
             const borderGeometry = new THREE.EdgesGeometry(zoneGeometry);
             const borderMaterial = new THREE.LineBasicMaterial({
                 color: q.color,
-                linewidth: 2
+                linewidth: 3
             });
             const border = new THREE.LineSegments(borderGeometry, borderMaterial);
             border.rotation.x = -Math.PI / 2;
