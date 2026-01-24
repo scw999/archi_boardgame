@@ -7579,3 +7579,84 @@ body {
   transform: none !important;
   transition: none !important;
 }
+
+/* ===== 커스텀 Confirm 모달 ===== */
+.confirm-modal {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideUp 0.3s ease;
+  overflow: hidden;
+}
+
+.confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, var(--accent-orange), #d97706);
+  color: white;
+}
+
+.confirm-icon {
+  font-size: 1.5rem;
+}
+
+.confirm-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.confirm-content {
+  padding: 1.5rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.confirm-content p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.confirm-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-tertiary);
+  justify-content: flex-end;
+}
+
+.confirm-footer button {
+  padding: 0.6rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.confirm-footer .btn-cancel {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.confirm-footer .btn-cancel:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.confirm-footer .btn-confirm {
+  background: linear-gradient(135deg, var(--accent-orange), #d97706);
+  color: white;
+}
+
+.confirm-footer .btn-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}

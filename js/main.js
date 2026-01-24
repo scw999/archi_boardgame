@@ -1,6 +1,6 @@
 // 앱 진입점 - 초기화 및 이벤트 바인딩
 import { gameState, GAME_PHASES } from './core/game-state.js';
-import { renderGameBoard, renderGameLog, renderActionArea, showNotification, showResultModal } from './ui/game-board.js';
+import { renderGameBoard, renderGameLog, renderActionArea, showNotification, showResultModal, showConfirmModal } from './ui/game-board.js';
 import { renderPlayerPanels } from './ui/player-panel.js';
 import { renderCardGrid, highlightCard, renderBuildingSelector } from './ui/card-display.js';
 import { showDiceRoll, showStartingDiceRoll, showLandPurchaseDice, showRiskCardDraw } from './ui/dice-roller.js';
@@ -417,12 +417,12 @@ class GameApp {
 
         // PM 활동
         document.querySelector('[data-action="pm-activity"]')?.addEventListener('click', () => {
-            if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
-
-            const result = gameState.doPMActivity(gameState.currentPlayerIndex);
-            showNotification(result.message, 'success');
-            this.updateUI();
-            this.nextPlayerOrPhase('land');
+            showConfirmModal('PM 컨설팅', 'PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?', () => {
+                const result = gameState.doPMActivity(gameState.currentPlayerIndex);
+                showNotification(result.message, 'success');
+                this.updateUI();
+                this.nextPlayerOrPhase('land');
+            });
         });
 
         // 대지 매각
@@ -957,40 +957,39 @@ class GameApp {
 
         // 액션 버튼 이벤트 바인딩
         document.getElementById('design-pm')?.addEventListener('click', () => {
-            if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
+            showConfirmModal('PM 컨설팅', 'PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?', () => {
+                // 모달 닫기
+                this.hideDesignPanel();
 
-            // 모달 닫기
-            this.hideDesignPanel();
-
-            const result = gameState.doPMActivity(gameState.currentPlayerIndex);
-            if (result.success) {
-                showNotification(result.message, 'success');
-                this.updateUI();
-                this.nextPlayerOrPhase('architect');
-            }
+                const result = gameState.doPMActivity(gameState.currentPlayerIndex);
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    this.updateUI();
+                    this.nextPlayerOrPhase('architect');
+                }
+            });
         });
 
         document.getElementById('design-sell-land')?.addEventListener('click', () => {
-            const confirmMsg = '⚠️ 주의: 설계 단계에서 대지를 매각하면 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?';
-            if (!confirm(confirmMsg)) return;
+            showConfirmModal('대지 매각', '⚠️ 주의: 설계 단계에서 대지를 매각하면 평가 단계까지 쉬어야 합니다.\n\n정말로 대지를 매각하시겠습니까?', () => {
+                const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
+                if (result.success) {
+                    // 설계 모달 먼저 닫기
+                    modalOverlay.classList.add('closing');
+                    setTimeout(() => modalOverlay.remove(), 300);
 
-            const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
-            if (result.success) {
-                // 설계 모달 먼저 닫기
-                modalOverlay.classList.add('closing');
-                setTimeout(() => modalOverlay.remove(), 300);
-
-                // 쉬어야 합니다 알림 표시
-                showResultModal('😴 휴식 알림', `
-                    <div style="text-align: center; padding: 1rem;">
-                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">대지를 매각하여 이번 라운드는 쉬어야 합니다.</p>
-                        <p style="color: var(--text-muted);">평가 단계까지 자동으로 진행됩니다.</p>
-                    </div>
-                `, () => {
-                    showNotification(result.message, 'success');
-                    this.nextPlayerOrPhase('architect');
-                });
-            }
+                    // 쉬어야 합니다 알림 표시
+                    showResultModal('😴 휴식 알림', `
+                        <div style="text-align: center; padding: 1rem;">
+                            <p style="font-size: 1.2rem; margin-bottom: 1rem;">대지를 매각하여 이번 라운드는 쉬어야 합니다.</p>
+                            <p style="color: var(--text-muted);">평가 단계까지 자동으로 진행됩니다.</p>
+                        </div>
+                    `, () => {
+                        showNotification(result.message, 'success');
+                        this.nextPlayerOrPhase('architect');
+                    });
+                }
+            });
         });
 
         document.getElementById('design-sell-building')?.addEventListener('click', () => {
@@ -1001,11 +1000,11 @@ class GameApp {
         });
 
         document.getElementById('design-skip')?.addEventListener('click', () => {
-            if (confirm('이번 턴을 넘기시겠습니까?')) {
+            showConfirmModal('턴 넘기기', '이번 턴을 넘기시겠습니까?', () => {
                 gameState.addLog(`${player.name}: 턴 패스`);
                 showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
                 this.nextPlayerOrPhase('architect');
-            }
+            });
         });
 
         // 건물 선택 이벤트
@@ -1548,15 +1547,15 @@ class GameApp {
                     return;
                 }
 
-                if (!confirm('PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?')) return;
-
-                const result = gameState.doPMActivity(gameState.currentPlayerIndex);
-                if (result.success) {
-                    showNotification(result.message, 'success');
-                    this.updateUI();
-                    // PM 컨설팅 후 다음 플레이어로 이동
-                    this.nextPlayerOrPhase('constructor');
-                }
+                showConfirmModal('PM 컨설팅', 'PM 컨설팅을 진행하면 2억을 받고 이번 라운드를 스킵합니다.\n\n진행하시겠습니까?', () => {
+                    const result = gameState.doPMActivity(gameState.currentPlayerIndex);
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        this.updateUI();
+                        // PM 컨설팅 후 다음 플레이어로 이동
+                        this.nextPlayerOrPhase('constructor');
+                    }
+                });
             };
         }
 
@@ -1570,28 +1569,28 @@ class GameApp {
 
                 // 시공중인 프로젝트면 확인 메시지 표시
                 if (hasConstructor) {
-                    if (!confirm('시공중인 프로젝트를 매각하면 투자비의 80%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
-
-                    const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
-                    if (result.success) {
-                        showNotification(result.message, 'success');
-                        this.updateUI();
-                        this.nextPlayerOrPhase('constructor');
-                    } else {
-                        showNotification(result.message, 'error');
-                    }
+                    showConfirmModal('프로젝트 매각', '시공중인 프로젝트를 매각하면 투자비의 80%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?', () => {
+                        const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            this.updateUI();
+                            this.nextPlayerOrPhase('constructor');
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    });
                 } else if (hasBuilding) {
                     // 설계만 완료된 프로젝트
-                    if (!confirm('설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
-
-                    const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
-                    if (result.success) {
-                        showNotification(result.message, 'success');
-                        this.updateUI();
-                        this.nextPlayerOrPhase('constructor');
-                    } else {
-                        showNotification(result.message, 'error');
-                    }
+                    showConfirmModal('프로젝트 매각', '설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?', () => {
+                        const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            this.updateUI();
+                            this.nextPlayerOrPhase('constructor');
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    });
                 } else {
                     const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
                     if (result.success) {
@@ -1809,28 +1808,28 @@ class GameApp {
 
                 // 시공중인 프로젝트면 확인 메시지 표시
                 if (hasConstructor) {
-                    if (!confirm('시공중인 프로젝트를 매각하면 투자비의 80%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
-
-                    const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
-                    if (result.success) {
-                        showNotification(result.message, 'success');
-                        this.updateUI();
-                        this.nextPlayerOrPhase('constructor');
-                    } else {
-                        showNotification(result.message, 'error');
-                    }
+                    showConfirmModal('프로젝트 매각', '시공중인 프로젝트를 매각하면 투자비의 80%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?', () => {
+                        const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            this.updateUI();
+                            this.nextPlayerOrPhase('constructor');
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    });
                 } else if (hasBuilding) {
                     // 설계만 완료된 프로젝트
-                    if (!confirm('설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?')) return;
-
-                    const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
-                    if (result.success) {
-                        showNotification(result.message, 'success');
-                        this.updateUI();
-                        this.nextPlayerOrPhase('constructor');
-                    } else {
-                        showNotification(result.message, 'error');
-                    }
+                    showConfirmModal('프로젝트 매각', '설계 완료된 프로젝트를 매각하면 투자비의 90%만 회수됩니다.\n또한 이번 라운드 평가까지 휴식합니다.\n\n진행하시겠습니까?', () => {
+                        const result = gameState.sellDesignedProject(gameState.currentPlayerIndex);
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            this.updateUI();
+                            this.nextPlayerOrPhase('constructor');
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    });
                 } else {
                     const result = gameState.sellCurrentLand(gameState.currentPlayerIndex);
                     if (result.success) {
@@ -3650,7 +3649,7 @@ class GameApp {
 
     // 자산 매각 확인
     confirmPropertySale(project, estimatedValue) {
-        if (confirm(`정말로 ${project.building.name}을(를) ${gameState.formatMoney(estimatedValue)}에 매각하시겠습니까?`)) {
+        showConfirmModal('건물 매각', `정말로 ${project.building.name}을(를) ${gameState.formatMoney(estimatedValue)}에 매각하시겠습니까?`, () => {
             const player = gameState.getCurrentPlayer();
 
             // 손익 계산
@@ -3713,7 +3712,7 @@ class GameApp {
             if (gameState.phase === GAME_PHASES.CONSTRUCTION && !player.currentProject) {
                 this.nextPlayerOrPhase('constructor');
             }
-        }
+        });
     }
 
     // 대지 상세 정보 모달 (건물 없는 경우)
@@ -3837,7 +3836,7 @@ class GameApp {
         const salePrice = Math.floor(totalInvestment * 0.8);
         const profit = salePrice - totalInvestment;
 
-        if (confirm(`정말로 ${project.land.name}을(를) ${gameState.formatMoney(salePrice)}에 매각하시겠습니까?\n(투자 대비 20% 손실)`)) {
+        showConfirmModal('대지 매각', `정말로 ${project.land.name}을(를) ${gameState.formatMoney(salePrice)}에 매각하시겠습니까?\n(투자 대비 20% 손실)`, () => {
             const player = gameState.getCurrentPlayer();
 
             // 매각 이력에 추가 (지도에 흔적을 남김)
@@ -3859,7 +3858,7 @@ class GameApp {
             // 모달 닫기 및 UI 업데이트
             document.querySelector('.modal-overlay')?.remove();
             this.updateUI();
-        }
+        });
     }
 
     // 매각된 건물 상세 정보 표시
@@ -4266,7 +4265,7 @@ class GameApp {
             `📍 단계: ${phaseNames[saveInfo.phase] || saveInfo.phase}\n` +
             `👥 플레이어: ${saveInfo.playerNames.join(', ')}`;
 
-        if (confirm(confirmMsg)) {
+        showConfirmModal('게임 불러오기', confirmMsg, () => {
             if (gameState.load()) {
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
@@ -4276,7 +4275,7 @@ class GameApp {
             } else {
                 showNotification('게임 불러오기에 실패했습니다.', 'error');
             }
-        }
+        });
     }
 
     // 단가표 보기
