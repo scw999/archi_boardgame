@@ -6188,3 +6188,56 @@ body {
   border-radius: var(--radius-md);
   color: #f87171;
 }
+
+/* ===== 시공 자금 부족 패널 ===== */
+.money-options-panel.insufficient-funds {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.insufficient-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.insufficient-header .notice-icon {
+  font-size: 2rem;
+}
+
+.insufficient-header h4 {
+  margin: 0;
+  color: #f87171;
+  font-size: 1.3rem;
+}
+
+.insufficient-info {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.insufficient-info strong {
+  color: var(--accent-orange);
+}
+
+.insufficient-warning {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.action-btn.skip {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+}
+
+.action-btn.skip:hover {
+  background: linear-gradient(135deg, #7c8290, #5c6573);
+}
