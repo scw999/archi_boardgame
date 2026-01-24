@@ -7204,3 +7204,30 @@ body {
 .stat-item.clickable-wildcard:hover .stat-icon {
   transform: scale(1.2);
 }
+
+/* ========================================
+   최종 지도 뷰 - hover 애니메이션 비활성화
+   ======================================== */
+#final-map-view .plot-marker,
+#final-map-view .plot-marker:hover,
+.final-map-grid .plot-marker,
+.final-map-grid .plot-marker:hover {
+  transform: translate(-50%, -50%) !important;
+  transition: none !important;
+}
+
+#final-map-view .plot-marker.has-building-img:hover .plot-building-img,
+.final-map-grid .plot-marker.has-building-img:hover .plot-building-img {
+  transform: none !important;
+}
+
+#final-map-view .plot-marker:hover .plot-marker-inner,
+.final-map-grid .plot-marker:hover .plot-marker-inner {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 최종 지도 건물 클릭 커서 */
+#final-map-view .plot-marker.owned,
+.final-map-grid .plot-marker.owned {
+  cursor: pointer;
+}
