@@ -2,7 +2,25 @@
 import { gameState } from '../core/game-state.js';
 import { REGIONS } from '../data/lands.js';
 import { buildings, BUILDING_IMAGES } from '../data/buildings.js';
-import { Building3DViewer, create3DViewerModal, BUILDING_3D_CONFIG } from './building-3d-viewer.js';
+
+// 3D 모듈 동적 로드 (필요할 때만)
+let Building3DViewer = null;
+let create3DViewerModal = null;
+let BUILDING_3D_CONFIG = null;
+
+async function load3DModule() {
+    if (Building3DViewer) return true;
+    try {
+        const module = await import('./building-3d-viewer.js');
+        Building3DViewer = module.Building3DViewer;
+        create3DViewerModal = module.create3DViewerModal;
+        BUILDING_3D_CONFIG = module.BUILDING_3D_CONFIG;
+        return true;
+    } catch (error) {
+        console.warn('3D 모듈 로드 실패:', error);
+        return false;
+    }
+}
 
 // 건물 이미지 HTML 생성 헬퍼 함수
 function getBuildingImageHTML(buildingName, size = '32px') {
@@ -642,7 +660,7 @@ function bindPlotEvents() {
 }
 
 // 3D 도시 뷰 토글
-export function toggle3DCityView(ownedPlots = null) {
+export async function toggle3DCityView(ownedPlots = null) {
     is3DCityView = !is3DCityView;
 
     const isoMap = document.getElementById('iso-city-map');
@@ -652,6 +670,14 @@ export function toggle3DCityView(ownedPlots = null) {
     if (!isoMap || !container3D) return;
 
     if (is3DCityView) {
+        // 3D 모듈 동적 로드
+        const loaded = await load3DModule();
+        if (!loaded) {
+            is3DCityView = false;
+            alert('3D 뷰어를 로드할 수 없습니다.');
+            return;
+        }
+
         isoMap.classList.add('hidden');
         container3D.classList.remove('hidden');
         toggle3DBtn?.classList.add('active');
@@ -661,7 +687,7 @@ export function toggle3DCityView(ownedPlots = null) {
         if (!ownedPlots) {
             ownedPlots = collectOwnedPlots();
         }
-        init3DCityView(ownedPlots);
+        await init3DCityView(ownedPlots);
     } else {
         isoMap.classList.remove('hidden');
         container3D.classList.add('hidden');
@@ -679,9 +705,9 @@ export function toggle3DCityView(ownedPlots = null) {
 }
 
 // 3D 도시 뷰 초기화
-function init3DCityView(ownedPlots) {
+async function init3DCityView(ownedPlots) {
     const canvas = document.getElementById('city-3d-canvas');
-    if (!canvas) return;
+    if (!canvas || !Building3DViewer) return;
 
     // 기존 뷰어 정리
     if (cityViewer) {
@@ -714,7 +740,7 @@ function init3DCityView(ownedPlots) {
         }));
 
     if (buildingDataList.length > 0) {
-        cityViewer.displayBuildings(buildingDataList);
+        await cityViewer.displayBuildings(buildingDataList);
     }
 
     // 컨트롤 버튼 이벤트
@@ -1021,7 +1047,6 @@ function showBuildingDetailModal(plotIndex) {
     let view3DButton = '';
     if (owned.building) {
         const buildingImage = BUILDING_IMAGES[owned.building.name];
-        const has3DConfig = BUILDING_3D_CONFIG[owned.building.name];
 
         buildingInfo = `
             <div class="modal-building-section">
@@ -1040,13 +1065,12 @@ function showBuildingDetailModal(plotIndex) {
             </div>
         `;
 
-        if (has3DConfig) {
-            view3DButton = `
-                <button class="btn-view-3d" data-building="${owned.building.name}" data-player="${owned.playerIndex}" data-status="${owned.status}">
-                    🏙️ 3D로 보기
-                </button>
-            `;
-        }
+        // 3D 버튼 항상 표시 (동적 로드)
+        view3DButton = `
+            <button class="btn-view-3d" data-building="${owned.building.name}" data-player="${owned.playerIndex}" data-status="${owned.status}">
+                🏙️ 3D로 보기
+            </button>
+        `;
     }
 
     // 가치/가격 정보
@@ -1093,10 +1117,16 @@ function showBuildingDetailModal(plotIndex) {
     // 3D 보기 버튼 이벤트
     const view3DBtn = document.querySelector('.btn-view-3d');
     if (view3DBtn) {
-        view3DBtn.addEventListener('click', () => {
+        view3DBtn.addEventListener('click', async () => {
             const buildingName = view3DBtn.dataset.building;
             const playerIdx = parseInt(view3DBtn.dataset.player);
-            const status = view3DBtn.dataset.status;
+
+            // 3D 모듈 동적 로드
+            const loaded = await load3DModule();
+            if (!loaded) {
+                alert('3D 뷰어를 로드할 수 없습니다.');
+                return;
+            }
 
             // 상세 모달 닫기
             document.querySelector('.building-detail-modal')?.remove();
