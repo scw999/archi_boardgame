@@ -37,7 +37,9 @@ const BUILDING_3D_CONFIG = {
         roofType: 'gable',
         roofColor: 0x8b4513,
         wallColor: 0xfaf0e6,
-        hasGarden: true
+        hasGarden: true,
+        glbScale: 10,
+        glbHeight: 20
     },
     '전원주택': {
         floors: 2,
@@ -47,7 +49,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x654321,
         wallColor: 0xf5deb3,
         hasGarden: true,
-        hasPorch: true
+        hasPorch: true,
+        glbScale: 10,
+        glbHeight: 20
     },
     '상가주택': {
         floors: 4,
@@ -56,7 +60,9 @@ const BUILDING_3D_CONFIG = {
         roofType: 'flat',
         roofColor: 0x555555,
         wallColor: 0xe8e8e8,
-        hasStorefront: true
+        hasStorefront: true,
+        glbScale: 12,
+        glbHeight: 36
     },
     '카페': {
         floors: 1,
@@ -66,7 +72,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x8b4513,
         wallColor: 0xdaa520,
         hasAwning: true,
-        hasTerrace: true
+        hasTerrace: true,
+        glbScale: 10,
+        glbHeight: 10
     },
     '풀빌라': {
         floors: 2,
@@ -76,7 +84,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0xffffff,
         wallColor: 0xffffff,
         hasPool: true,
-        modern: true
+        modern: true,
+        glbScale: 12,
+        glbHeight: 20
     },
     '호텔': {
         floors: 8,
@@ -86,7 +96,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x333333,
         wallColor: 0x87ceeb,
         hasEntrance: true,
-        hasBalconies: true
+        hasBalconies: true,
+        glbScale: 15,
+        glbHeight: 72
     },
     '대형카페': {
         floors: 2,
@@ -96,7 +108,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x8b4513,
         wallColor: 0xf4a460,
         hasAwning: true,
-        hasTerrace: true
+        hasTerrace: true,
+        glbScale: 12,
+        glbHeight: 18
     },
     '상가': {
         floors: 5,
@@ -106,7 +120,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x444444,
         wallColor: 0xd3d3d3,
         hasStorefront: true,
-        hasSigns: true
+        hasSigns: true,
+        glbScale: 12,
+        glbHeight: 45
     },
     '복합몰': {
         floors: 4,
@@ -116,7 +132,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x222222,
         wallColor: 0x4169e1,
         hasGlassFacade: true,
-        hasEntrance: true
+        hasEntrance: true,
+        glbScale: 15,
+        glbHeight: 36
     },
     '펜션': {
         floors: 2,
@@ -126,7 +144,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x2f4f4f,
         wallColor: 0xdeb887,
         hasGarden: true,
-        cabinStyle: true
+        cabinStyle: true,
+        glbScale: 10,
+        glbHeight: 18
     },
     '대형빌딩': {
         floors: 15,
@@ -136,7 +156,9 @@ const BUILDING_3D_CONFIG = {
         roofColor: 0x1a1a1a,
         wallColor: 0x4682b4,
         hasGlassFacade: true,
-        hasHelipad: true
+        hasHelipad: true,
+        glbScale: 15,
+        glbHeight: 135
     }
 };
 
@@ -214,8 +236,8 @@ export class Building3DViewer {
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.05;
             this.controls.maxPolarAngle = Math.PI / 2.1;
-            this.controls.minDistance = 20;
-            this.controls.maxDistance = 150;
+            this.controls.minDistance = 5;
+            this.controls.maxDistance = 300;
             this.controls.autoRotate = this.options.autoRotate;
             this.controls.autoRotateSpeed = 0.5;
         }
@@ -827,9 +849,9 @@ export class Building3DViewer {
         const config = BUILDING_3D_CONFIG[buildingType];
         if (config) {
             const height = config.glbHeight || config.floors * 3;
-            const distance = Math.max(config.width, config.depth, height) * 2;
-            this.camera.position.set(distance, distance * 0.8, distance);
-            this.camera.lookAt(0, height / 2, 0);
+            const distance = Math.max(config.width, config.depth, height) * 1.2;
+            this.camera.position.set(distance, distance * 0.6, distance);
+            this.camera.lookAt(0, height / 3, 0);
         }
     }
 
