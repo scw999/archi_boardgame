@@ -719,10 +719,10 @@ async function init3DCityView(ownedPlots) {
 
     // 컨테이너 크기 설정
     const container = document.getElementById('city-3d-container');
-    const width = container.clientWidth;
-    const height = Math.max(400, container.clientHeight - 60);
+    const width = container.clientWidth || 800;
+    const height = Math.max(500, container.clientHeight - 50);
 
-    canvas.style.width = width + 'px';
+    canvas.style.width = '100%';
     canvas.style.height = height + 'px';
 
     // 3D 뷰어 생성
@@ -761,7 +761,7 @@ async function init3DCityView(ownedPlots) {
     if (resetBtn) {
         resetBtn.onclick = () => {
             if (cityViewer && cityViewer.camera) {
-                cityViewer.camera.position.set(50, 40, 50);
+                cityViewer.camera.position.set(350, 280, 350);
                 cityViewer.camera.lookAt(0, 0, 0);
             }
         };

@@ -237,7 +237,7 @@ export class Building3DViewer {
             this.controls.dampingFactor = 0.05;
             this.controls.maxPolarAngle = Math.PI / 2.1;
             this.controls.minDistance = 5;
-            this.controls.maxDistance = 300;
+            this.controls.maxDistance = 600;
             this.controls.autoRotate = this.options.autoRotate;
             this.controls.autoRotateSpeed = 0.5;
         }
@@ -261,18 +261,18 @@ export class Building3DViewer {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
-        // 태양광 (그림자)
+        // 태양광 (그림자) - 확장된 영역에 맞게 조정
         const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        sunLight.position.set(30, 50, 30);
+        sunLight.position.set(100, 150, 100);
         sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 2048;
-        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.mapSize.width = 4096;
+        sunLight.shadow.mapSize.height = 4096;
         sunLight.shadow.camera.near = 0.5;
-        sunLight.shadow.camera.far = 200;
-        sunLight.shadow.camera.left = -50;
-        sunLight.shadow.camera.right = 50;
-        sunLight.shadow.camera.top = 50;
-        sunLight.shadow.camera.bottom = -50;
+        sunLight.shadow.camera.far = 500;
+        sunLight.shadow.camera.left = -300;
+        sunLight.shadow.camera.right = 300;
+        sunLight.shadow.camera.top = 300;
+        sunLight.shadow.camera.bottom = -300;
         this.scene.add(sunLight);
 
         // 보조 조명
@@ -282,8 +282,8 @@ export class Building3DViewer {
     }
 
     createGround() {
-        // 지면 (더 큰 영역)
-        const groundGeometry = new THREE.PlaneGeometry(400, 400);
+        // 지면 (확장된 영역에 맞게 더 큰 크기)
+        const groundGeometry = new THREE.PlaneGeometry(550, 550);
         const groundMaterial = new THREE.MeshLambertMaterial({
             color: 0x7cfc00,
             side: THREE.DoubleSide
@@ -298,7 +298,7 @@ export class Building3DViewer {
         const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
 
         const roadH = new THREE.Mesh(
-            new THREE.PlaneGeometry(400, 10),
+            new THREE.PlaneGeometry(550, 12),
             roadMaterial
         );
         roadH.rotation.x = -Math.PI / 2;
@@ -306,7 +306,7 @@ export class Building3DViewer {
         this.scene.add(roadH);
 
         const roadV = new THREE.Mesh(
-            new THREE.PlaneGeometry(10, 400),
+            new THREE.PlaneGeometry(12, 550),
             roadMaterial
         );
         roadV.rotation.x = -Math.PI / 2;
@@ -930,15 +930,15 @@ export class Building3DViewer {
             }
         });
 
-        // 4등분 영역 중심점 (플레이어별)
+        // 4등분 영역 중심점 (플레이어별) - 녹색 영역에 맞게 확장
         const quadrantCenters = [
-            { x: -80, z: -80 },  // 플레이어 0: 좌상단
-            { x: 80, z: -80 },   // 플레이어 1: 우상단
-            { x: -80, z: 80 },   // 플레이어 2: 좌하단
-            { x: 80, z: 80 }     // 플레이어 3: 우하단
+            { x: -120, z: -120 },  // 플레이어 0: 좌상단
+            { x: 120, z: -120 },   // 플레이어 1: 우상단
+            { x: -120, z: 120 },   // 플레이어 2: 좌하단
+            { x: 120, z: 120 }     // 플레이어 3: 우하단
         ];
 
-        const spacing = 60;
+        const spacing = 80;
         const promises = [];
 
         playerBuildings.forEach((buildings, playerIdx) => {
@@ -980,19 +980,19 @@ export class Building3DViewer {
         // 플레이어 영역 표시 (바닥에 색상)
         this.addPlayerZones();
 
-        // 카메라 위치 조정
-        this.camera.position.set(250, 200, 250);
+        // 카메라 위치 조정 (확장된 영역에 맞게)
+        this.camera.position.set(350, 280, 350);
         this.camera.lookAt(0, 0, 0);
     }
 
     // 플레이어 영역 표시
     addPlayerZones() {
-        const zoneSize = 140;
+        const zoneSize = 220;
         const quadrants = [
-            { x: -80, z: -80, color: PLAYER_COLORS[0] },
-            { x: 80, z: -80, color: PLAYER_COLORS[1] },
-            { x: -80, z: 80, color: PLAYER_COLORS[2] },
-            { x: 80, z: 80, color: PLAYER_COLORS[3] }
+            { x: -120, z: -120, color: PLAYER_COLORS[0] },
+            { x: 120, z: -120, color: PLAYER_COLORS[1] },
+            { x: -120, z: 120, color: PLAYER_COLORS[2] },
+            { x: 120, z: 120, color: PLAYER_COLORS[3] }
         ];
 
         quadrants.forEach(q => {
