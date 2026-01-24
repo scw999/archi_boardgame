@@ -299,6 +299,13 @@ class GameApp {
     showPlayerSetup() {
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('player-setup').classList.remove('hidden');
+        document.getElementById('game-container').classList.add('hidden');
+
+        // 최종 결과 화면도 숨김
+        const finalMapView = document.getElementById('final-map-view');
+        if (finalMapView) {
+            finalMapView.classList.add('hidden');
+        }
     }
 
     // 게임 시작
