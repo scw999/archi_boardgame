@@ -2930,32 +2930,47 @@ class GameApp {
 
         finalMapView.classList.remove('hidden');
 
-        // 지도 렌더링
+        // 지도 렌더링 - 기존 city-grid를 final-city-grid로 이동
         const finalCityGrid = document.getElementById('final-city-grid');
-        if (finalCityGrid) {
-            // renderCityGrid 함수를 재사용하여 지도 렌더링
-            const cityGridSection = document.getElementById('city-grid');
-            if (cityGridSection) {
-                finalCityGrid.innerHTML = cityGridSection.innerHTML;
+        const cityGridSection = document.getElementById('city-grid');
 
-                // 최종 지도에서 건물 클릭 이벤트 바인딩
-                this.bindFinalMapPlotEvents(finalCityGrid);
+        if (finalCityGrid && cityGridSection) {
+            // 기존 city-grid를 final-city-grid 안으로 이동
+            finalCityGrid.appendChild(cityGridSection);
+            cityGridSection.classList.remove('hidden');
 
-                // 3D 토글 버튼 이벤트 재바인딩
-                const toggle3DBtn = finalCityGrid.querySelector('#toggle-3d-city-btn');
-                if (toggle3DBtn) {
-                    toggle3DBtn.addEventListener('click', async () => {
-                        const is3D = await toggle3DCityView();
-                        toggle3DBtn.textContent = is3D ? '🗺️ 2D' : '🏙️ 3D';
-                    });
-                }
+            // 개발자 모드 버튼 숨기기 (최종 결과에서는 필요없음)
+            const devModeBtn = cityGridSection.querySelector('#toggle-dev-mode-btn');
+            if (devModeBtn) devModeBtn.style.display = 'none';
+
+            // 3D 토글 버튼 이벤트 재바인딩
+            const toggle3DBtn = cityGridSection.querySelector('#toggle-3d-city-btn');
+            if (toggle3DBtn) {
+                // 기존 이벤트 리스너 제거를 위해 버튼 복제
+                const newToggle3DBtn = toggle3DBtn.cloneNode(true);
+                toggle3DBtn.parentNode.replaceChild(newToggle3DBtn, toggle3DBtn);
+                newToggle3DBtn.addEventListener('click', () => {
+                    toggle3DCityView();
+                });
             }
+
+            // 플롯 마커 클릭 이벤트 재바인딩 (상세 정보 표시)
+            this.bindFinalMapPlotEvents(cityGridSection);
         }
 
         // 게임 종료 버튼 이벤트
         const endGameBtn = document.getElementById('end-game-btn');
         if (endGameBtn) {
             endGameBtn.addEventListener('click', () => {
+                // city-grid를 원래 위치(game-container)로 복원
+                const gameContainer = document.getElementById('game-container');
+                const cityGrid = document.getElementById('city-grid');
+                if (gameContainer && cityGrid) {
+                    gameContainer.appendChild(cityGrid);
+                    // 개발자 모드 버튼 다시 표시
+                    const devModeBtn = cityGrid.querySelector('#toggle-dev-mode-btn');
+                    if (devModeBtn) devModeBtn.style.display = '';
+                }
                 finalMapView.classList.add('hidden');
                 this.showMainMenu();
             });
@@ -3164,10 +3179,14 @@ class GameApp {
         const plotMarkers = container.querySelectorAll('.plot-marker.owned');
 
         plotMarkers.forEach(marker => {
-            marker.addEventListener('click', (e) => {
+            // 기존 이벤트 리스너 제거를 위해 마커 복제
+            const newMarker = marker.cloneNode(true);
+            marker.parentNode.replaceChild(newMarker, marker);
+
+            newMarker.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const plotIndex = parseInt(marker.dataset.plotIndex);
-                this.showFinalMapBuildingDetail(plotIndex, marker);
+                const plotIndex = parseInt(newMarker.dataset.plotIndex);
+                this.showFinalMapBuildingDetail(plotIndex, newMarker);
             });
         });
     }
