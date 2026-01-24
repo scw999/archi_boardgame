@@ -7028,3 +7028,146 @@ body {
 .action-btn.skip:hover {
   background: linear-gradient(135deg, #7c8290, #5c6573);
 }
+
+/* ===== 자금 부족 카드 스타일 ===== */
+.game-card.unaffordable {
+  opacity: 0.6;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.game-card.unaffordable .card-body {
+  position: relative;
+}
+
+.unaffordable-badge {
+  background: #f97316;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.unaffordable-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f97316;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  z-index: 10;
+}
+
+/* ===== 자금 부족 시 액션 영역 스타일 ===== */
+.insufficient-funds-notice {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(239, 68, 68, 0.1));
+  border: 2px solid rgba(249, 115, 22, 0.5);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.insufficient-funds-notice .notice-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.insufficient-funds-notice .notice-icon {
+  font-size: 1.5rem;
+}
+
+.insufficient-funds-notice .notice-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f97316;
+}
+
+.insufficient-funds-notice .notice-details {
+  display: flex;
+  gap: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.insufficient-funds-notice .notice-details strong {
+  color: var(--text-primary);
+}
+
+.insufficient-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.insufficient-action-buttons .action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-family: inherit;
+  min-width: 120px;
+  transition: all 0.2s ease;
+}
+
+.insufficient-action-buttons .action-btn .btn-icon {
+  font-size: 1.5rem;
+}
+
+.insufficient-action-buttons .action-btn .btn-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.insufficient-action-buttons .action-btn .btn-value {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.insufficient-action-buttons .pm-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.insufficient-action-buttons .pm-btn:hover {
+  background: linear-gradient(135deg, #4b8af6, #3570ec);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.insufficient-action-buttons .sell-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+
+.insufficient-action-buttons .sell-btn:hover {
+  background: linear-gradient(135deg, #34d86d, #1cb356);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.insufficient-action-buttons .skip-btn {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+}
+
+.insufficient-action-buttons .skip-btn:hover {
+  background: linear-gradient(135deg, #7c8290, #5c6573);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
+}

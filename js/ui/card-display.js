@@ -205,12 +205,19 @@ function renderArchitectCard(architect, index) {
 function renderConstructorCard(constructor, index) {
     const info = getConstructorDisplayInfo(constructor);
     const isClaimed = constructor.isClaimed === true;
+    const isUnaffordable = constructor.isUnaffordable === true;
+
+    // 카드 클래스 결정
+    let cardClasses = 'game-card constructor-card';
+    if (isClaimed) cardClasses += ' claimed';
+    if (isUnaffordable) cardClasses += ' unaffordable disabled';
 
     return `
-    <div class="game-card constructor-card ${isClaimed ? 'claimed' : ''}" data-index="${index}">
+    <div class="${cardClasses}" data-index="${index}">
       <div class="card-header constructor">
         <span class="card-type">🏗️ 시공사</span>
         ${isClaimed ? '<span class="claimed-badge">선점됨</span>' : ''}
+        ${isUnaffordable ? '<span class="unaffordable-badge">자금 부족</span>' : ''}
       </div>
       <div class="card-body">
         <div class="portrait">${info.emoji}</div>
@@ -243,6 +250,7 @@ function renderConstructorCard(constructor, index) {
         <div class="card-description">${info.description}</div>
 
         ${isClaimed ? '<div class="claimed-overlay">🚫 다른 플레이어가 선택</div>' : ''}
+        ${isUnaffordable ? '<div class="unaffordable-overlay">💸 자금 부족</div>' : ''}
       </div>
     </div>
   `;
