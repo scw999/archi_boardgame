@@ -41,6 +41,7 @@ function createPlayer(id, name) {
         id,
         name,
         money: 0,
+        initialMoney: 0,          // 시작 자금 (수익 계산용)
         loan: 0,
         interestRate: 0.1,        // 대출 이자율 10%
         maxLoanMultiplier: 2.33,  // 최대 대출 배율
@@ -280,14 +281,17 @@ class GameState {
 
     // 시작 자금 설정 (주사위 결과)
     setStartingMoney(playerIndex, diceTotal) {
+        let startingMoney;
         if (this.settings.easyStart) {
-            this.players[playerIndex].money = this.settings.startingMoney;
+            startingMoney = this.settings.startingMoney;
         } else {
-            this.players[playerIndex].money = STARTING_MONEY[diceTotal] || 500000000;
+            startingMoney = STARTING_MONEY[diceTotal] || 500000000;
         }
+        this.players[playerIndex].money = startingMoney;
+        this.players[playerIndex].initialMoney = startingMoney;  // 초기 자금 저장
         // 시작 자금 주사위 결과 저장 (선 플레이어 결정용)
         this.players[playerIndex].startingDiceTotal = diceTotal;
-        this.addLog(`${this.players[playerIndex].name}: 시작 자금 ${this.formatMoney(this.players[playerIndex].money)}`);
+        this.addLog(`${this.players[playerIndex].name}: 시작 자금 ${this.formatMoney(startingMoney)}`);
     }
 
     // 선 플레이어 결정 (주사위 합계가 가장 높은 플레이어)
@@ -318,6 +322,9 @@ class GameState {
         // 선점 초기화 (매 라운드마다 리셋)
         this.selectedArchitects = new Set();
         this.selectedConstructors = new Set();
+
+        // 경매/급매 실패 기록 초기화 (새 라운드에서는 새 카드가 나오므로)
+        this.pendingLands = [];
 
         // 카드 8장씩 공개
         this.availableLands = this.drawCards(this.landDeck, 8);
@@ -410,6 +417,11 @@ class GameState {
         return { success: true };
     }
 
+    // 건축가 선점 해제
+    releaseArchitect(architectId) {
+        this.selectedArchitects.delete(architectId);
+    }
+
     // 시공사 선점 확인
     isConstructorAvailable(constructorId) {
         return !this.selectedConstructors.has(constructorId);
@@ -477,7 +489,12 @@ class GameState {
         this.players.forEach((player, playerIndex) => {
             if (player.currentProject && player.currentProject.building) {
                 // 건물을 자산으로 추가 (현금은 지급하지 않음 - 매각해야 현금 획득)
-                player.buildings.push({ ...player.currentProject });
+                // Note: constructor는 JavaScript 예약 속성이므로 constructorData로 별도 저장
+                const completedBuilding = {
+                    ...player.currentProject,
+                    constructorData: player.currentProject.constructor
+                };
+                player.buildings.push(completedBuilding);
                 // 대출은 상환하지 않고 유지 (건물 자산이 담보가 됨)
                 this.addLog(`🏢 ${player.name}: ${player.currentProject.building.name} 완공! (자산가치: ${this.formatMoney(player.currentProject.salePrice)})`);
 
@@ -559,9 +576,17 @@ class GameState {
         }, 0);
     }
 
-    takeLoan(playerIndex, amount) {
+    takeLoan(playerIndex, amount, loanType = 'construction') {
         const player = this.players[playerIndex];
         const maxLoan = this.getMaxLoan(player);
+
+        // 라운드당 1회 제한 체크
+        if (loanType === 'construction' && player.constructionLoanUsedRound === this.currentRound) {
+            return { success: false, message: '이번 라운드에 이미 건설자금대출을 받았습니다.' };
+        }
+        if (loanType === 'landMortgage' && player.landMortgageUsedRound === this.currentRound) {
+            return { success: false, message: '이번 라운드에 이미 토지담보대출을 받았습니다.' };
+        }
 
         if (player.loan + amount > maxLoan) {
             return { success: false, message: '대출 한도를 초과했습니다.' };
@@ -569,8 +594,29 @@ class GameState {
 
         player.loan += amount;
         player.money += amount;
-        this.addLog(`${player.name}: ${this.formatMoney(amount)} 대출 실행`);
+
+        // 대출 사용 기록
+        if (loanType === 'construction') {
+            player.constructionLoanUsedRound = this.currentRound;
+        } else if (loanType === 'landMortgage') {
+            player.landMortgageUsedRound = this.currentRound;
+        }
+
+        const loanTypeName = loanType === 'landMortgage' ? '토지담보대출' : '건설자금대출';
+        this.addLog(`${player.name}: ${loanTypeName} ${this.formatMoney(amount)} 실행`);
         return { success: true, message: `${this.formatMoney(amount)} 대출이 실행되었습니다.` };
+    }
+
+    // 대출 가능 여부 체크
+    canTakeLoan(playerIndex, loanType = 'construction') {
+        const player = this.players[playerIndex];
+        if (loanType === 'construction') {
+            return player.constructionLoanUsedRound !== this.currentRound;
+        }
+        if (loanType === 'landMortgage') {
+            return player.landMortgageUsedRound !== this.currentRound;
+        }
+        return true;
     }
 
     // 이자 계산 (월 단위)
@@ -633,7 +679,7 @@ class GameState {
             land: project.land,
             sellPrice,
             profit,
-            soldAt: this.round
+            soldAt: this.currentRound
         });
 
         // 개발 지도에서 제거
@@ -668,25 +714,30 @@ class GameState {
             return { success: false, message: '설계가 완료되지 않은 프로젝트입니다. 대지 매각을 이용하세요.' };
         }
 
-        if (project.constructor) {
-            return { success: false, message: '이미 시공이 시작된 프로젝트는 매각할 수 없습니다.' };
-        }
+        // 시공 중인 프로젝트도 매각 가능 (시공사가 선택되어 있어도 매각 허용)
+        const hasConstructor = !!project.constructor;
 
-        // 판매 가격: 토지 구매가 + 개발비 + 설계비의 90% (설계 프리미엄)
+        // 판매 가격 계산: 토지 + 개발비 + 설계비 + (시공비가 있으면 시공비도 포함)
         const landCost = project.landPrice + project.developmentCost;
         const designCost = project.designFee;
-        const totalInvestment = landCost + designCost;
-        const sellPrice = Math.floor(totalInvestment * 0.9); // 투자비의 90% 회수
+        const constructionCost = hasConstructor ? (project.constructionCost || 0) : 0;
+        const totalInvestment = landCost + designCost + constructionCost;
+
+        // 시공 중인 경우 80% 회수, 설계만 완료된 경우 90% 회수
+        const recoveryRate = hasConstructor ? 0.8 : 0.9;
+        const sellPrice = Math.floor(totalInvestment * recoveryRate);
         const loss = totalInvestment - sellPrice;
 
         player.money += sellPrice;
 
         // 매각 이력에 추가
         player.soldHistory.push({
-            type: 'designed_project',
+            type: hasConstructor ? 'construction_project' : 'designed_project',
             land: project.land,
             building: project.building,
             architect: project.architect,
+            constructor: project.constructor,
+            constructionCost: constructionCost,
             sellPrice,
             loss,
             soldAt: this.currentRound
@@ -700,7 +751,13 @@ class GameState {
             this.releaseArchitect(project.architect.id);
         }
 
+        // 시공사 선점 해제
+        if (project.constructor) {
+            this.selectedConstructors.delete(project.constructor.id);
+        }
+
         const projectName = `${project.land.name}/${project.building.name}`;
+        const phaseText = hasConstructor ? '시공 중 프로젝트' : '설계 프로젝트';
 
         // 프로젝트 초기화
         project.land = null;
@@ -709,16 +766,22 @@ class GameState {
         project.architect = null;
         project.designFee = 0;
         project.building = null;
+        project.constructor = null;
+        project.constructionCost = 0;
+        project.constructionProgress = 0;
+        project.risks = [];
+        project.totalLoss = 0;
 
         // 평가 단계까지 스킵 플래그 설정
         player.designSoldRound = this.currentRound;
 
-        this.addLog(`${player.name}: ${projectName} 설계 프로젝트 매각 (${this.formatMoney(sellPrice)}, 손실 -${this.formatMoney(loss)})`);
+        this.addLog(`${player.name}: ${projectName} ${phaseText} 매각 (${this.formatMoney(sellPrice)}, 손실 -${this.formatMoney(loss)})`);
 
         return {
             success: true,
             sellPrice,
             loss,
+            hasConstructor,
             message: `${projectName} 프로젝트를 ${this.formatMoney(sellPrice)}에 매각했습니다. (손실: -${this.formatMoney(loss)}, 평가까지 휴식)`
         };
     }
@@ -766,10 +829,11 @@ class GameState {
             building: building.building,
             land: building.land,
             architect: building.architect,
+            constructor: building.constructorData || building.constructor,
             sellPrice,
             profitLoss,
             marketFactor,
-            soldAt: this.round,
+            soldAt: this.currentRound,
             originalProject: { ...building }
         });
 
@@ -855,6 +919,8 @@ class GameState {
             availableLands: this.availableLands,
             availableArchitects: this.availableArchitects,
             availableConstructors: this.availableConstructors,
+            // 실패한 경매/급매 기록
+            pendingLands: this.pendingLands,
             // 선점 상태 (Set을 배열로 변환)
             selectedArchitects: Array.from(this.selectedArchitects || []),
             selectedConstructors: Array.from(this.selectedConstructors || []),
@@ -896,6 +962,9 @@ class GameState {
             this.availableLands = data.availableLands || [];
             this.availableArchitects = data.availableArchitects || [];
             this.availableConstructors = data.availableConstructors || [];
+
+            // 실패한 경매/급매 기록 복원
+            this.pendingLands = data.pendingLands || [];
 
             // 선점 상태 복원 (배열을 Set으로 변환)
             this.selectedArchitects = new Set(data.selectedArchitects || []);

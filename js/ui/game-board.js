@@ -144,8 +144,8 @@ export function renderActionArea(actions) {
     actionArea.innerHTML = `
     <div class="action-buttons">
       ${actions.map(action => `
-        <button 
-          class="action-btn ${action.primary ? 'primary' : ''} ${action.disabled ? 'disabled' : ''}"
+        <button
+          class="action-btn ${action.primary ? 'primary' : ''} ${action.disabled ? 'disabled' : ''} ${action.className || ''}"
           data-action="${action.id}"
           ${action.disabled ? 'disabled' : ''}
         >
@@ -237,4 +237,39 @@ export function showResultModal(title, content, onClose) {
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeModal();
     });
+}
+
+// 커스텀 confirm 모달 (게임 UI 테마)
+export function showConfirmModal(title, message, onConfirm, onCancel) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+    <div class="confirm-modal">
+      <div class="confirm-header">
+        <span class="confirm-icon">❓</span>
+        <h3>${title}</h3>
+      </div>
+      <div class="confirm-content">
+        <p>${message.replace(/\n/g, '<br>')}</p>
+      </div>
+      <div class="confirm-footer">
+        <button class="btn-cancel">취소</button>
+        <button class="btn-confirm">확인</button>
+      </div>
+    </div>
+  `;
+
+    document.body.appendChild(overlay);
+
+    const closeModal = (confirmed) => {
+        overlay.classList.add('closing');
+        setTimeout(() => {
+            overlay.remove();
+            if (confirmed && onConfirm) onConfirm();
+            if (!confirmed && onCancel) onCancel();
+        }, 300);
+    };
+
+    overlay.querySelector('.btn-confirm').addEventListener('click', () => closeModal(true));
+    overlay.querySelector('.btn-cancel').addEventListener('click', () => closeModal(false));
 }

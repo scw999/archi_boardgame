@@ -1,7 +1,7 @@
 // 대지 구매 페이즈 로직
 import { gameState, GAME_PHASES } from '../core/game-state.js';
 import { rollDice, checkLandPurchase, getDiceEmoji } from '../core/dice.js';
-import { calculateLandDevelopmentCost } from '../data/lands.js';
+import { calculateLandDevelopmentCost, getRegionByPrice } from '../data/lands.js';
 
 // 토지 선택
 export function selectLand(playerIndex, landIndex, priceType) {
@@ -31,7 +31,15 @@ export function selectLand(playerIndex, landIndex, priceType) {
 
     // 개발 비용 계산
     const developmentCost = calculateLandDevelopmentCost(land);
-    const totalCost = price + developmentCost;
+
+    // 와일드카드 할인 적용 체크
+    let discountedPrice = price;
+    let discountRate = 0;
+    if (player.landDiscountActive) {
+        discountRate = player.landDiscountActive;
+        discountedPrice = Math.floor(price * (1 - discountRate));
+    }
+    const totalCost = discountedPrice + developmentCost;
 
     // 자금 체크 (대출 가능 금액 포함)
     const maxAvailable = player.money + gameState.getMaxLoan(player) - player.loan;
@@ -46,7 +54,9 @@ export function selectLand(playerIndex, landIndex, priceType) {
         success: true,
         land,
         priceType,
-        price,
+        price: discountedPrice,
+        originalPrice: price,
+        discountRate,
         developmentCost,
         totalCost,
         requiredDice,
@@ -119,7 +129,15 @@ export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResu
 
     // 개발 비용 계산
     const developmentCost = calculateLandDevelopmentCost(land);
-    const totalCost = price + developmentCost;
+
+    // 와일드카드 할인 적용 체크
+    let discountedPrice = price;
+    let discountRate = 0;
+    if (player.landDiscountActive) {
+        discountRate = player.landDiscountActive;
+        discountedPrice = Math.floor(price * (1 - discountRate));
+    }
+    const totalCost = discountedPrice + developmentCost;
 
     // 자금 체크 (대출 가능 금액 포함)
     const maxAvailable = player.money + gameState.getMaxLoan(player) - player.loan;
@@ -136,7 +154,9 @@ export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResu
     const result = {
         land,
         priceType,
-        price,
+        price: discountedPrice,
+        originalPrice: price,
+        discountRate,
         developmentCost,
         totalCost,
         requiredDice,
@@ -157,13 +177,22 @@ export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResu
 
         // 프로젝트에 토지 정보 저장 (고유 인스턴스 ID 부여)
         const project = player.currentProject;
+        const region = getRegionByPrice(land.prices.market);
         project.land = {
             ...land,
-            instanceId: `${land.id}_${Date.now()}_${playerIndex}`  // 고유 인스턴스 ID
+            instanceId: `${land.id}_${Date.now()}_${playerIndex}`,  // 고유 인스턴스 ID
+            region: region
         };
-        project.landPrice = price;
+        project.landPrice = discountedPrice;
         project.priceType = priceType;
         project.developmentCost = developmentCost;
+
+        // 할인 적용 시 로그
+        if (discountRate > 0) {
+            gameState.addLog(`${player.name}: 🎫 토지 할인권 사용 (${discountRate * 100}% 할인, ${gameState.formatMoney(price - discountedPrice)} 절감)`);
+            // 할인 플래그 초기화
+            player.landDiscountActive = null;
+        }
 
         // availableLands에서 해당 토지 제거 (ID로 찾아서)
         const landIndex = gameState.availableLands.findIndex(l => l.id === land.id);
@@ -174,7 +203,7 @@ export function attemptLandPurchaseByLand(playerIndex, land, priceType, diceResu
         // 개발 지도에 토지 표시
         gameState.placeProjectOnMap(playerIndex, project);
 
-        result.message = `${getDiceEmoji(diceResult)} 낙찰 성공! ${land.name} 구매 완료`;
+        result.message = `${getDiceEmoji(diceResult)} 낙찰 성공! ${land.name} 구매 완료${discountRate > 0 ? ` (${discountRate * 100}% 할인 적용)` : ''}`;
         gameState.addLog(`${player.name}: ${result.message}`);
     } else {
         // 구매 실패 - pendingLands에 실패 정보 기록 (같은 플레이어가 다시 경매/급매 시도 방지)
@@ -210,13 +239,23 @@ function completeLandPurchase(playerIndex, landIndex, priceType, selection) {
     gameState.payMoney(playerIndex, selection.totalCost);
 
     // 프로젝트에 토지 정보 저장 (고유 인스턴스 ID 부여)
+    // 지역 정보 계산 (시세 기준)
+    const region = getRegionByPrice(selection.land.prices.market);
     project.land = {
         ...selection.land,
-        instanceId: `${selection.land.id}_${Date.now()}_${playerIndex}`
+        instanceId: `${selection.land.id}_${Date.now()}_${playerIndex}`,
+        region: region
     };
     project.landPrice = selection.price;
     project.priceType = priceType;
     project.developmentCost = selection.developmentCost;
+
+    // 할인 적용 시 로그
+    if (selection.discountRate > 0) {
+        gameState.addLog(`${player.name}: 🎫 토지 할인권 사용 (${selection.discountRate * 100}% 할인, ${gameState.formatMoney(selection.originalPrice - selection.price)} 절감)`);
+        // 할인 플래그 초기화
+        player.landDiscountActive = null;
+    }
 
     // 사용된 토지 목록에서 제거
     gameState.availableLands.splice(landIndex, 1);

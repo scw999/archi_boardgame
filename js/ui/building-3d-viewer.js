@@ -394,8 +394,8 @@ export class Building3DViewer {
                 this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
             }
 
-            // 상태 라벨 추가 (설계중/시공중)
-            if (status === 'design' || status === 'construction') {
+            // 상태 라벨 추가 (설계중/시공중/시공완료)
+            if (status === 'design' || status === 'construction' || status === 'constructionComplete') {
                 this.addStatusLabel(buildingGroup, status, totalHeight);
             }
 
@@ -513,8 +513,8 @@ export class Building3DViewer {
             this.addPlayerFlag(buildingGroup, playerIndex, totalHeight);
         }
 
-        // 상태 라벨 추가 (설계중/시공중)
-        if (status === 'design' || status === 'construction') {
+        // 상태 라벨 추가 (설계중/시공중/시공완료)
+        if (status === 'design' || status === 'construction' || status === 'constructionComplete') {
             this.addStatusLabel(buildingGroup, status, totalHeight);
         }
 
@@ -794,73 +794,103 @@ export class Building3DViewer {
         buildingGroup.add(flagGroup);
     }
 
-    // 상태 라벨 추가 (설계중/시공중)
+    // 상태 라벨 추가 (설계중/설계 완료)
     addStatusLabel(buildingGroup, status, totalHeight) {
         const labelGroup = new THREE.Group();
 
-        // 라벨 배경
-        const labelWidth = status === 'design' ? 12 : 10;
-        const bgGeometry = new THREE.PlaneGeometry(labelWidth, 4);
-        const bgColor = status === 'design' ? 0x3b82f6 : 0xf59e0b; // 파랑/주황
+        // 3배 크기로 확대 (사용자 요청)
+        const scale = 3;
+
+        // 상태별 텍스트와 색상 설정
+        let labelText, bgColor, iconEmoji;
+        if (status === 'design') {
+            labelText = '설계중';
+            bgColor = 0x3b82f6; // 파랑
+            iconEmoji = '📐';
+        } else if (status === 'construction') {
+            labelText = '설계완료';
+            bgColor = 0x22c55e; // 초록
+            iconEmoji = '✅';
+        } else if (status === 'constructionComplete') {
+            labelText = '시공완료';
+            bgColor = 0xf97316; // 오렌지
+            iconEmoji = '🏢';
+        } else {
+            return; // 알 수 없는 상태는 라벨 표시 안함
+        }
+
+        // 라벨 배경 (3배 크기)
+        const labelWidth = 14 * scale;
+        const labelHeight = 4 * scale;
+        const bgGeometry = new THREE.PlaneGeometry(labelWidth, labelHeight);
         const bgMaterial = new THREE.MeshBasicMaterial({
             color: bgColor,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false // z-fighting 방지
         });
         const bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
+        bgMesh.renderOrder = 1; // z-fighting 방지
         labelGroup.add(bgMesh);
 
         // 테두리
         const borderGeometry = new THREE.EdgesGeometry(bgGeometry);
         const borderMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
         const border = new THREE.LineSegments(borderGeometry, borderMaterial);
+        border.renderOrder = 2;
         labelGroup.add(border);
 
-        // 텍스트 대신 아이콘으로 표시
-        const iconGeometry = new THREE.PlaneGeometry(3, 3);
+        // 텍스트 대신 아이콘으로 표시 (3배 크기)
+        const iconGeometry = new THREE.PlaneGeometry(3 * scale, 3 * scale);
         const iconCanvas = document.createElement('canvas');
-        iconCanvas.width = 128;
-        iconCanvas.height = 128;
+        iconCanvas.width = 256;
+        iconCanvas.height = 256;
         const ctx = iconCanvas.getContext('2d');
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 80px Arial';
+        ctx.font = 'bold 160px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(status === 'design' ? '📐' : '🔨', 64, 64);
+        ctx.fillText(iconEmoji, 128, 128);
 
         const iconTexture = new THREE.CanvasTexture(iconCanvas);
         const iconMaterial = new THREE.MeshBasicMaterial({
             map: iconTexture,
             transparent: true,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false
         });
         const iconMesh = new THREE.Mesh(iconGeometry, iconMaterial);
-        iconMesh.position.x = -labelWidth / 2 + 2;
+        iconMesh.position.x = -labelWidth / 2 + 5 * scale;
+        iconMesh.position.z = 0.1; // z-fighting 방지
+        iconMesh.renderOrder = 3;
         labelGroup.add(iconMesh);
 
-        // 한글 텍스트
+        // 한글 텍스트 (3배 크기)
         const textCanvas = document.createElement('canvas');
-        textCanvas.width = 256;
-        textCanvas.height = 64;
+        textCanvas.width = 512;
+        textCanvas.height = 128;
         const textCtx = textCanvas.getContext('2d');
         textCtx.fillStyle = 'white';
-        textCtx.font = 'bold 40px sans-serif';
+        textCtx.font = 'bold 80px sans-serif';
         textCtx.textAlign = 'center';
         textCtx.textBaseline = 'middle';
-        textCtx.fillText(status === 'design' ? '설계중' : '시공중', 128, 32);
+        textCtx.fillText(labelText, 256, 64);
 
         const textTexture = new THREE.CanvasTexture(textCanvas);
         const textMaterial = new THREE.MeshBasicMaterial({
             map: textTexture,
             transparent: true,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false
         });
-        const textGeometry = new THREE.PlaneGeometry(8, 2);
+        const textGeometry = new THREE.PlaneGeometry(8 * scale, 2 * scale);
         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-        textMesh.position.x = 2;
+        textMesh.position.x = 3 * scale;
+        textMesh.position.z = 0.1; // z-fighting 방지
+        textMesh.renderOrder = 3;
         labelGroup.add(textMesh);
 
-        // 라벨 위치 설정 (건물 위)
-        labelGroup.position.set(0, totalHeight + 8, 0);
+        // 라벨 위치 설정 - 건물 가운데, 깃발 바로 위
+        labelGroup.position.set(0, totalHeight + 32, 0);
 
         // 카메라를 향하도록 설정 (빌보드)
         labelGroup.userData.isBillboard = true;

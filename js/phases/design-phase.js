@@ -160,6 +160,10 @@ export function completeDesign(playerIndex, architectIndex, buildingName) {
 // 페이즈 완료 체크
 export function checkDesignPhaseComplete() {
     return gameState.players.every(player => {
+        // PM 컨설팅으로 라운드 스킵한 플레이어는 완료로 처리
+        if (player.pmSkippedRound === gameState.currentRound) {
+            return true;
+        }
         // 토지가 없는 플레이어는 설계 완료로 처리 (스킵)
         if (!player.currentProject || !player.currentProject.land) {
             return true;

@@ -1,5 +1,5 @@
 // 아이소메트릭 개발 지도 UI
-import { gameState } from '../core/game-state.js';
+import { gameState, GAME_PHASES } from '../core/game-state.js';
 import { REGIONS } from '../data/lands.js';
 import { buildings, BUILDING_IMAGES } from '../data/buildings.js';
 
@@ -278,7 +278,11 @@ function collectOwnedPlots() {
                 playerName: player.name,
                 land: project.land,
                 building: project.building,
-                constructor: project.constructor,
+                architect: project.architect,
+                constructorInfo: project.constructor,
+                landPrice: project.landPrice || 0,
+                designFee: project.designFee || 0,
+                constructionCost: project.constructionCost || 0,
                 plotIndex: assignedPlot,
                 status: getProjectStatus(project)
             });
@@ -296,29 +300,57 @@ function collectOwnedPlots() {
                     playerName: player.name,
                     land: building.land,
                     building: building.building,
+                    architect: building.architect,
+                    constructorInfo: building.constructorData || building.constructor,
                     salePrice: building.salePrice,
+                    landPrice: building.landPrice || 0,
+                    designFee: building.designFee || 0,
+                    constructionCost: building.constructionCost || 0,
                     plotIndex: assignedPlot,
                     status: 'completed'
                 });
             });
         }
 
-        // 매각 이력 (건물은 지도에 남음)
+        // 매각 이력 (건물 및 토지 매각)
         if (player.soldHistory) {
             player.soldHistory.forEach(sold => {
                 const landId = sold.land.instanceId || sold.land.id;
                 const assignedPlot = getOrAssignPlotForLand(landId, sold.land.region, sold.land.name);
 
-                ownedPlots.push({
-                    type: 'sold',
-                    playerIndex,
-                    playerName: player.name,
-                    land: sold.land,
-                    building: sold.building,
-                    sellPrice: sold.sellPrice,
-                    plotIndex: assignedPlot,
-                    status: 'sold'
-                });
+                if (sold.type === 'land') {
+                    // 토지만 매각한 경우
+                    ownedPlots.push({
+                        type: 'sold-land',
+                        playerIndex,
+                        playerName: player.name,
+                        land: sold.land,
+                        building: null,
+                        sellPrice: sold.sellPrice,
+                        profit: sold.profit,
+                        soldAt: sold.soldAt,
+                        plotIndex: assignedPlot,
+                        status: 'sold-land'
+                    });
+                } else {
+                    // 건물 매각
+                    ownedPlots.push({
+                        type: 'sold',
+                        playerIndex,
+                        playerName: player.name,
+                        land: sold.land,
+                        building: sold.building,
+                        architect: sold.architect || sold.originalProject?.architect,
+                        constructorInfo: sold.constructor || sold.originalProject?.constructor,
+                        sellPrice: sold.sellPrice,
+                        soldAt: sold.soldAt,
+                        landPrice: sold.originalProject?.landPrice || sold.landPrice || 0,
+                        designFee: sold.originalProject?.designFee || sold.designFee || 0,
+                        constructionCost: sold.originalProject?.constructionCost || sold.constructionCost || 0,
+                        plotIndex: assignedPlot,
+                        status: 'sold'
+                    });
+                }
             });
         }
     });
@@ -441,7 +473,11 @@ function getTierFromZone(zone) {
 function getProjectStatus(project) {
     if (!project) return 'empty';
     if (project.salePrice > 0) return 'completed';
+    // 시공 단계 또는 평가 단계에서 시공사가 있으면 시공 완료 (오렌지색 박스)
+    if (project.constructor && (gameState.phase === GAME_PHASES.CONSTRUCTION || gameState.phase === GAME_PHASES.EVALUATION)) return 'constructionComplete';
     if (project.constructor) return 'construction';
+    // 시공 단계에서 건물이 있으면 "설계완료" (construction status)
+    if (project.building && gameState.phase === GAME_PHASES.CONSTRUCTION) return 'construction';
     if (project.building) return 'design';
     if (project.land) return 'land';
     return 'empty';
@@ -451,7 +487,7 @@ function getProjectStatus(project) {
 function renderPlotMarker(plot, index, owned) {
     const tierClass = `tier-${plot.tier}`;
     const isOwned = owned !== undefined;
-    const isSold = isOwned && owned.status === 'sold';
+    const isSold = isOwned && (owned.status === 'sold' || owned.status === 'sold-land');
     const ownerClass = isOwned ? `owned owner-${owned.playerIndex}${isSold ? ' sold' : ''}` : 'available';
     const playerColor = isOwned ? PLAYER_COLORS[owned.playerIndex] : null;
     const hasBuilding = isOwned && owned.building;
@@ -484,6 +520,7 @@ function renderPlotMarker(plot, index, owned) {
             case 'construction': statusIcon = '🏗️'; break;
             case 'completed': statusIcon = '✅'; break;
             case 'sold': statusIcon = '💰'; break;
+            case 'sold-land': statusIcon = '💰'; break;
         }
     } else {
         content = `<span class="plot-empty">${plot.emoji}</span>`;
@@ -592,9 +629,11 @@ function renderOwnedAssetsList(ownedPlots) {
                     ${plots.map(plot => {
                         // 건물이 완성되었으면 건물 이름 표시, 아니면 토지 이름 표시
                         const hasCompletedBuilding = plot.building && (plot.status === 'completed' || plot.status === 'sold');
+                        const isLandSold = plot.status === 'sold-land';
                         const assetName = hasCompletedBuilding ? `${plot.building.name} 건물` : `${plot.land.name.replace(' 필지', '')} 택지`;
+                        const statusClass = isLandSold ? 'sold sold-land' : plot.status;
                         return `
-                        <div class="asset-item ${plot.status}">
+                        <div class="asset-item ${statusClass}">
                             <span class="asset-icon">${plot.building ? getBuildingImageHTML(plot.building.name, '24px') : '🏞️'}</span>
                             <span class="asset-name">${assetName}</span>
                             <span class="asset-status">${getStatusLabel(plot.status)}</span>
@@ -614,8 +653,10 @@ function getStatusLabel(status) {
         'land': '대지 확보',
         'design': '설계 중',
         'construction': '설계 완료',  // 시공 단계 진입 = 설계 완료
+        'constructionComplete': '시공 완료',  // 시공사 선정 후 시공 완료
         'completed': '완료',
-        'sold': '매각됨'
+        'sold': '매각됨',
+        'sold-land': '토지 매각'
     };
     return labels[status] || status;
 }
@@ -662,6 +703,32 @@ function bindPlotEvents() {
     });
 }
 
+// 3D 로딩 오버레이 표시
+function show3DLoadingOverlay() {
+    // 기존 로딩 오버레이 제거
+    document.getElementById('loading-3d-overlay')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'loading-3d-overlay';
+    overlay.innerHTML = `
+        <div class="loading-3d-content">
+            <div class="loading-3d-spinner"></div>
+            <div class="loading-3d-text">3D 도시 로딩 중...</div>
+            <div class="loading-3d-subtext">건물을 배치하고 있습니다</div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// 3D 로딩 오버레이 숨기기
+function hide3DLoadingOverlay() {
+    const overlay = document.getElementById('loading-3d-overlay');
+    if (overlay) {
+        overlay.classList.add('fade-out');
+        setTimeout(() => overlay.remove(), 300);
+    }
+}
+
 // 3D 도시 뷰 토글
 export async function toggle3DCityView(ownedPlots = null) {
     is3DCityView = !is3DCityView;
@@ -673,10 +740,14 @@ export async function toggle3DCityView(ownedPlots = null) {
     if (!isoMap || !container3D) return;
 
     if (is3DCityView) {
+        // 로딩 화면 표시
+        show3DLoadingOverlay();
+
         // 3D 모듈 동적 로드
         const loaded = await load3DModule();
         if (!loaded) {
             is3DCityView = false;
+            hide3DLoadingOverlay();
             alert('3D 뷰어를 로드할 수 없습니다.');
             return;
         }
@@ -691,6 +762,9 @@ export async function toggle3DCityView(ownedPlots = null) {
             ownedPlots = collectOwnedPlots();
         }
         await init3DCityView(ownedPlots);
+
+        // 로딩 완료 후 오버레이 숨기기
+        hide3DLoadingOverlay();
     } else {
         isoMap.classList.remove('hidden');
         container3D.classList.add('hidden');
@@ -717,11 +791,16 @@ async function init3DCityView(ownedPlots) {
         cityViewer.dispose();
     }
 
-    // 컨테이너 크기 설정
+    // 컨테이너 크기 설정 - 더 큰 기본값 사용
     const container = document.getElementById('city-3d-container');
-    const width = container.clientWidth || 800;
-    const height = Math.max(500, container.clientHeight - 50);
+    const wrapper = document.querySelector('.iso-city-map-wrapper');
+    const width = Math.max(wrapper?.clientWidth || container.clientWidth || 1000, 800);
+    const height = Math.max(600, container.clientHeight || 600);
 
+    // 컨테이너 스타일 강제 설정
+    container.style.width = '100%';
+    container.style.height = height + 'px';
+    container.style.minHeight = height + 'px';
     canvas.style.width = '100%';
     canvas.style.height = height + 'px';
 
@@ -1041,48 +1120,97 @@ function showBuildingDetailModal(plotIndex) {
         'design': { text: '설계 중', class: 'status-design' },
         'construction': { text: '시공 중', class: 'status-construction' },
         'completed': { text: '완공', class: 'status-completed' },
-        'sold': { text: '매각됨', class: 'status-sold' }
+        'sold': { text: '매각됨', class: 'status-sold' },
+        'sold-land': { text: '매각됨', class: 'status-sold' }
     };
     const statusInfo = statusLabels[owned.status] || { text: owned.status, class: '' };
 
-    // 건물 정보 및 3D 버튼
-    let buildingInfo = '';
-    let view3DButton = '';
-    if (owned.building) {
-        const buildingImage = BUILDING_IMAGES[owned.building.name];
+    // 비용 계산
+    const totalInvestment = (owned.landPrice || 0) + (owned.designFee || 0) + (owned.constructionCost || 0);
+    const isSold = owned.status === 'sold' || owned.status === 'sold-land';
+    const finalPrice = isSold ? (owned.sellPrice || 0) : (owned.salePrice || 0);
+    const profit = finalPrice - totalInvestment;
+    const profitClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
+    const profitSign = profit >= 0 ? '+' : '';
 
+    // 건물 정보
+    let buildingInfo = '';
+    if (owned.building) {
         buildingInfo = `
-            <div class="modal-building-section">
-                <div class="modal-building-visual">
-                    ${buildingImage ?
-                        `<img src="${buildingImage}" alt="${owned.building.name}" class="modal-building-img">` :
-                        `<span class="modal-building-emoji">${owned.building.emoji}</span>`
-                    }
-                </div>
-                <div class="modal-building-info">
-                    <div class="modal-building-name">${getBuildingImageHTML(owned.building.name, '24px')} ${owned.building.name}</div>
-                    <div class="modal-building-stat">면적: ${owned.building.area || '-'}평</div>
-                    <div class="modal-building-stat">설계비: ${gameState.formatMoney(owned.building.designFee || 0)}</div>
-                    <div class="modal-building-stat">시공비: ${gameState.formatMoney(owned.building.constructionCost || 0)}</div>
+            <div class="modal-section">
+                <div class="modal-building">
+                    <strong>🏢 ${owned.building.name}</strong>
                 </div>
             </div>
         `;
+    }
 
-        // 3D 버튼 항상 표시 (동적 로드)
-        view3DButton = `
-            <button class="btn-view-3d" data-building="${owned.building.name}" data-player="${owned.playerIndex}" data-status="${owned.status}">
-                🏙️ 3D로 보기
-            </button>
+    // 팀 정보 (건축가, 시공사) - 건물이 있을 때만 표시
+    // Note: constructor는 JavaScript 예약 속성이므로 hasOwnProperty로 체크
+    const hasArchitect = owned.architect && typeof owned.architect === 'object' && owned.architect.name;
+    const hasConstructor = owned.constructorInfo && typeof owned.constructorInfo === 'object' && owned.constructorInfo.name;
+
+    let teamInfo = '';
+    if (owned.building && (hasArchitect || hasConstructor)) {
+        teamInfo = `
+            <div class="modal-section team-info">
+                ${hasArchitect ? `
+                    <div class="modal-architect">
+                        <span class="label">건축가</span>
+                        <span class="value">${owned.architect.portrait || '👤'} ${owned.architect.name}</span>
+                    </div>
+                ` : ''}
+                ${hasConstructor ? `
+                    <div class="modal-constructor">
+                        <span class="label">시공사</span>
+                        <span class="value">${owned.constructorInfo.emoji || '🏗️'} ${owned.constructorInfo.name}</span>
+                    </div>
+                ` : ''}
+            </div>
         `;
     }
 
-    // 가치/가격 정보
-    let priceInfo = '';
-    if (owned.salePrice) {
-        priceInfo = `<div class="modal-price">건물 가치: ${gameState.formatMoney(owned.salePrice)}</div>`;
+    // 투자 내역 (완공 또는 매각된 건물만)
+    let costBreakdown = '';
+    if ((owned.status === 'completed' || owned.status === 'sold') && totalInvestment > 0) {
+        costBreakdown = `
+            <div class="modal-section cost-breakdown">
+                <h4>💰 투자 내역</h4>
+                <div class="cost-row">
+                    <span>토지 구입비</span>
+                    <span>${gameState.formatMoney(owned.landPrice || 0)}</span>
+                </div>
+                <div class="cost-row">
+                    <span>설계비</span>
+                    <span>${gameState.formatMoney(owned.designFee || 0)}</span>
+                </div>
+                <div class="cost-row">
+                    <span>시공비</span>
+                    <span>${gameState.formatMoney(owned.constructionCost || 0)}</span>
+                </div>
+                <div class="cost-row total">
+                    <span>총 투자금</span>
+                    <span>${gameState.formatMoney(totalInvestment)}</span>
+                </div>
+            </div>
+        `;
     }
-    if (owned.sellPrice) {
-        priceInfo = `<div class="modal-price sold">매각가: ${gameState.formatMoney(owned.sellPrice)}</div>`;
+
+    // 결과 정보 (완공 또는 매각된 건물만)
+    let resultInfo = '';
+    if ((owned.status === 'completed' || owned.status === 'sold') && finalPrice > 0) {
+        resultInfo = `
+            <div class="modal-section result-info">
+                <div class="result-row">
+                    <span>${isSold ? '매각가' : '건물 가치'}</span>
+                    <span class="final-price">${gameState.formatMoney(finalPrice)}</span>
+                </div>
+                <div class="result-row profit ${profitClass}">
+                    <span>수익</span>
+                    <span>${profitSign}${gameState.formatMoney(Math.abs(profit))}</span>
+                </div>
+            </div>
+        `;
     }
 
     const modalHtml = `
@@ -1095,49 +1223,23 @@ function showBuildingDetailModal(plotIndex) {
                     <span class="modal-owner">${owned.playerName}</span>
                 </div>
 
-                <div class="modal-land-section">
-                    <div class="modal-land-name">${plot.label}</div>
-                    <div class="modal-land-actual">${owned.land.name}</div>
+                <div class="modal-section">
+                    <div class="modal-land">
+                        <strong>📍 ${owned.land.name}</strong>
+                        <span class="land-area">${owned.land.area}평</span>
+                    </div>
                     <div class="modal-land-region">${owned.land.region?.name || ''} ${owned.land.region?.emoji || ''}</div>
-                    <div class="modal-land-area">면적: ${owned.land.area}평</div>
                 </div>
 
                 ${buildingInfo}
-                ${priceInfo}
-                ${view3DButton}
-
-                ${owned.status === 'sold' ? `
-                    <div class="modal-sold-badge">
-                        💰 매각 완료
-                    </div>
-                ` : ''}
+                ${teamInfo}
+                ${costBreakdown}
+                ${resultInfo}
             </div>
         </div>
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    // 3D 보기 버튼 이벤트
-    const view3DBtn = document.querySelector('.btn-view-3d');
-    if (view3DBtn) {
-        view3DBtn.addEventListener('click', async () => {
-            const buildingName = view3DBtn.dataset.building;
-            const playerIdx = parseInt(view3DBtn.dataset.player);
-
-            // 3D 모듈 동적 로드
-            const loaded = await load3DModule();
-            if (!loaded) {
-                alert('3D 뷰어를 로드할 수 없습니다.');
-                return;
-            }
-
-            // 상세 모달 닫기
-            document.querySelector('.building-detail-modal')?.remove();
-
-            // 3D 뷰어 모달 열기
-            create3DViewerModal(buildingName, playerIdx);
-        });
-    }
 
     // 모달 외부 클릭시 닫기
     const modal = document.querySelector('.building-detail-modal');

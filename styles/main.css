@@ -687,16 +687,25 @@ body {
 
 .panel-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.4rem;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.player-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 4px currentColor;
+}
+
 .player-name {
   font-weight: 700;
   font-size: 0.9rem;
+  flex: 1;
 }
 
 .turn-indicator {
@@ -1039,6 +1048,92 @@ body {
   cursor: pointer;
 }
 
+/* 토지 할인 안내 */
+.discount-notice {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
+  border: 1px solid var(--accent-emerald);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  color: var(--accent-emerald);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 할인 가격 표시 */
+.price-btn .original-price {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.price-btn .discounted-price {
+  color: var(--accent-emerald);
+  font-weight: 700;
+}
+
+/* 토지 구매 자금 부족 모달 */
+.insufficient-funds-modal {
+  text-align: center;
+}
+
+.insufficient-funds-modal .funds-info {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.insufficient-funds-modal .required-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin: 0.5rem 0;
+}
+
+.insufficient-funds-modal .current-money {
+  color: var(--accent-blue);
+}
+
+.insufficient-funds-modal .shortage {
+  margin-top: 0.5rem;
+}
+
+.insufficient-funds-modal .shortage-amount {
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.insufficient-funds-modal .sell-options {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.insufficient-funds-modal .sell-options p {
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.insufficient-funds-modal .sell-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.insufficient-funds-modal .sell-options .action-btn {
+  margin: 0;
+  min-width: 200px;
+}
+
+.insufficient-funds-modal .no-assets-msg {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* ===== 건물 선택 ===== */
 #building-selector {
   margin-top: 1rem;
@@ -1266,7 +1361,7 @@ body {
 /* ===== 알림 ===== */
 #notifications {
   position: fixed;
-  top: 1rem;
+  top: 5rem;
   right: 1rem;
   z-index: 2000;
   display: flex;
@@ -2286,7 +2381,8 @@ body {
 
 .tile-phase.land { background: var(--accent-emerald); color: white; }
 .tile-phase.design { background: var(--accent-blue); color: white; }
-.tile-phase.construction { background: var(--accent-orange); color: white; }
+.tile-phase.construction { background: #22c55e; color: white; }  /* 설계 완료 - 초록색 */
+.tile-phase.constructionComplete { background: #f97316; color: white; }  /* 시공 완료 - 오렌지색 */
 .tile-phase.complete { background: var(--accent-gold); color: #1a1a2e; }
 .tile-phase.sold { background: #6b7280; color: white; }
 
@@ -2340,7 +2436,161 @@ body {
   width: 100%;
 }
 
-/* 매각 상세 모달 */
+/* 매각 상세 모달 (새 스타일) */
+.property-detail-modal {
+  padding: 1rem 0;
+}
+
+.property-detail-modal .property-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.property-detail-modal .property-image {
+  width: 80px;
+  height: 80px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.property-detail-modal .property-image.land-image {
+  font-size: 2.5rem;
+}
+
+.property-detail-modal .property-title {
+  flex: 1;
+}
+
+.property-detail-modal .property-title h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.property-detail-modal .property-location,
+.property-detail-modal .property-owner {
+  margin: 0.25rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.property-detail-modal .property-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.property-detail-modal .property-badge.sold {
+  background: linear-gradient(135deg, #6b7280, #9ca3af);
+  color: white;
+}
+
+.property-detail-modal .property-section {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.property-detail-modal .property-section:last-child {
+  margin-bottom: 0;
+}
+
+.property-detail-modal .section-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.property-detail-modal .property-section.result .section-title {
+  color: var(--accent-emerald);
+}
+
+.property-detail-modal .info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.property-detail-modal .info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.property-detail-modal .info-row:last-child {
+  border-bottom: none;
+}
+
+.property-detail-modal .info-row .label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.property-detail-modal .info-row .value {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.property-detail-modal .info-row .value.highlight {
+  color: var(--accent-blue);
+  font-weight: 600;
+}
+
+.property-detail-modal .info-row .value.gold {
+  color: var(--accent-gold);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.property-detail-modal .info-row .value.profit {
+  color: var(--accent-emerald);
+  font-weight: 600;
+}
+
+.property-detail-modal .info-row .value.loss {
+  color: var(--accent-red);
+  font-weight: 600;
+}
+
+.property-detail-modal .info-row.total {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+}
+
+.property-detail-modal .info-row.large {
+  padding: 0.5rem 0;
+}
+
+.property-detail-modal .info-row.large .label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.property-detail-modal .info-row.large .value {
+  font-size: 1.1rem;
+}
+
+/* 기존 매각 상세 모달 (하위 호환) */
 .sold-detail {
   padding: 1rem 0;
 }
@@ -2559,7 +2809,8 @@ body {
 
 .progress-fill.land { background: var(--accent-emerald); width: 25%; }
 .progress-fill.design { background: var(--accent-blue); width: 50%; }
-.progress-fill.construction { background: var(--accent-orange); width: 75%; }
+.progress-fill.construction { background: #22c55e; width: 75%; }  /* 설계 완료 - 초록색 */
+.progress-fill.constructionComplete { background: #f97316; width: 90%; }  /* 시공 완료 - 오렌지색 */
 .progress-fill.complete { background: var(--accent-gold); width: 100%; }
 
 /* ===== 매각 모달 ===== */
@@ -4668,6 +4919,41 @@ body {
   color: var(--accent-blue);
 }
 
+/* 와일드카드 상세 모달 footer */
+.wildcard-modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.btn-use-wildcard-detail {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--accent-gold), #d97706);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-use-wildcard-detail:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-use-wildcard-detail.disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  font-size: 0.85rem;
+}
+
+.wildcard-detail-result-modal .modal-footer {
+  flex-wrap: wrap;
+}
+
 /* ===== 대지 상세 모달 ===== */
 .land-detail {
   text-align: left;
@@ -5427,6 +5713,25 @@ body {
 .wildcard-item:hover {
   border-color: var(--accent-gold);
   background: rgba(251, 191, 36, 0.1);
+}
+
+.wildcard-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.card-detail-hint {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: all var(--transition-fast);
+}
+
+.wildcard-item:hover .card-detail-hint {
+  opacity: 1;
+  color: var(--accent-gold);
 }
 
 .wildcard-item .card-name {
@@ -6794,7 +7099,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
   animation: modalFadeIn 0.2s ease;
 }
 
@@ -6999,6 +7304,121 @@ body {
   font-weight: 600;
 }
 
+.building-detail-modal .modal-section {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.building-detail-modal .modal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.building-detail-modal .modal-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--accent-gold);
+}
+
+.building-detail-modal .modal-land {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.building-detail-modal .modal-land-region {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.building-detail-modal .land-area {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.building-detail-modal .modal-building {
+  margin-top: 0.5rem;
+}
+
+.building-detail-modal .team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.building-detail-modal .modal-architect,
+.building-detail-modal .modal-constructor {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.building-detail-modal .team-info .label {
+  color: var(--text-muted);
+}
+
+.building-detail-modal .team-info .value {
+  font-weight: 500;
+}
+
+.building-detail-modal .cost-breakdown {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.building-detail-modal .cost-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  font-size: 0.85rem;
+}
+
+.building-detail-modal .cost-row.total {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.building-detail-modal .result-info {
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.building-detail-modal .result-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.building-detail-modal .result-row .final-price {
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.building-detail-modal .result-row.profit {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.building-detail-modal .profit-positive {
+  color: var(--accent-emerald);
+}
+
+.building-detail-modal .profit-negative {
+  color: var(--accent-red);
+}
+
 /* ===== 자금 부족 알림 ===== */
 .insufficient-funds-notice {
   text-align: center;
@@ -7182,11 +7602,204 @@ body {
   transition: all 0.2s ease;
 }
 
-.wildcard-list-item .btn-use-card {
+/* ===== 와일드카드 모달 스타일 ===== */
+.player-wildcards-modal {
+  padding: 1rem 0;
+}
+
+/* ===== 와일드카드 모달 스타일 ===== */
+.wildcards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.wildcard-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.wildcard-list-item.can-use {
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.wildcard-list-item.can-use:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.wildcard-card-icon {
+  width: 64px;
+  height: 72px;
+  min-width: 64px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.wildcard-list-item.can-use .wildcard-card-icon {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+}
+
+.wildcard-card-icon .card-emoji {
+  font-size: 2rem;
+}
+
+.wildcard-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.wildcard-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.wildcard-header .wildcard-icon {
+  font-size: 1.1rem;
+}
+
+.wildcard-header .wildcard-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #60a5fa;
+}
+
+.wildcard-details .wildcard-desc {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-top: 0.1rem;
+}
+
+.wildcard-details .wildcard-effect {
+  font-size: 0.85rem;
+  color: #60a5fa;
+  margin-top: 0.2rem;
+}
+
+.wildcard-details .wildcard-phase {
+  font-size: 0.85rem;
+  color: #ef4444;
+}
+
+.btn-use-wildcard {
   padding: 0.5rem 1.2rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.btn-use-wildcard:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* ===== 건물 모달 스타일 ===== */
+.buildings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.building-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--bg-tertiary);
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.building-list-item:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.building-icon-box {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.building-icon-box img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.building-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.building-info .building-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.building-info .building-land {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.building-info .building-value {
+  font-size: 0.95rem;
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.building-arrow-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(107, 114, 128, 0.3);
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.building-list-item:hover .building-arrow-btn {
+  background: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
 .insufficient-action-buttons .action-btn .btn-icon {
   font-size: 1.5rem;
 }
@@ -7207,10 +7820,6 @@ body {
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
-.wildcard-list-item .btn-use-card:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 .view-3d-btn:hover,
 #toggle-3d-city-btn:hover {
   transform: scale(1.08);
@@ -7229,8 +7838,8 @@ body {
 .city-3d-container {
   position: relative;
   width: 100%;
-  height: 500px;
-  min-height: 500px;
+  height: 600px;
+  min-height: 600px;
   background: linear-gradient(180deg, #87ceeb 0%, #b0e0e6 100%);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -7243,12 +7852,52 @@ body {
 #city-3d-canvas {
   width: 100%;
   height: 100%;
-  min-height: 500px;
+  min-height: 600px;
 }
 
 #city-3d-canvas canvas {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* 3D 컨트롤 버튼 */
+.city-3d-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.city-3d-btn {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.city-3d-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.city-3d-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}
+
 .insufficient-action-buttons .action-btn .btn-label {
   font-weight: 600;
   font-size: 0.9rem;
@@ -7340,4 +7989,476 @@ body {
 #final-city-grid .plot-marker:hover .plot-building-img {
   transform: none !important;
   transition: none !important;
+}
+
+/* ===== 커스텀 Confirm 모달 ===== */
+.confirm-modal {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideUp 0.3s ease;
+  overflow: hidden;
+}
+
+.confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, var(--accent-orange), #d97706);
+  color: white;
+}
+
+.confirm-icon {
+  font-size: 1.5rem;
+}
+
+.confirm-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.confirm-content {
+  padding: 1.5rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.confirm-content p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.confirm-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-tertiary);
+}
+
+.confirm-footer button {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.confirm-footer .btn-cancel {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.confirm-footer .btn-cancel:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.confirm-footer .btn-confirm {
+  background: linear-gradient(135deg, var(--accent-orange), #d97706);
+  color: white;
+}
+
+.confirm-footer .btn-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+/* ===== 3D 로딩 오버레이 ===== */
+#loading-3d-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+#loading-3d-overlay.fade-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.loading-3d-content {
+  text-align: center;
+  color: white;
+}
+
+.loading-3d-spinner {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.5rem;
+  border: 4px solid rgba(249, 115, 22, 0.2);
+  border-top-color: var(--accent-orange);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-3d-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--accent-orange), #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.loading-3d-subtext {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ===== 게임 메뉴 드롭다운 ===== */
+.menu-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.menu-dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  min-width: 140px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.menu-dropdown-content.show {
+  display: block;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-dropdown-content button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+}
+
+.menu-dropdown-content button:hover {
+  background: var(--bg-tertiary);
+}
+
+.menu-dropdown-content button:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+}
+
+#btn-game-menu::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 0.3rem;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  vertical-align: middle;
+}
+
+/* ===== 건물 매각 버튼 (오렌지색) ===== */
+.action-btn.sell-building-btn {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border-color: #c2410c;
+  color: white;
+}
+
+.action-btn.sell-building-btn:hover {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+/* ===== 플레이어 히스토리 섹션 ===== */
+.rank-history {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-toggle-history {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-history:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.history-details {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.history-details.hidden {
+  display: none;
+}
+
+.history-section {
+  margin-bottom: 0.75rem;
+}
+
+.history-section:last-child {
+  margin-bottom: 0;
+}
+
+.history-section h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item .item-icon {
+  flex-shrink: 0;
+}
+
+.history-item .item-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.history-item .item-location {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.history-item .item-round {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  background: var(--bg-tertiary);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+}
+
+.history-item .item-value {
+  margin-left: auto;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.history-item .item-cost {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.history-item .item-profit {
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.history-item .item-profit.profit {
+  color: var(--accent-emerald);
+}
+
+.history-item .item-profit.loss,
+.history-item .item-loss {
+  color: var(--accent-red);
+}
+
+.loan-info {
+  padding: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent-red);
+}
+
+.loan-info .loan-amount {
+  color: var(--accent-red);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.no-history {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* 자산 요약 */
+.history-section.summary {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.asset-summary {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+}
+
+.asset-summary .summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.asset-summary .summary-row:last-child {
+  border-bottom: none;
+}
+
+.asset-summary .summary-row .label {
+  color: var(--text-secondary);
+}
+
+.asset-summary .summary-row .value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.asset-summary .summary-row .value.dimmed {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.asset-summary .summary-row.negative .value {
+  color: var(--accent-red);
+}
+
+.asset-summary .summary-row.total {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.asset-summary .summary-row.total .label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.asset-summary .summary-row.total .value.highlight {
+  color: var(--accent-gold);
+  font-size: 1rem;
+}
+
+.asset-summary .summary-row.profit .value {
+  color: var(--accent-emerald);
+}
+
+.asset-summary .summary-row.loss .value {
+  color: var(--accent-red);
+}
+
+.asset-summary .summary-row.dimmed {
+  opacity: 0.7;
+}
+
+.asset-summary .summary-row.dimmed .label,
+.asset-summary .summary-row.dimmed .value {
+  color: var(--text-muted);
+}
+
+.asset-summary .summary-row.total-profit {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent-emerald);
+}
+
+.asset-summary .summary-row.total-profit.loss {
+  background: rgba(239, 68, 68, 0.1);
+  border-left-color: var(--accent-red);
+}
+
+.asset-summary .summary-row.total-profit .label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.asset-summary .summary-row.total-profit .value.large {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.asset-summary .summary-row.total-profit.profit .value {
+  color: var(--accent-emerald);
+}
+
+.asset-summary .summary-row.total-profit.loss .value {
+  color: var(--accent-red);
 }
