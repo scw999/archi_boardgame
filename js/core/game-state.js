@@ -490,9 +490,10 @@ class GameState {
             if (player.currentProject && player.currentProject.building) {
                 // 건물을 자산으로 추가 (현금은 지급하지 않음 - 매각해야 현금 획득)
                 // Note: constructor는 JavaScript 예약 속성이므로 constructorData로 별도 저장
+                const constructorValue = player.currentProject.constructorData || player.currentProject.constructor;
                 const completedBuilding = {
                     ...player.currentProject,
-                    constructorData: player.currentProject.constructor
+                    constructorData: constructorValue
                 };
                 player.buildings.push(completedBuilding);
                 // 대출은 상환하지 않고 유지 (건물 자산이 담보가 됨)
@@ -510,19 +511,28 @@ class GameState {
                     }
                 }
             } else if (player.currentProject && player.currentProject.land && !player.currentProject.building) {
-                // 건물 없이 토지만 있는 경우 - 개발지도에서 제거
-                for (let y = 0; y < 5; y++) {
-                    for (let x = 0; x < 5; x++) {
-                        const cell = this.cityMap[y][x];
-                        if (cell.owner === playerIndex && cell.project === player.currentProject) {
-                            this.cityMap[y][x].owner = null;
-                            this.cityMap[y][x].project = null;
-                            this.cityMap[y][x].building = null;
+                // 건물 없이 토지만 있는 경우
+                // 마지막 라운드가 아닌 경우에만 개발지도에서 제거 (마지막 라운드에서는 보존)
+                const isLastRound = this.currentRound >= this.maxRounds;
+                if (!isLastRound) {
+                    for (let y = 0; y < 5; y++) {
+                        for (let x = 0; x < 5; x++) {
+                            const cell = this.cityMap[y][x];
+                            if (cell.owner === playerIndex && cell.project === player.currentProject) {
+                                this.cityMap[y][x].owner = null;
+                                this.cityMap[y][x].project = null;
+                                this.cityMap[y][x].building = null;
+                            }
                         }
                     }
                 }
             }
-            player.currentProject = null;
+            // 마지막 라운드가 아닌 경우에만 currentProject를 null로 설정
+            // 마지막 라운드에서는 미완성 프로젝트(토지만 있는 경우)를 최종 화면에 표시하기 위해 보존
+            const isLastRound = this.currentRound >= this.maxRounds;
+            if (!isLastRound || (player.currentProject && player.currentProject.building)) {
+                player.currentProject = null;
+            }
             // wildcardUsed는 게임 전체에서 1회만 사용 가능하므로 리셋하지 않음
         });
 
@@ -731,12 +741,15 @@ class GameState {
         player.money += sellPrice;
 
         // 매각 이력에 추가
+        // Note: constructorData를 별도로 저장 (constructor는 JavaScript 예약어)
+        const constructorValue = project.constructorData || project.constructor;
         player.soldHistory.push({
             type: hasConstructor ? 'construction_project' : 'designed_project',
             land: project.land,
             building: project.building,
             architect: project.architect,
-            constructor: project.constructor,
+            constructorData: constructorValue,
+            constructor: constructorValue,
             constructionCost: constructionCost,
             sellPrice,
             loss,
@@ -751,9 +764,9 @@ class GameState {
             this.releaseArchitect(project.architect.id);
         }
 
-        // 시공사 선점 해제
-        if (project.constructor) {
-            this.selectedConstructors.delete(project.constructor.id);
+        // 시공사 선점 해제 (constructorData 또는 constructor 사용)
+        if (constructorValue && constructorValue.id) {
+            this.selectedConstructors.delete(constructorValue.id);
         }
 
         const projectName = `${project.land.name}/${project.building.name}`;
@@ -767,6 +780,7 @@ class GameState {
         project.designFee = 0;
         project.building = null;
         project.constructor = null;
+        project.constructorData = null;
         project.constructionCost = 0;
         project.constructionProgress = 0;
         project.risks = [];
@@ -824,17 +838,20 @@ class GameState {
         const buildingName = `${building.building.name} @ ${building.land.name}`;
 
         // 매각 이력에 추가
+        // Note: constructorData를 별도로 저장 (constructor는 JavaScript 예약어)
+        const constructorValue = building.constructorData || building.constructor;
         player.soldHistory.push({
             type: 'building',
             building: building.building,
             land: building.land,
             architect: building.architect,
-            constructor: building.constructorData || building.constructor,
+            constructorData: constructorValue,
+            constructor: constructorValue,
             sellPrice,
             profitLoss,
             marketFactor,
             soldAt: this.currentRound,
-            originalProject: { ...building }
+            originalProject: { ...building, constructorData: constructorValue }
         });
 
         player.buildings.splice(buildingIndex, 1);

@@ -3394,7 +3394,8 @@ class GameApp {
         if (player.currentProject && player.currentProject.land) {
             const project = player.currentProject;
             const hasBuilding = !!project.building;
-            const hasConstructor = !!project.constructor;
+            const constructorInfo = project.constructorData || project.constructor;
+            const hasConstructor = constructorInfo && typeof constructorInfo === 'object' && constructorInfo.name;
 
             let statusText = '대지 소유 중';
             let statusEmoji = '🏞️';
@@ -3467,7 +3468,7 @@ class GameApp {
                                 <li class="history-item sale-item">
                                     <span class="item-icon">${getBuildingImage(s.building?.name || '건물', '20px')}</span>
                                     <span class="item-name">${s.building?.name || '건물'}</span>
-                                    <span class="item-round">${s.soldAt || '?'}라운드 매각</span>
+                                    <span class="item-round">${s.soldAt != null ? s.soldAt + 'R' : ''}</span>
                                     <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
                                     <span class="item-profit ${profitClass}">(${profitSign}${gameState.formatMoney(Math.abs(s.profitLoss || 0))})</span>
                                 </li>
@@ -3486,7 +3487,7 @@ class GameApp {
                                 <li class="history-item project-sale-item">
                                     <span class="item-icon">📋</span>
                                     <span class="item-name">${s.building?.name || s.land?.name || '프로젝트'}</span>
-                                    <span class="item-round">${s.soldAt || '?'}라운드 매각</span>
+                                    <span class="item-round">${s.soldAt != null ? s.soldAt + 'R' : ''}</span>
                                     <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
                                     <span class="item-loss">(-${gameState.formatMoney(s.loss || 0)})</span>
                                 </li>
@@ -3505,7 +3506,7 @@ class GameApp {
                                 <li class="history-item land-sale-item">
                                     <span class="item-icon">🏞️</span>
                                     <span class="item-name">${s.land?.name || '토지'}</span>
-                                    <span class="item-round">${s.soldAt || '?'}라운드 매각</span>
+                                    <span class="item-round">${s.soldAt != null ? s.soldAt + 'R' : ''}</span>
                                     <span class="item-value">${gameState.formatMoney(s.sellPrice || 0)}</span>
                                     <span class="item-profit profit">(+${gameState.formatMoney(s.profit || 0)})</span>
                                 </li>
@@ -3666,7 +3667,7 @@ class GameApp {
                         land: sold.land,
                         building: sold.building,
                         architect: sold.architect,
-                        constructorInfo: sold.constructor || sold.originalProject?.constructorData || sold.originalProject?.constructor,
+                        constructorInfo: sold.constructorData || sold.constructor || sold.originalProject?.constructorData || sold.originalProject?.constructor,
                         sellPrice: sold.sellPrice,
                         soldAt: sold.soldAt,
                         landPrice: sold.originalProject.landPrice || sold.landPrice || 0,
@@ -4232,7 +4233,7 @@ class GameApp {
                         </div>
                         <div class="info-row">
                             <span class="label">시공사</span>
-                            <span class="value">${project.constructor?.emoji || ''} ${project.constructor?.name || '-'}</span>
+                            <span class="value">${(project.constructorData || project.constructor)?.emoji || ''} ${(project.constructorData || project.constructor)?.name || '-'}</span>
                         </div>
                         <div class="info-row">
                             <span class="label">평가 팩터</span>
@@ -4317,16 +4318,18 @@ class GameApp {
             const profitLoss = estimatedValue - originalSalePrice;
 
             // 매각 이력에 추가 (지도에 흔적을 남김)
+            // Note: constructorData를 별도로 저장 (constructor는 JavaScript 예약어)
             player.soldHistory.push({
                 type: 'building',
                 building: project.building,
                 land: project.land,
                 architect: project.architect,
+                constructorData: project.constructorData || project.constructor,
                 sellPrice: estimatedValue,
                 profitLoss,
                 marketFactor: 1.0,
                 soldAt: gameState.currentRound,
-                originalProject: { ...project }
+                originalProject: { ...project, constructorData: project.constructorData || project.constructor }
             });
 
             // 매각 처리
@@ -4560,7 +4563,7 @@ class GameApp {
                         </div>
                         <div class="info-row">
                             <span class="label">시공사</span>
-                            <span class="value">${sold.originalProject?.constructor?.emoji || sold.constructor?.emoji || '🏗️'} ${sold.originalProject?.constructor?.name || sold.constructor?.name || '-'}</span>
+                            <span class="value">${(sold.originalProject?.constructorData || sold.originalProject?.constructor || sold.constructorData || sold.constructor)?.emoji || '🏗️'} ${(sold.originalProject?.constructorData || sold.originalProject?.constructor || sold.constructorData || sold.constructor)?.name || '-'}</span>
                         </div>
                         <div class="info-row">
                             <span class="label">평가 팩터</span>

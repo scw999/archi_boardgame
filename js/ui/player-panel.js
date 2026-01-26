@@ -136,11 +136,12 @@ function renderProjectStatus(project) {
     `);
     }
 
-    if (project.constructor) {
+    const constructorInfo = project.constructorData || project.constructor;
+    if (constructorInfo && typeof constructorInfo === 'object' && constructorInfo.name) {
         items.push(`
       <div class="project-item constructor">
-        <span class="icon">${project.constructor.emoji}</span>
-        <span class="name">${project.constructor.name}</span>
+        <span class="icon">${constructorInfo.emoji}</span>
+        <span class="name">${constructorInfo.name}</span>
       </div>
     `);
     }

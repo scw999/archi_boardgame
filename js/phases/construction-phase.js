@@ -100,7 +100,9 @@ export function selectConstructor(playerIndex, constructorIndex) {
     }
 
     // 프로젝트에 시공사 정보 저장
+    // Note: constructor는 JavaScript 예약어이므로 constructorData에도 저장 (JSON 직렬화 시 안전)
     project.constructor = check.constructor;
+    project.constructorData = check.constructor;
     project.constructionCost = check.constructionCost;
     project.constructionProgress = 0;
 
