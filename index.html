@@ -14,6 +14,7 @@
   <!-- 스타일시트 -->
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/cards.css">
+  <link rel="stylesheet" href="styles/mobile.css">
   
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
@@ -179,7 +180,44 @@
     </aside>
   </main>
   
+  <!-- 모바일 플레이어 패널 토글 -->
+  <button class="mobile-player-toggle" id="mobile-player-toggle" aria-label="플레이어 패널 열기">👥</button>
+  <div class="mobile-panel-overlay" id="mobile-panel-overlay"></div>
+
   <!-- 메인 스크립트 -->
   <script type="module" src="js/main.js"></script>
+
+  <!-- 모바일 토글 스크립트 -->
+  <script>
+    (function() {
+      const toggle = document.getElementById('mobile-player-toggle');
+      const overlay = document.getElementById('mobile-panel-overlay');
+      const panels = document.getElementById('player-panels');
+
+      function openPanel() {
+        panels.classList.add('mobile-open');
+        overlay.classList.add('show');
+        toggle.classList.add('active');
+        toggle.textContent = '✕';
+      }
+
+      function closePanel() {
+        panels.classList.remove('mobile-open');
+        overlay.classList.remove('show');
+        toggle.classList.remove('active');
+        toggle.textContent = '👥';
+      }
+
+      toggle.addEventListener('click', function() {
+        if (panels.classList.contains('mobile-open')) {
+          closePanel();
+        } else {
+          openPanel();
+        }
+      });
+
+      overlay.addEventListener('click', closePanel);
+    })();
+  </script>
 </body>
 </html>

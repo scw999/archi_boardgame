@@ -1402,43 +1402,7 @@ body {
   display: none !important;
 }
 
-/* ===== 반응형 ===== */
-@media (max-width: 1024px) {
-  #game-container {
-    grid-template-columns: 1fr;
-    padding-top: 180px; /* 모바일에서 고정 헤더 공간 */
-  }
-
-  #player-panels,
-  #game-log {
-    grid-column: 1;
-    grid-row: auto;
-    flex-direction: row;
-    overflow-x: auto;
-  }
-
-  .player-panel {
-    min-width: 250px;
-  }
-
-  /* 모바일에서 고정 헤더 전체 너비 */
-  .board-header-sticky {
-    left: 0;
-    margin-left: 1rem;
-    right: 0;
-    margin-right: 1rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .game-title {
-    font-size: 2rem;
-  }
-
-  .card-grid {
-    grid-template-columns: 1fr;
-  }
-}
+/* ===== 반응형 (기본 - 상세 스타일은 mobile.css) ===== */
 
 /* ===== 설계/시공 모달 오버레이 ===== */
 .design-modal-overlay,
