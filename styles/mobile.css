@@ -506,24 +506,109 @@
   color: var(--bg-primary);
 }
 
+/* 게임 컨테이너가 보일 때만 토글 버튼 표시 */
 @media (max-width: 1024px) {
-  .mobile-player-toggle {
+  #game-container:not(.hidden) ~ .mobile-player-toggle {
     display: flex !important;
   }
 }
 
 /* ===== 아이소메트릭 맵 모바일 ===== */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
+  /* city-grid 마진 조정 (고정 헤더 공간) */
+  #city-grid {
+    margin-top: 0 !important;
+  }
+
   .iso-city-container {
     grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    grid-template-areas:
+      "header"
+      "map"
+      "sidebar" !important;
+    padding: 0.5rem !important;
+    gap: 0.5rem !important;
+  }
+
+  /* 헤더 타이틀과 3D 버튼 겹침 해결 */
+  .iso-city-header {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem !important;
+    min-height: auto !important;
+  }
+
+  .iso-city-header h3 {
+    font-size: 1.1rem !important;
+    text-align: center !important;
+  }
+
+  /* 범례(legend)를 헤더 내 상대 위치로 변경 */
+  .iso-city-legend {
+    position: static !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .view-3d-btn,
+  #toggle-3d-city-btn {
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
   }
 
   .iso-city-sidebar {
-    max-height: 150px !important;
+    max-height: 200px !important;
   }
 
   .iso-city-map {
-    min-height: 250px !important;
+    min-height: auto !important;
+  }
+
+  /* 3D 도시 뷰 높이 조정 */
+  .city-3d-container {
+    height: 350px !important;
+  }
+
+  /* 구 city-grid 스타일 */
+  .city-grid-container {
+    transform: none !important;
+    padding: 0.75rem !important;
+  }
+
+  .city-grid-container:hover {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .iso-city-header h3 {
+    font-size: 0.95rem !important;
+    letter-spacing: 0 !important;
+  }
+
+  .iso-city-legend {
+    gap: 0.3rem !important;
+  }
+
+  .legend-player {
+    font-size: 0.7rem !important;
+  }
+
+  .city-3d-container {
+    height: 280px !important;
+  }
+
+  /* 사이드바 내 자산 목록 */
+  .iso-city-sidebar {
+    max-height: 150px !important;
+    padding: 0.5rem !important;
+  }
+
+  .asset-player-group {
+    padding: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
   }
 }
 

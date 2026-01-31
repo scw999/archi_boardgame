@@ -193,6 +193,7 @@
       const toggle = document.getElementById('mobile-player-toggle');
       const overlay = document.getElementById('mobile-panel-overlay');
       const panels = document.getElementById('player-panels');
+      const gameContainer = document.getElementById('game-container');
 
       function openPanel() {
         panels.classList.add('mobile-open');
@@ -217,6 +218,15 @@
       });
 
       overlay.addEventListener('click', closePanel);
+
+      // game-container의 hidden 클래스 변경 감지하여 토글 버튼 표시/숨김
+      var observer = new MutationObserver(function() {
+        if (gameContainer.classList.contains('hidden')) {
+          toggle.style.display = 'none';
+          closePanel();
+        }
+      });
+      observer.observe(gameContainer, { attributes: true, attributeFilter: ['class'] });
     })();
   </script>
 </body>
