@@ -99,14 +99,9 @@ class GameApp {
 
     // 이벤트 바인딩
     bindEvents() {
-        // 메인 메뉴 버튼들
-        document.getElementById('btn-new-game')?.addEventListener('click', () => this.showPlayerSetup());
-        document.getElementById('btn-load-game')?.addEventListener('click', () => this.loadGame());
-        document.getElementById('btn-rules')?.addEventListener('click', () => this.showRules());
-
-        // 플레이어 설정
-        document.getElementById('btn-start-game')?.addEventListener('click', () => this.startGame());
-        document.getElementById('btn-back')?.addEventListener('click', () => this.showMainMenu());
+        // 메인 메뉴 & 설정 버튼은 index.html 인라인 스크립트에서 바인딩됨
+        // window._gameApp을 통해 이 인스턴스의 메서드를 호출함
+        // (중복 바인딩하지 않음 → 알림 두 번 뜨는 문제 방지)
 
         // 유틸리티 버튼
         document.getElementById('btn-budget-table')?.addEventListener('click', () => this.showBudgetTable());

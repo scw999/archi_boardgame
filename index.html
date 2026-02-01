@@ -57,13 +57,13 @@
     <p class="game-subtitle">Real Estate Mogul - 부동산 개발 보드게임</p>
     
     <div class="menu-buttons">
-      <button id="btn-new-game" class="menu-btn primary" onclick="if(window._gameApp)window._gameApp.showPlayerSetup()">
+      <button id="btn-new-game" class="menu-btn primary">
         🎮 새 게임 시작
       </button>
-      <button id="btn-load-game" class="menu-btn secondary" onclick="if(window._gameApp)window._gameApp.loadGame()">
+      <button id="btn-load-game" class="menu-btn secondary">
         💾 이어하기
       </button>
-      <button id="btn-rules" class="menu-btn secondary" onclick="if(window._gameApp)window._gameApp.showRules()">
+      <button id="btn-rules" class="menu-btn secondary">
         📜 게임 규칙
       </button>
     </div>
@@ -103,8 +103,8 @@
     </div>
     
     <div class="setup-actions">
-      <button id="btn-back" class="menu-btn secondary" onclick="if(window._gameApp)window._gameApp.showMainMenu()">← 뒤로</button>
-      <button id="btn-start-game" class="menu-btn primary" onclick="if(window._gameApp)window._gameApp.startGame()">게임 시작 →</button>
+      <button id="btn-back" class="menu-btn secondary">← 뒤로</button>
+      <button id="btn-start-game" class="menu-btn primary">게임 시작 →</button>
     </div>
   </section>
   
@@ -183,6 +183,56 @@
   <!-- 모바일 플레이어 패널 토글 -->
   <button class="mobile-player-toggle" id="mobile-player-toggle" aria-label="플레이어 패널 열기">👥</button>
   <div class="mobile-panel-overlay" id="mobile-panel-overlay"></div>
+
+  <!-- 기본 화면 전환 (모듈 로드 전에도 동작) -->
+  <script>
+    (function() {
+      // 화면 전환 기본 함수
+      function showScreen(showId) {
+        ['main-menu', 'player-setup', 'game-container'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          if (id === showId) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        });
+      }
+
+      // 프리로더 숨기기 (모듈이 로드 안되는 경우 대비, 5초 후 강제 숨김)
+      setTimeout(function() {
+        var preloader = document.getElementById('preloader');
+        if (preloader && !preloader.classList.contains('hidden')) {
+          preloader.classList.add('hidden');
+        }
+      }, 5000);
+
+      // 버튼 이벤트 (모듈과 무관하게 즉시 바인딩)
+      document.getElementById('btn-new-game').addEventListener('click', function() {
+        // 모듈 앱이 있으면 그걸 사용, 없으면 직접 전환
+        if (window._gameApp) { window._gameApp.showPlayerSetup(); }
+        else { showScreen('player-setup'); }
+      });
+
+      document.getElementById('btn-back').addEventListener('click', function() {
+        if (window._gameApp) { window._gameApp.showMainMenu(); }
+        else { showScreen('main-menu'); }
+      });
+
+      document.getElementById('btn-load-game').addEventListener('click', function() {
+        if (window._gameApp) { window._gameApp.loadGame(); }
+        else { alert('게임 데이터를 로딩중입니다. 잠시 후 다시 시도해주세요.'); }
+      });
+
+      document.getElementById('btn-rules').addEventListener('click', function() {
+        if (window._gameApp) { window._gameApp.showRules(); }
+        else { alert('게임 데이터를 로딩중입니다. 잠시 후 다시 시도해주세요.'); }
+      });
+
+      document.getElementById('btn-start-game').addEventListener('click', function() {
+        if (window._gameApp) { window._gameApp.startGame(); }
+        else { alert('게임 데이터를 로딩중입니다. 잠시 후 다시 시도해주세요.'); }
+      });
+    })();
+  </script>
 
   <!-- 메인 스크립트 -->
   <script type="module" src="js/main.js"></script>
