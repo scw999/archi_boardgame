@@ -2418,6 +2418,9 @@ class GameApp {
                 cardEl.dataset.harmful = isHarmful;
                 cardEl.dataset.riskType = risk.type;
 
+                // 공개된 카드가 보이도록 스크롤
+                cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
                 revealedCards.push({ index: currentIndex, risk, isHarmful });
 
                 // 진행률 업데이트
