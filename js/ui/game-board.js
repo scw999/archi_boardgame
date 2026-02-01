@@ -224,6 +224,12 @@ export function showResultModal(title, content, onClose) {
 
     document.body.appendChild(overlay);
 
+    // 모바일에서 닫기 버튼이 보이도록 자동 스크롤
+    setTimeout(() => {
+        const btnClose = overlay.querySelector('.btn-close');
+        if (btnClose) btnClose.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 300);
+
     const closeModal = () => {
         overlay.classList.add('closing');
         setTimeout(() => {

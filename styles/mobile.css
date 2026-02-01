@@ -19,7 +19,7 @@
   /* 게임 컨테이너: 사이드바 공간 제거 */
   #game-container {
     padding-left: 1rem !important;
-    padding-top: 160px !important;
+    padding-top: 170px !important;
     padding-right: 1rem !important;
   }
 
@@ -218,8 +218,8 @@
   }
 
   .plot-marker.has-building-img {
-    width: 50px !important;
-    height: 50px !important;
+    width: 42px !important;
+    height: 42px !important;
   }
 
   .plot-marker.available .plot-empty {
@@ -290,7 +290,7 @@
   /* 게임 컨테이너 */
   #game-container {
     padding: 0.5rem !important;
-    padding-top: 150px !important;
+    padding-top: 160px !important;
     padding-bottom: 55px !important;
   }
 
@@ -673,8 +673,8 @@
   }
 
   .plot-marker.has-building-img {
-    width: 42px !important;
-    height: 42px !important;
+    width: 34px !important;
+    height: 34px !important;
   }
 
   .plot-marker.available .plot-empty {
@@ -688,6 +688,23 @@
 
   .plot-marker .plot-building-emoji {
     font-size: 1.2rem !important;
+  }
+
+  /* [FIX 1] 와일드카드 버튼 - 하단 footer 위로 */
+  .wildcard-toggle-btn {
+    bottom: 55px !important;
+    right: 0.5rem !important;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.85rem !important;
+    max-width: calc(100vw - 1rem) !important;
+    white-space: nowrap !important;
+  }
+
+  #wildcard-panel {
+    bottom: 100px !important;
+    right: 0.5rem !important;
+    left: 0.5rem !important;
+    width: auto !important;
   }
 
   /* 건물 위 플레이어 라벨 숨김 & 체크마크 축소 */
@@ -714,18 +731,49 @@
     flex-direction: column !important;
   }
 
-  /* 모달 내 액션 버튼 영역을 하단 고정 */
-  .design-modal-content .design-action-buttons,
-  .construction-modal-content .action-buttons,
-  .design-modal-content .btn-confirm-design,
-  .construction-modal-content .btn-confirm-construction {
-    position: sticky !important;
-    bottom: 0 !important;
-    background: var(--bg-secondary) !important;
+  /* [FIX 5] 설계 진행하기 버튼 - 오렌지색 가운데 정렬 */
+  .btn-confirm-design {
+    background: linear-gradient(135deg, #f59e0b, #ea580c) !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    padding: 0.9rem 1.5rem !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+    display: block !important;
+    margin: 1rem auto !important;
+    width: auto !important;
+    max-width: 80% !important;
+  }
+
+  /* [FIX 6] 시공 계약하기 버튼 - 오렌지색 가운데 정렬 */
+  .btn-confirm-construction {
+    background: linear-gradient(135deg, #f59e0b, #ea580c) !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    padding: 0.9rem 1.5rem !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+    display: block !important;
+    margin: 1rem auto !important;
+    width: auto !important;
+    max-width: 80% !important;
+  }
+
+  .construction-modal-content .action-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
     padding: 0.75rem !important;
-    margin: 0 -0.75rem -0.75rem -0.75rem !important;
+  }
+
+  /* 설계 모달 하단 action-buttons - sticky 해제, 맨 아래 고정 */
+  .design-modal-content .design-action-buttons {
+    position: static !important;
+    background: transparent !important;
+    padding: 0.75rem 0 !important;
+    margin: 0 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-    z-index: 10 !important;
   }
 
   /* 리스크 카드 모달 - 확인 버튼 고정 */
@@ -873,10 +921,11 @@
 
 /* ===== 아이소메트릭 맵 모바일 ===== */
 @media (max-width: 1024px) {
-  /* [FIX 3] city-grid 마진 조정 - 헤더와 확실히 분리 */
+  /* [FIX 2] city-grid 마진 조정 - 헤더와 확실히 분리 */
   #city-grid {
-    margin-top: 0 !important;
+    margin-top: 0.5rem !important;
     padding: 0.75rem !important;
+    overflow: visible !important;
   }
 
   .city-grid-title {

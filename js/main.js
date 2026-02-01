@@ -2573,8 +2573,12 @@ class GameApp {
                     `;
                     summaryEl.style.display = 'block';
 
+                    // 계속하기 버튼으로 자동 스크롤
+                    const continueBtn = document.getElementById('btn-risk-continue');
+                    continueBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
                     // 계속하기 버튼
-                    document.getElementById('btn-risk-continue').onclick = () => {
+                    continueBtn.onclick = () => {
                         modal.remove();
                         // 리스크 처리
                         const riskResult = processRisks(gameState.currentPlayerIndex);
@@ -2631,7 +2635,11 @@ class GameApp {
                 `;
                 summaryEl.style.display = 'block';
 
-                document.getElementById('btn-risk-continue').onclick = () => {
+                // 계속하기 버튼으로 자동 스크롤
+                const continueBtn2 = document.getElementById('btn-risk-continue');
+                continueBtn2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                continueBtn2.onclick = () => {
                     modal.remove();
                     const riskResult = processRisks(gameState.currentPlayerIndex);
                     if (riskResult.success) {
