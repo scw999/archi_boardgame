@@ -65,8 +65,11 @@ export function selectBuilding(playerIndex, buildingName, architectIndex) {
         return { success: false, message: '존재하지 않는 건물 유형입니다.' };
     }
 
-    // 설계비 계산
-    const designFee = calculateDesignFee(architect, building);
+    // 설계비 계산 (와일드카드 무료 설계비 적용)
+    let designFee = calculateDesignFee(architect, building);
+    if (player.designFreeActive) {
+        designFee = 0;
+    }
 
     // 시공비 미리보기 (건축가 팩터 적용)
     const baseConstructionCost = building.constructionCost;
@@ -132,6 +135,11 @@ export function completeDesign(playerIndex, architectIndex, buildingName) {
 
     // 설계비 지불
     gameState.payMoney(playerIndex, preview.designFee);
+
+    // 와일드카드 설계비 무료 플래그 초기화
+    if (player.designFreeActive) {
+        player.designFreeActive = false;
+    }
 
     // 프로젝트에 설계 정보 저장
     project.architect = preview.architect;
