@@ -174,6 +174,9 @@ export class Building3DViewer {
             return;
         }
 
+        // 모바일 감지 (성능 최적화용)
+        this.isMobile = window.innerWidth <= 1024;
+
         this.options = {
             width: options.width || this.container.clientWidth || 400,
             height: options.height || this.container.clientHeight || 300,
@@ -219,16 +222,19 @@ export class Building3DViewer {
         this.camera.position.set(50, 40, 50);
         this.camera.lookAt(0, 0, 0);
 
-        // Renderer 생성 (logarithmicDepthBuffer로 z-fighting 방지)
+        // Renderer 생성 (모바일 성능 최적화)
         this.renderer = new THREE.WebGLRenderer({
-            antialias: true,
+            antialias: !this.isMobile,
             alpha: true,
-            logarithmicDepthBuffer: true
+            logarithmicDepthBuffer: !this.isMobile,
+            powerPreference: 'high-performance'
         });
         this.renderer.setSize(this.options.width, this.options.height);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2));
+        this.renderer.shadowMap.enabled = !this.isMobile;
+        if (!this.isMobile) {
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        }
         this.container.appendChild(this.renderer.domElement);
 
         // Controls
@@ -263,11 +269,12 @@ export class Building3DViewer {
         this.scene.add(ambientLight);
 
         // 태양광 (그림자) - 확장된 영역에 맞게 조정
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        const sunLight = new THREE.DirectionalLight(0xffffff, this.isMobile ? 1.0 : 0.8);
         sunLight.position.set(100, 150, 100);
-        sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 4096;
-        sunLight.shadow.mapSize.height = 4096;
+        sunLight.castShadow = !this.isMobile;
+        const shadowRes = this.isMobile ? 1024 : 2048;
+        sunLight.shadow.mapSize.width = shadowRes;
+        sunLight.shadow.mapSize.height = shadowRes;
         sunLight.shadow.camera.near = 0.5;
         sunLight.shadow.camera.far = 500;
         sunLight.shadow.camera.left = -300;

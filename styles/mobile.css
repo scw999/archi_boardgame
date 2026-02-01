@@ -272,14 +272,24 @@
     border-width: 1px !important;
   }
 
-  /* 소유자 깃발 - 건물 위 충분한 간격 */
+  /* 소유자 깃발 - 건물 위 충분한 간격, 잘리지 않게 */
   .owner-flag {
     top: -14px !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
   }
 
   .owner-flag .flag-name {
     font-size: 0.45rem !important;
-    padding: 1px 3px !important;
+    padding: 1px 4px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    max-width: none !important;
+  }
+
+  .plot-marker,
+  .plot-marker-inner {
+    overflow: visible !important;
   }
 
   /* 상태 아이콘 (체크/판매 등) - 건물 우측 바깥에 표시 */
@@ -786,11 +796,16 @@
 
   .owner-flag {
     top: -12px !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
   }
 
   .owner-flag .flag-name {
     font-size: 0.35rem !important;
-    padding: 1px 2px !important;
+    padding: 1px 3px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    max-width: none !important;
   }
 
   .owned-marker-content {
