@@ -57,25 +57,25 @@
     <p class="game-subtitle">Real Estate Mogul - 부동산 개발 보드게임</p>
     
     <div class="menu-buttons">
-      <button id="btn-new-game" class="menu-btn primary">
+      <button id="btn-new-game" class="menu-btn primary" onclick="if(window._gameApp)window._gameApp.showPlayerSetup()">
         🎮 새 게임 시작
       </button>
-      <button id="btn-load-game" class="menu-btn secondary">
+      <button id="btn-load-game" class="menu-btn secondary" onclick="if(window._gameApp)window._gameApp.loadGame()">
         💾 이어하기
       </button>
-      <button id="btn-rules" class="menu-btn secondary">
+      <button id="btn-rules" class="menu-btn secondary" onclick="if(window._gameApp)window._gameApp.showRules()">
         📜 게임 규칙
       </button>
     </div>
   </section>
-  
+
   <!-- ===== 플레이어 설정 ===== -->
   <section id="player-setup" class="hidden">
     <div class="setup-header">
       <h2>👥 플레이어 설정</h2>
       <p>참여할 플레이어 이름을 입력하세요 (1~4명)</p>
     </div>
-    
+
     <div class="player-inputs">
       <div class="player-input-row">
         <div class="player-number">1</div>
@@ -103,8 +103,8 @@
     </div>
     
     <div class="setup-actions">
-      <button id="btn-back" class="menu-btn secondary">← 뒤로</button>
-      <button id="btn-start-game" class="menu-btn primary">게임 시작 →</button>
+      <button id="btn-back" class="menu-btn secondary" onclick="if(window._gameApp)window._gameApp.showMainMenu()">← 뒤로</button>
+      <button id="btn-start-game" class="menu-btn primary" onclick="if(window._gameApp)window._gameApp.startGame()">게임 시작 →</button>
     </div>
   </section>
   
@@ -190,61 +190,68 @@
   <!-- 모바일 토글 스크립트 -->
   <script>
     (function() {
-      const toggle = document.getElementById('mobile-player-toggle');
-      const overlay = document.getElementById('mobile-panel-overlay');
-      const panels = document.getElementById('player-panels');
-      const gameContainer = document.getElementById('game-container');
+      try {
+        var toggle = document.getElementById('mobile-player-toggle');
+        var overlay = document.getElementById('mobile-panel-overlay');
+        var panels = document.getElementById('player-panels');
+        var gameContainer = document.getElementById('game-container');
 
-      // 전역에서 접근 가능하도록 window에 등록
-      window.closeMobilePanel = closePanel;
+        if (!toggle || !overlay || !panels || !gameContainer) return;
 
-      function openPanel() {
-        panels.classList.add('mobile-open');
-        overlay.classList.add('show');
-        toggle.classList.add('active');
-        toggle.textContent = '✕';
+        window.closeMobilePanel = closePanel;
+
+        function openPanel() {
+          panels.classList.add('mobile-open');
+          overlay.classList.add('show');
+          toggle.classList.add('active');
+          toggle.textContent = '✕';
+        }
+
+        function closePanel() {
+          panels.classList.remove('mobile-open');
+          overlay.classList.remove('show');
+          toggle.classList.remove('active');
+          toggle.textContent = '👥';
+        }
+
+        toggle.addEventListener('click', function() {
+          if (panels.classList.contains('mobile-open')) {
+            closePanel();
+          } else {
+            openPanel();
+          }
+        });
+
+        overlay.addEventListener('click', closePanel);
+
+        var observer = new MutationObserver(function() {
+          try {
+            if (gameContainer.classList.contains('hidden')) {
+              toggle.style.display = 'none';
+              closePanel();
+            } else {
+              toggle.style.display = '';
+            }
+          } catch(e) {}
+        });
+        observer.observe(gameContainer, { attributes: true, attributeFilter: ['class'] });
+
+        var bodyObserver = new MutationObserver(function() {
+          try {
+            var hasModal = document.querySelector('.modal-overlay, .design-modal-overlay, .construction-modal-overlay');
+            if (hasModal) {
+              toggle.style.opacity = '0';
+              toggle.style.pointerEvents = 'none';
+            } else {
+              toggle.style.opacity = '';
+              toggle.style.pointerEvents = '';
+            }
+          } catch(e) {}
+        });
+        bodyObserver.observe(document.body, { childList: true, subtree: false });
+      } catch(e) {
+        console.error('모바일 토글 초기화 오류:', e);
       }
-
-      function closePanel() {
-        panels.classList.remove('mobile-open');
-        overlay.classList.remove('show');
-        toggle.classList.remove('active');
-        toggle.textContent = '👥';
-      }
-
-      toggle.addEventListener('click', function() {
-        if (panels.classList.contains('mobile-open')) {
-          closePanel();
-        } else {
-          openPanel();
-        }
-      });
-
-      overlay.addEventListener('click', closePanel);
-
-      // game-container의 hidden 클래스 변경 감지하여 토글 버튼 표시/숨김
-      var observer = new MutationObserver(function() {
-        if (gameContainer.classList.contains('hidden')) {
-          toggle.style.display = 'none';
-          closePanel();
-        } else {
-          toggle.style.display = '';
-        }
-      });
-      observer.observe(gameContainer, { attributes: true, attributeFilter: ['class'] });
-
-      // 모달 열릴 때 토글 버튼 숨기기 (매뉴얼, 단가표 등)
-      var bodyObserver = new MutationObserver(function() {
-        var hasModal = document.querySelector('.modal-overlay, .design-modal-overlay, .construction-modal-overlay');
-        if (hasModal) {
-          toggle.style.opacity = '0';
-          toggle.style.pointerEvents = 'none';
-        } else {
-          toggle.style.opacity = '';
-          toggle.style.pointerEvents = '';
-        }
-      });
-      bodyObserver.observe(document.body, { childList: true, subtree: false });
     })();
   </script>
 </body>
