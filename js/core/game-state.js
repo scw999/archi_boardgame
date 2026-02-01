@@ -477,7 +477,8 @@ class GameState {
         const currentIndex = phaseOrder.indexOf(this.phase);
         if (currentIndex < phaseOrder.length - 1) {
             this.phase = phaseOrder[currentIndex + 1];
-            this.currentPlayerIndex = 0;
+            // 매 페이즈 시작 시 선플레이어부터 시작
+            this.currentPlayerIndex = this.roundStartingPlayer;
         }
 
         return this.phase;

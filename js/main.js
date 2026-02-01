@@ -503,11 +503,10 @@ class GameApp {
             this.showBuildingSellModal();
         });
 
-        // 턴 패스
+        // 턴 패스 - 상대방에게 턴만 넘김 (페이즈 종료하지 않음)
         document.querySelector('[data-action="skip-land"]')?.addEventListener('click', () => {
             showNotification(`${player.name} 토지 구매 패스`, 'info');
-            player.currentProject.landSkipped = true;
-            this.nextPlayerOrPhase('land');
+            this.skipToNextPlayer();
         });
 
         // 토지 가로채기
@@ -1231,11 +1230,10 @@ class GameApp {
             showConfirmModal('턴 넘기기', '이번 턴을 넘기시겠습니까?', () => {
                 gameState.addLog(`${player.name}: 턴 패스`);
                 showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
-                player.currentProject.designSkipped = true;
                 // 설계 모달 닫기
                 modalOverlay.classList.add('closing');
                 setTimeout(() => modalOverlay.remove(), 300);
-                self.nextPlayerOrPhase('architect');
+                self.skipToNextPlayer();
             });
         });
 
@@ -2138,7 +2136,7 @@ class GameApp {
                 player.currentProject.constructor = null;
                 player.currentProject.skippedConstruction = true;
                 player.currentProject.constructionSkippedRound = gameState.currentRound;
-                this.nextPlayerOrPhase('constructor');
+                this.skipToNextPlayer();
             };
         }
     }
@@ -2899,6 +2897,13 @@ class GameApp {
     }
 
     // 다음 플레이어 또는 다음 페이즈
+    // 턴 넘기기 - 페이즈 종료 체크 없이 다음 플레이어에게 턴만 넘김
+    skipToNextPlayer() {
+        gameState.nextPlayer();
+        this.updateUI();
+        this.runPhase();
+    }
+
     nextPlayerOrPhase(checkField) {
         // 현재 플레이어의 턴이 끝나므로 사용하지 않은 턴 한정 와일드카드 효과 초기화
         const currentPlayer = gameState.getCurrentPlayer();

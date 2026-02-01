@@ -326,10 +326,6 @@ export function checkLandPhaseComplete() {
         if (player.pmSkippedRound === gameState.currentRound) {
             return true;
         }
-        // 턴 패스한 플레이어는 완료로 처리
-        if (player.currentProject && player.currentProject.landSkipped) {
-            return true;
-        }
         return player.currentProject && player.currentProject.land !== null;
     });
 }

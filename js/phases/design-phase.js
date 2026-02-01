@@ -176,10 +176,6 @@ export function checkDesignPhaseComplete() {
         if (!player.currentProject || !player.currentProject.land) {
             return true;
         }
-        // 설계 턴 패스한 플레이어는 완료로 처리
-        if (player.currentProject.designSkipped) {
-            return true;
-        }
         // 토지가 있으면 설계가 완료되어야 함
         return player.currentProject.architect !== null &&
                player.currentProject.building !== null;
