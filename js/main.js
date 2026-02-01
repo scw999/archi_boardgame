@@ -506,6 +506,7 @@ class GameApp {
         // 턴 패스
         document.querySelector('[data-action="skip-land"]')?.addEventListener('click', () => {
             showNotification(`${player.name} 토지 구매 패스`, 'info');
+            player.currentProject.landSkipped = true;
             this.nextPlayerOrPhase('land');
         });
 
@@ -1230,6 +1231,10 @@ class GameApp {
             showConfirmModal('턴 넘기기', '이번 턴을 넘기시겠습니까?', () => {
                 gameState.addLog(`${player.name}: 턴 패스`);
                 showNotification(`${player.name}님이 턴을 넘깁니다.`, 'info');
+                player.currentProject.designSkipped = true;
+                // 설계 모달 닫기
+                modalOverlay.classList.add('closing');
+                setTimeout(() => modalOverlay.remove(), 300);
                 self.nextPlayerOrPhase('architect');
             });
         });
@@ -1266,6 +1271,11 @@ class GameApp {
 
     // 설계비 미리보기 계산
     calculateDesignFeePreview(architect, building) {
+        const player = gameState.getCurrentPlayer();
+        // 와일드카드: 설계비 무료
+        if (player && player.designFreeActive) {
+            return 0;
+        }
         let fee = building.designFee * architect.feeMultiplier;
         // 대표작이 아니면 30% 할인
         if (!architect.masterpieces.includes(building.name)) {
@@ -2126,7 +2136,8 @@ class GameApp {
                 showNotification(`${player.name}님이 시공을 포기하고 휴식합니다.`, 'info');
                 // 시공사 미선택 상태 명시
                 player.currentProject.constructor = null;
-                player.currentProject.skippedConstruction = true; // 시공 스킵 표시
+                player.currentProject.skippedConstruction = true;
+                player.currentProject.constructionSkippedRound = gameState.currentRound;
                 this.nextPlayerOrPhase('constructor');
             };
         }
@@ -5120,9 +5131,12 @@ class GameApp {
         showConfirmModal('게임 불러오기', confirmMsg, () => {
             if (gameState.load()) {
                 document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('player-setup')?.classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
                 self.updateUI();
                 self.runPhase();
+                // 개발 현황판이 보이도록 스크롤 맨 위로
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 showNotification('게임을 불러왔습니다! 🎮', 'success');
             } else {
                 showNotification('게임 불러오기에 실패했습니다.', 'error');
