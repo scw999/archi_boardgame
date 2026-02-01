@@ -243,10 +243,10 @@ export function showResultModal(title, content, onClose) {
 
     document.body.appendChild(overlay);
 
-    // 모바일에서 닫기 버튼이 보이도록 자동 스크롤
+    // 모바일에서 모달 상단이 보이도록 스크롤
     setTimeout(() => {
-        const btnClose = overlay.querySelector('.btn-close');
-        if (btnClose) btnClose.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const modalHeader = overlay.querySelector('.modal-header');
+        if (modalHeader) modalHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 300);
 
     const closeModal = () => {
