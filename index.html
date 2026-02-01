@@ -224,6 +224,8 @@
         if (gameContainer.classList.contains('hidden')) {
           toggle.style.display = 'none';
           closePanel();
+        } else {
+          toggle.style.display = '';
         }
       });
       observer.observe(gameContainer, { attributes: true, attributeFilter: ['class'] });
