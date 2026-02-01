@@ -5272,7 +5272,13 @@ class GameApp {
 }
 
 // 앱 시작
-document.addEventListener('DOMContentLoaded', () => {
+// 모듈 스크립트는 defer되므로 DOM이 이미 파싱되었을 수 있음
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = new GameApp();
+        app.init();
+    });
+} else {
     const app = new GameApp();
     app.init();
-});
+}
