@@ -14,6 +14,34 @@
   }
 }
 
+/* 메인 메뉴 & 설정 화면 - 오버레이에 가려지지 않도록 */
+#main-menu,
+#player-setup {
+  position: relative;
+  z-index: 50;
+}
+
+#main-menu .menu-btn,
+#player-setup .menu-btn,
+#player-setup .setup-actions button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+  pointer-events: auto !important;
+}
+
+/* 알림 컨테이너가 클릭을 가로채지 않도록 */
+#notifications {
+  pointer-events: none;
+}
+#notifications .notification {
+  pointer-events: auto;
+}
+
+/* 프리로더 완전 숨김 보장 */
+#preloader.hidden {
+  display: none !important;
+}
+
 /* ===== 태블릿 (max-width: 1024px) ===== */
 @media (max-width: 1024px) {
   /* 게임 컨테이너: 사이드바 공간 제거 */
