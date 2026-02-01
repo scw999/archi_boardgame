@@ -1405,6 +1405,12 @@ class GameApp {
 
         document.body.appendChild(container);
 
+        // 설계 확정 버튼으로 자동 스크롤
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('btn-confirm-preview');
+            if (confirmBtn) confirmBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+
         // 확정 버튼
         document.getElementById('btn-confirm-preview').onclick = () => {
             container.remove();

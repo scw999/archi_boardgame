@@ -221,11 +221,12 @@
     min-width: 80px !important;
   }
 
-  /* 알림 위치 조정 - 헤더 아래로 */
+  /* 알림 위치 조정 - 헤더 파란줄 바로 아래 */
   #notifications {
-    top: auto !important;
-    bottom: 4rem !important;
+    top: 120px !important;
+    bottom: auto !important;
     right: 0.5rem !important;
+    left: 0.5rem !important;
     left: 0.5rem !important;
   }
 
@@ -246,8 +247,8 @@
   }
 
   .plot-marker.has-building-img {
-    width: 42px !important;
-    height: 42px !important;
+    width: 38px !important;
+    height: 38px !important;
   }
 
   .plot-marker.available .plot-empty {
@@ -264,6 +265,22 @@
     height: 100% !important;
   }
 
+  .owned-building-img {
+    width: 35px !important;
+    height: 35px !important;
+  }
+
+  /* 소유자 깃발 축소 */
+  .owner-flag {
+    top: -5px !important;
+    z-index: 15;
+  }
+
+  .owner-flag .flag-name {
+    font-size: 0.5rem !important;
+    padding: 1px 4px !important;
+  }
+
   .owned-marker-label {
     font-size: 0.55rem !important;
     padding: 0.05rem 0.25rem !important;
@@ -275,8 +292,8 @@
   }
 
   .owned-marker-content {
-    width: 40px !important;
-    height: 40px !important;
+    width: 35px !important;
+    height: 35px !important;
     font-size: 1rem !important;
   }
 
@@ -290,10 +307,12 @@
   }
 
   .plot-status {
-    font-size: 0.6rem !important;
+    font-size: 0.5rem !important;
     padding: 1px !important;
     bottom: -3px !important;
     right: -3px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
   }
 
   .plot-marker.has-building-img .plot-status {
@@ -451,9 +470,10 @@
     margin-bottom: 0.25rem !important;
   }
 
-  /* [FIX] 알림창 위치 - 위쪽으로 이동하여 버튼 안가림 */
+  /* [FIX] 알림창 위치 - 헤더 파란줄 바로 아래 */
   #notifications {
-    top: 1rem !important;
+    top: 105px !important;
+    bottom: auto !important;
     right: 0.5rem !important;
     left: 0.5rem !important;
     z-index: 2001 !important;
@@ -717,26 +737,51 @@
 
   /* [FIX 4] 지도 마커 더 작게 */
   .plot-marker {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .plot-marker.has-building-img {
     width: 30px !important;
     height: 30px !important;
   }
 
-  .plot-marker.has-building-img {
-    width: 34px !important;
-    height: 34px !important;
-  }
-
   .plot-marker.available .plot-empty {
-    font-size: 0.8rem !important;
+    font-size: 0.75rem !important;
   }
 
   .plot-marker.owned .plot-building,
   .plot-marker.owned .plot-land {
-    font-size: 1rem !important;
+    font-size: 0.9rem !important;
   }
 
   .plot-marker .plot-building-emoji {
-    font-size: 1.2rem !important;
+    font-size: 1rem !important;
+  }
+
+  .owned-building-img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .owner-flag {
+    top: -4px !important;
+  }
+
+  .owner-flag .flag-name {
+    font-size: 0.4rem !important;
+    padding: 1px 3px !important;
+  }
+
+  .owned-marker-content {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .plot-status {
+    font-size: 0.45rem !important;
+    min-width: 12px !important;
+    min-height: 12px !important;
   }
 
   /* [FIX 1] 와일드카드 버튼 - 하단 footer 위로 */
