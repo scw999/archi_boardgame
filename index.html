@@ -49,21 +49,49 @@
 
   <!-- 알림 컨테이너 -->
   <div id="notifications"></div>
-  
+
+  <!-- 메뉴 버튼 핸들러 (인라인, 모듈 무관) -->
+  <script>
+    function goToSetup() {
+      document.getElementById('main-menu').classList.add('hidden');
+      document.getElementById('player-setup').classList.remove('hidden');
+      var gc = document.getElementById('game-container');
+      if (gc) gc.classList.add('hidden');
+    }
+    function goToMenu() {
+      document.getElementById('main-menu').classList.remove('hidden');
+      document.getElementById('player-setup').classList.add('hidden');
+      var gc = document.getElementById('game-container');
+      if (gc) gc.classList.add('hidden');
+    }
+    function doStartGame() {
+      if (window._gameApp) window._gameApp.startGame();
+      else alert('로딩 중입니다. 잠시 후 다시 시도해주세요.');
+    }
+    function doLoadGame() {
+      if (window._gameApp) window._gameApp.loadGame();
+      else alert('로딩 중입니다. 잠시 후 다시 시도해주세요.');
+    }
+    function doShowRules() {
+      if (window._gameApp) window._gameApp.showRules();
+      else alert('로딩 중입니다. 잠시 후 다시 시도해주세요.');
+    }
+  </script>
+
   <!-- ===== 메인 메뉴 ===== -->
   <section id="main-menu">
     <div class="game-logo">🏗️</div>
     <h1 class="game-title">갓물주</h1>
     <p class="game-subtitle">Real Estate Mogul - 부동산 개발 보드게임</p>
-    
+
     <div class="menu-buttons">
-      <button id="btn-new-game" class="menu-btn primary" onclick="(window._gameApp?window._gameApp.showPlayerSetup():document.getElementById('player-setup').classList.remove('hidden')||document.getElementById('main-menu').classList.add('hidden'))">
+      <button id="btn-new-game" class="menu-btn primary" onclick="goToSetup()">
         🎮 새 게임 시작
       </button>
-      <button id="btn-load-game" class="menu-btn secondary" onclick="window._gameApp&amp;&amp;window._gameApp.loadGame()">
+      <button id="btn-load-game" class="menu-btn secondary" onclick="doLoadGame()">
         💾 이어하기
       </button>
-      <button id="btn-rules" class="menu-btn secondary" onclick="window._gameApp&amp;&amp;window._gameApp.showRules()">
+      <button id="btn-rules" class="menu-btn secondary" onclick="doShowRules()">
         📜 게임 규칙
       </button>
     </div>
@@ -103,8 +131,8 @@
     </div>
     
     <div class="setup-actions">
-      <button id="btn-back" class="menu-btn secondary" onclick="(window._gameApp?window._gameApp.showMainMenu():(document.getElementById('main-menu').classList.remove('hidden'),document.getElementById('player-setup').classList.add('hidden')))">← 뒤로</button>
-      <button id="btn-start-game" class="menu-btn primary" onclick="window._gameApp&amp;&amp;window._gameApp.startGame()">게임 시작 →</button>
+      <button id="btn-back" class="menu-btn secondary" onclick="goToMenu()">← 뒤로</button>
+      <button id="btn-start-game" class="menu-btn primary" onclick="doStartGame()">게임 시작 →</button>
     </div>
   </section>
   
