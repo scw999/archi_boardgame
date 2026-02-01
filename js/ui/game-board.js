@@ -198,7 +198,7 @@ export function showNotification(message, type = 'info', duration = 3000) {
     const header = document.querySelector('.board-header-sticky');
     if (header && container.id === 'notifications') {
         const headerRect = header.getBoundingClientRect();
-        container.style.top = (headerRect.bottom + 4) + 'px';
+        container.style.setProperty('top', (headerRect.bottom + 4) + 'px', 'important');
     }
 
     container.appendChild(notification);
@@ -213,8 +213,19 @@ export function showNotification(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-// 결과 모달 표시
+// 결과 모달 표시 (토글 지원 - 같은 제목의 모달이 열려있으면 닫기)
 export function showResultModal(title, content, onClose) {
+    // 이미 같은 제목의 모달이 열려있으면 닫기 (토글)
+    const existingOverlays = document.querySelectorAll('.modal-overlay');
+    for (const existing of existingOverlays) {
+        const h2 = existing.querySelector('.modal-header h2');
+        if (h2 && h2.textContent === title) {
+            existing.classList.add('closing');
+            setTimeout(() => existing.remove(), 300);
+            return;
+        }
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `

@@ -62,13 +62,11 @@ function setupScrollIndicator(container) {
         }
     };
 
-    // 클릭하면 카드 영역으로 스크롤
+    // 클릭하면 카드 목록 아래쪽으로 스크롤
     indicator.addEventListener('click', () => {
-        const cardGridRect = cardGrid.getBoundingClientRect();
-        const scrollTarget = window.scrollY + cardGridRect.top - 20; // 카드 상단으로 스크롤 (20px 여유)
-
-        window.scrollTo({
-            top: scrollTarget,
+        // 현재 보이는 위치에서 한 화면분 아래로 스크롤
+        window.scrollBy({
+            top: window.innerHeight * 0.7,
             behavior: 'smooth'
         });
     });
