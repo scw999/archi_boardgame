@@ -19,7 +19,7 @@
   /* 게임 컨테이너: 사이드바 공간 제거 */
   #game-container {
     padding-left: 1rem !important;
-    padding-top: 140px !important;
+    padding-top: 160px !important;
     padding-right: 1rem !important;
   }
 
@@ -241,6 +241,40 @@
     padding: 0.05rem 0.25rem !important;
   }
 
+  /* [FIX 2] 건물 위 플레이어 라벨/체크마크 가림 방지 */
+  .owned-marker {
+    gap: 0.1rem !important;
+  }
+
+  .owned-marker-content {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1rem !important;
+  }
+
+  .owned-marker-label {
+    font-size: 0.5rem !important;
+    padding: 0.05rem 0.2rem !important;
+    max-width: 50px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .plot-status {
+    font-size: 0.6rem !important;
+    padding: 1px !important;
+    bottom: -3px !important;
+    right: -3px !important;
+  }
+
+  .plot-marker.has-building-img .plot-status {
+    font-size: 0.7rem !important;
+    padding: 2px !important;
+    bottom: 0 !important;
+    right: 0 !important;
+  }
+
   .plot-marker .plot-building-emoji {
     font-size: 1.5rem !important;
   }
@@ -256,7 +290,7 @@
   /* 게임 컨테이너 */
   #game-container {
     padding: 0.5rem !important;
-    padding-top: 130px !important;
+    padding-top: 150px !important;
     padding-bottom: 55px !important;
   }
 
@@ -656,10 +690,60 @@
     font-size: 1.2rem !important;
   }
 
+  /* 건물 위 플레이어 라벨 숨김 & 체크마크 축소 */
   .owned-marker-label {
+    display: none !important;
+  }
+
+  .owned-marker-content {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .plot-status {
     font-size: 0.5rem !important;
-    padding: 0 0.2rem !important;
-    display: none !important; /* 모바일에서는 라벨 숨김 */
+    padding: 1px !important;
+  }
+
+  /* [FIX 3] 설계/시공 모달 - 버튼이 보이도록 */
+  .design-modal-content,
+  .construction-modal-content {
+    max-height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* 모달 내 액션 버튼 영역을 하단 고정 */
+  .design-modal-content .design-action-buttons,
+  .construction-modal-content .action-buttons,
+  .design-modal-content .btn-confirm-design,
+  .construction-modal-content .btn-confirm-construction {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--bg-secondary) !important;
+    padding: 0.75rem !important;
+    margin: 0 -0.75rem -0.75rem -0.75rem !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    z-index: 10 !important;
+  }
+
+  /* 리스크 카드 모달 - 확인 버튼 고정 */
+  .modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--bg-secondary) !important;
+    z-index: 10 !important;
+  }
+
+  /* 결과 모달 버튼도 잘 보이도록 */
+  .result-modal .modal-footer,
+  .dialog .modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--bg-secondary) !important;
+    padding: 0.75rem 1rem !important;
+    z-index: 10 !important;
   }
 
   /* [FIX 6] 사이드바 텍스트 키우기 */
