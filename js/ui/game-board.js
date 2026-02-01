@@ -193,6 +193,14 @@ export function showNotification(message, type = 'info', duration = 3000) {
   `;
 
     const container = document.getElementById('notifications') || document.body;
+
+    // 헤더 바로 아래에 알림 표시 (동적 위치 계산)
+    const header = document.querySelector('.board-header-sticky');
+    if (header && container.id === 'notifications') {
+        const headerRect = header.getBoundingClientRect();
+        container.style.setProperty('top', (headerRect.bottom + 4) + 'px', 'important');
+    }
+
     container.appendChild(notification);
 
     // 애니메이션
@@ -205,8 +213,19 @@ export function showNotification(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-// 결과 모달 표시
+// 결과 모달 표시 (토글 지원 - 같은 제목의 모달이 열려있으면 닫기)
 export function showResultModal(title, content, onClose) {
+    // 이미 같은 제목의 모달이 열려있으면 닫기 (토글)
+    const existingOverlays = document.querySelectorAll('.modal-overlay');
+    for (const existing of existingOverlays) {
+        const h2 = existing.querySelector('.modal-header h2');
+        if (h2 && h2.textContent === title) {
+            existing.classList.add('closing');
+            setTimeout(() => existing.remove(), 300);
+            return;
+        }
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
@@ -223,6 +242,12 @@ export function showResultModal(title, content, onClose) {
   `;
 
     document.body.appendChild(overlay);
+
+    // 모바일에서 닫기 버튼이 보이도록 자동 스크롤
+    setTimeout(() => {
+        const btnClose = overlay.querySelector('.btn-close');
+        if (btnClose) btnClose.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 300);
 
     const closeModal = () => {
         overlay.classList.add('closing');

@@ -11,19 +11,19 @@ let BUILDING_3D_CONFIG = null;
 async function load3DModule() {
     if (Building3DViewer) return true;
     try {
-        console.log('3D 모듈 로드 시작...');
         const module = await import('./building-3d-viewer.js');
-        console.log('3D 모듈 로드 완료:', module);
         Building3DViewer = module.Building3DViewer;
         create3DViewerModal = module.create3DViewerModal;
         BUILDING_3D_CONFIG = module.BUILDING_3D_CONFIG;
         return true;
     } catch (error) {
         console.error('3D 모듈 로드 실패:', error);
-        console.error('에러 상세:', error.message, error.stack);
         return false;
     }
 }
+
+// 3D 모듈 백그라운드 프리로드 (버튼 클릭 전 미리 로드)
+setTimeout(() => load3DModule(), 3000);
 
 // 건물 이미지 HTML 생성 헬퍼 함수
 function getBuildingImageHTML(buildingName, size = '32px') {

@@ -99,14 +99,9 @@ class GameApp {
 
     // 이벤트 바인딩
     bindEvents() {
-        // 메인 메뉴 버튼들
-        document.getElementById('btn-new-game')?.addEventListener('click', () => this.showPlayerSetup());
-        document.getElementById('btn-load-game')?.addEventListener('click', () => this.loadGame());
-        document.getElementById('btn-rules')?.addEventListener('click', () => this.showRules());
-
-        // 플레이어 설정
-        document.getElementById('btn-start-game')?.addEventListener('click', () => this.startGame());
-        document.getElementById('btn-back')?.addEventListener('click', () => this.showMainMenu());
+        // 메인 메뉴 & 설정 버튼은 index.html 인라인 스크립트에서 바인딩됨
+        // window._gameApp을 통해 이 인스턴스의 메서드를 호출함
+        // (중복 바인딩하지 않음 → 알림 두 번 뜨는 문제 방지)
 
         // 유틸리티 버튼
         document.getElementById('btn-budget-table')?.addEventListener('click', () => this.showBudgetTable());
@@ -369,6 +364,9 @@ class GameApp {
     startRound() {
         gameState.startRound();
         this.updateUI();
+
+        // 라운드 시작 시 스크롤 맨 위로 (개발 현황판 보이도록)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // 라운드 시작 알림 (선 플레이어 표시)
         const startingPlayer = gameState.players[gameState.roundStartingPlayer];
@@ -1410,6 +1408,12 @@ class GameApp {
 
         document.body.appendChild(container);
 
+        // 설계 확정 버튼으로 자동 스크롤
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('btn-confirm-preview');
+            if (confirmBtn) confirmBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+
         // 확정 버튼
         document.getElementById('btn-confirm-preview').onclick = () => {
             container.remove();
@@ -2238,6 +2242,12 @@ class GameApp {
             this.runConstructionPhase();
         });
 
+        // 시공 계약 버튼으로 자동 스크롤
+        setTimeout(() => {
+            const scrollTarget = document.getElementById('btn-confirm-construction');
+            if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+
         // 시공 계약 버튼 이벤트
         const confirmBtn = document.getElementById('btn-confirm-construction');
         if (confirmBtn && check.canAfford) {
@@ -2408,6 +2418,9 @@ class GameApp {
                 cardEl.dataset.harmful = isHarmful;
                 cardEl.dataset.riskType = risk.type;
 
+                // 공개된 카드가 보이도록 스크롤
+                cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
                 revealedCards.push({ index: currentIndex, risk, isHarmful });
 
                 // 진행률 업데이트
@@ -2435,6 +2448,12 @@ class GameApp {
                 // 방어 선택 UI 표시
                 const selectionPhase = modal.querySelector('.defense-selection-phase');
                 selectionPhase.style.display = 'block';
+
+                // 방어 적용 완료 버튼으로 자동 스크롤
+                setTimeout(() => {
+                    const defenseBtn = document.getElementById('btn-confirm-defense');
+                    if (defenseBtn) defenseBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
 
                 // 유해한 카드에 클릭 이벤트 추가
                 harmfulCards.forEach(({ index }) => {
@@ -2573,8 +2592,12 @@ class GameApp {
                     `;
                     summaryEl.style.display = 'block';
 
+                    // 계속하기 버튼으로 자동 스크롤
+                    const continueBtn = document.getElementById('btn-risk-continue');
+                    continueBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
                     // 계속하기 버튼
-                    document.getElementById('btn-risk-continue').onclick = () => {
+                    continueBtn.onclick = () => {
                         modal.remove();
                         // 리스크 처리
                         const riskResult = processRisks(gameState.currentPlayerIndex);
@@ -2631,7 +2654,11 @@ class GameApp {
                 `;
                 summaryEl.style.display = 'block';
 
-                document.getElementById('btn-risk-continue').onclick = () => {
+                // 계속하기 버튼으로 자동 스크롤
+                const continueBtn2 = document.getElementById('btn-risk-continue');
+                continueBtn2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                continueBtn2.onclick = () => {
                     modal.remove();
                     const riskResult = processRisks(gameState.currentPlayerIndex);
                     if (riskResult.success) {
@@ -5044,6 +5071,8 @@ class GameApp {
             if (wildcardSlot) {
                 const playerIndex = parseInt(wildcardSlot.dataset.playerIndex);
                 if (!isNaN(playerIndex)) {
+                    // 모바일: 플레이어 패널 닫기
+                    if (window.closeMobilePanel) window.closeMobilePanel();
                     this.showPlayerWildcardsModal(playerIndex);
                 }
                 return;
@@ -5054,6 +5083,8 @@ class GameApp {
             if (buildingSlot) {
                 const playerIndex = parseInt(buildingSlot.dataset.playerIndex);
                 if (!isNaN(playerIndex)) {
+                    // 모바일: 플레이어 패널 닫기
+                    if (window.closeMobilePanel) window.closeMobilePanel();
                     this.showPlayerBuildingsModal(playerIndex);
                 }
                 return;
@@ -5248,7 +5279,28 @@ class GameApp {
 }
 
 // 앱 시작
-document.addEventListener('DOMContentLoaded', () => {
-    const app = new GameApp();
-    app.init();
+// 앱 초기화
+function startApp() {
+    try {
+        const app = new GameApp();
+        app.init();
+        window._gameApp = app;
+    } catch (e) {
+        console.error('GameApp 초기화 오류:', e);
+    }
+}
+
+// 모듈 스크립트는 defer되므로 DOM이 이미 파싱되었을 수 있음
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+} else {
+    startApp();
+}
+
+// 안전장치: 위 방법이 실패할 경우를 대비
+window.addEventListener('load', () => {
+    if (!window._gameApp) {
+        console.warn('load 이벤트에서 앱 재초기화');
+        startApp();
+    }
 });

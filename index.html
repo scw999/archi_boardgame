@@ -14,6 +14,7 @@
   <!-- 스타일시트 -->
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/cards.css">
+  <link rel="stylesheet" href="styles/mobile.css">
   
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
@@ -48,33 +49,61 @@
 
   <!-- 알림 컨테이너 -->
   <div id="notifications"></div>
-  
+
+  <!-- 메뉴 버튼 핸들러 (인라인, 모듈 무관) -->
+  <script>
+    function goToSetup() {
+      document.getElementById('main-menu').classList.add('hidden');
+      document.getElementById('player-setup').classList.remove('hidden');
+      var gc = document.getElementById('game-container');
+      if (gc) gc.classList.add('hidden');
+    }
+    function goToMenu() {
+      document.getElementById('main-menu').classList.remove('hidden');
+      document.getElementById('player-setup').classList.add('hidden');
+      var gc = document.getElementById('game-container');
+      if (gc) gc.classList.add('hidden');
+    }
+    function doStartGame() {
+      if (window._gameApp) window._gameApp.startGame();
+      else alert('로딩 중입니다. 잠시 후 다시 시도해주세요.');
+    }
+    function doLoadGame() {
+      if (window._gameApp) window._gameApp.loadGame();
+      else alert('로딩 중입니다. 잠시 후 다시 시도해주세요.');
+    }
+    function doShowRules() {
+      if (window._gameApp) window._gameApp.showRules();
+      else alert('로딩 중입니다. 잠시 후 다시 시도해주세요.');
+    }
+  </script>
+
   <!-- ===== 메인 메뉴 ===== -->
   <section id="main-menu">
     <div class="game-logo">🏗️</div>
     <h1 class="game-title">갓물주</h1>
     <p class="game-subtitle">Real Estate Mogul - 부동산 개발 보드게임</p>
-    
+
     <div class="menu-buttons">
-      <button id="btn-new-game" class="menu-btn primary">
+      <button id="btn-new-game" class="menu-btn primary" onclick="goToSetup()">
         🎮 새 게임 시작
       </button>
-      <button id="btn-load-game" class="menu-btn secondary">
+      <button id="btn-load-game" class="menu-btn secondary" onclick="doLoadGame()">
         💾 이어하기
       </button>
-      <button id="btn-rules" class="menu-btn secondary">
+      <button id="btn-rules" class="menu-btn secondary" onclick="doShowRules()">
         📜 게임 규칙
       </button>
     </div>
   </section>
-  
+
   <!-- ===== 플레이어 설정 ===== -->
   <section id="player-setup" class="hidden">
     <div class="setup-header">
       <h2>👥 플레이어 설정</h2>
       <p>참여할 플레이어 이름을 입력하세요 (1~4명)</p>
     </div>
-    
+
     <div class="player-inputs">
       <div class="player-input-row">
         <div class="player-number">1</div>
@@ -102,8 +131,8 @@
     </div>
     
     <div class="setup-actions">
-      <button id="btn-back" class="menu-btn secondary">← 뒤로</button>
-      <button id="btn-start-game" class="menu-btn primary">게임 시작 →</button>
+      <button id="btn-back" class="menu-btn secondary" onclick="goToMenu()">← 뒤로</button>
+      <button id="btn-start-game" class="menu-btn primary" onclick="doStartGame()">게임 시작 →</button>
     </div>
   </section>
   
@@ -179,7 +208,87 @@
     </aside>
   </main>
   
+  <!-- 모바일 플레이어 패널 토글 -->
+  <button class="mobile-player-toggle" id="mobile-player-toggle" aria-label="플레이어 패널 열기">👥</button>
+  <div class="mobile-panel-overlay" id="mobile-panel-overlay"></div>
+
+  <!-- 프리로더 강제 숨김 안전장치 -->
+  <script>
+    setTimeout(function() {
+      var p = document.getElementById('preloader');
+      if (p && !p.classList.contains('hidden')) p.classList.add('hidden');
+    }, 5000);
+  </script>
+
   <!-- 메인 스크립트 -->
   <script type="module" src="js/main.js"></script>
+
+  <!-- 모바일 토글 스크립트 -->
+  <script>
+    (function() {
+      try {
+        var toggle = document.getElementById('mobile-player-toggle');
+        var overlay = document.getElementById('mobile-panel-overlay');
+        var panels = document.getElementById('player-panels');
+        var gameContainer = document.getElementById('game-container');
+
+        if (!toggle || !overlay || !panels || !gameContainer) return;
+
+        window.closeMobilePanel = closePanel;
+
+        function openPanel() {
+          panels.classList.add('mobile-open');
+          overlay.classList.add('show');
+          toggle.classList.add('active');
+          toggle.textContent = '✕';
+        }
+
+        function closePanel() {
+          panels.classList.remove('mobile-open');
+          overlay.classList.remove('show');
+          toggle.classList.remove('active');
+          toggle.textContent = '👥';
+        }
+
+        toggle.addEventListener('click', function() {
+          if (panels.classList.contains('mobile-open')) {
+            closePanel();
+          } else {
+            openPanel();
+          }
+        });
+
+        overlay.addEventListener('click', closePanel);
+
+        var observer = new MutationObserver(function() {
+          try {
+            if (gameContainer.classList.contains('hidden')) {
+              toggle.style.display = 'none';
+              closePanel();
+            } else {
+              toggle.style.display = '';
+            }
+          } catch(e) {}
+        });
+        observer.observe(gameContainer, { attributes: true, attributeFilter: ['class'] });
+
+        var bodyObserver = new MutationObserver(function() {
+          try {
+            var hasModal = document.querySelector('.modal-overlay, .design-modal-overlay, .construction-modal-overlay');
+            if (hasModal) {
+              toggle.style.opacity = '0';
+              toggle.style.pointerEvents = 'none';
+            } else {
+              toggle.style.opacity = '';
+              toggle.style.pointerEvents = '';
+            }
+          } catch(e) {}
+        });
+        bodyObserver.observe(document.body, { childList: true, subtree: false });
+      } catch(e) {
+        console.error('모바일 토글 초기화 오류:', e);
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -1,0 +1,1246 @@
+/* ===== 모바일 친화적 반응형 스타일 ===== */
+
+/* 터치 디바이스 최적화 */
+@media (pointer: coarse) {
+  .action-btn,
+  .menu-btn,
+  .utility-btn,
+  .price-btn,
+  .building-option,
+  .phase-step,
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* 메인 메뉴 & 설정 화면 - 오버레이에 가려지지 않도록 */
+#main-menu,
+#player-setup {
+  position: relative;
+  z-index: 50;
+}
+
+#main-menu .menu-btn,
+#player-setup .menu-btn,
+#player-setup .setup-actions button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+  pointer-events: auto !important;
+}
+
+/* 알림 컨테이너가 클릭을 가로채지 않도록 */
+#notifications {
+  pointer-events: none;
+}
+#notifications .notification {
+  pointer-events: auto;
+}
+
+/* 프리로더 완전 숨김 보장 */
+#preloader.hidden {
+  display: none !important;
+}
+
+/* ===== 태블릿 (max-width: 1024px) ===== */
+@media (max-width: 1024px) {
+  /* 게임 컨테이너: 사이드바 공간 제거 */
+  #game-container {
+    padding-left: 1rem !important;
+    padding-top: 170px !important;
+    padding-right: 1rem !important;
+  }
+
+  /* 플레이어 패널: 고정 사이드바 -> 접을 수 있는 패널 */
+  #player-panels {
+    position: fixed !important;
+    top: 0 !important;
+    left: -280px !important;
+    width: 260px !important;
+    height: 100vh !important;
+    z-index: 2000 !important;
+    background: var(--bg-primary) !important;
+    padding: 1rem !important;
+    padding-top: 60px !important;
+    transition: left 0.3s ease !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5) !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  #player-panels.mobile-open {
+    left: 0 !important;
+  }
+
+  /* 플레이어 패널 오버레이 */
+  .mobile-panel-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1999;
+  }
+
+  .mobile-panel-overlay.show {
+    display: block;
+  }
+
+  /* ===== 고정 헤더 ===== */
+  .board-header-sticky {
+    left: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+  }
+
+  /* [FIX 2] 헤더 요소 정렬: 가운데 정렬, 간격 조정 */
+  .header-top-row {
+    gap: 0.4rem !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .round-badge {
+    padding: 0.25rem 0.6rem !important;
+    flex-shrink: 0;
+  }
+
+  .round-badge .round-label {
+    font-size: 0.8rem !important;
+  }
+
+  .round-badge .round-number {
+    font-size: 0.9rem !important;
+  }
+
+  .current-phase-large {
+    padding: 0.3rem 0.8rem !important;
+    flex-shrink: 0;
+  }
+
+  .current-phase-name {
+    font-size: 0.9rem !important;
+    white-space: nowrap;
+  }
+
+  .current-player-turn {
+    padding: 0.2rem 0.5rem !important;
+    flex-shrink: 0;
+  }
+
+  .current-player-turn .player-turn {
+    font-size: 0.8rem !important;
+    white-space: nowrap;
+  }
+
+  /* [FIX 2] 페이즈 진행 바 - 가운데 정렬 */
+  .phase-progress-row {
+    padding: 0.2rem 0 !important;
+    justify-content: center !important;
+  }
+
+  .board-header-sticky .phase-progress {
+    justify-content: center !important;
+  }
+
+  .board-header-sticky .phase-step {
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  .board-header-sticky .phase-step .phase-icon {
+    font-size: 1.1rem !important;
+  }
+
+  .board-header-sticky .phase-step .phase-name {
+    font-size: 0.65rem !important;
+  }
+
+  .phase-arrow {
+    font-size: 0.7rem !important;
+  }
+
+  /* 유틸리티 버튼: 헤더와 겹치지 않도록 */
+  #game-utility-buttons {
+    top: 0.3rem !important;
+    right: 0.3rem !important;
+    gap: 0.2rem !important;
+    z-index: 1002 !important;
+  }
+
+  .utility-btn {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  /* 카드 그리드 최적화 */
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+
+  /* 모달 최적화 */
+  .design-modal-overlay,
+  .construction-modal-overlay {
+    padding: 0.5rem !important;
+  }
+
+  .design-modal-content,
+  .construction-modal-content {
+    padding: 1rem !important;
+    max-height: 95vh !important;
+  }
+
+  .design-modal-content h3,
+  .construction-modal-content h3 {
+    font-size: 1.3rem !important;
+  }
+
+  /* 구매 옵션 패널 */
+  #purchase-options {
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    transform: none !important;
+    bottom: 80px !important;
+    max-width: none !important;
+    width: auto !important;
+  }
+
+  .price-options {
+    flex-wrap: wrap !important;
+  }
+
+  .price-btn {
+    min-width: 80px !important;
+  }
+
+  /* 알림 위치 - JS에서 헤더 높이 기반 동적 설정 */
+  #notifications {
+    bottom: auto !important;
+    right: 0.5rem !important;
+    left: 0.5rem !important;
+  }
+
+  .notification {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* 헤더 스페이서 제거 */
+  .header-spacer {
+    display: none !important;
+  }
+
+  /* [FIX 4] 지도 플롯 마커 모바일 축소 */
+  .plot-marker {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .plot-marker.has-building-img {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .plot-marker.available .plot-empty {
+    font-size: 0.75rem !important;
+  }
+
+  .plot-marker.owned .plot-building,
+  .plot-marker.owned .plot-land {
+    font-size: 0.9rem !important;
+  }
+
+  .plot-building-img {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .owned-building-img {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .plot-marker.available .plot-marker-inner {
+    border-width: 1px !important;
+  }
+
+  /* 소유자 깃발 - 건물 위 충분한 간격, 잘리지 않게 */
+  .owner-flag {
+    top: -14px !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
+  }
+
+  .owner-flag .flag-name {
+    font-size: 0.45rem !important;
+    padding: 1px 4px 1px 3px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    max-width: none !important;
+  }
+
+  /* 깃발 화살표 크기 모바일 맞춤 */
+  .owner-flag .flag-name::before {
+    border-width: 4px !important;
+    left: -4px !important;
+  }
+
+  .owner-flag .flag-name::after {
+    border-width: 5px !important;
+    right: -5px !important;
+  }
+
+  .plot-marker,
+  .plot-marker-inner {
+    overflow: visible !important;
+  }
+
+  /* 상태 아이콘 (체크/판매 등) - 건물 우측 바깥에 표시 */
+  .plot-status {
+    font-size: 0.5rem !important;
+    padding: 1px !important;
+    bottom: auto !important;
+    top: 50% !important;
+    right: -10px !important;
+    transform: translateY(-50%) !important;
+    min-width: 12px !important;
+    min-height: 12px !important;
+  }
+
+  .plot-marker.has-building-img .plot-status {
+    font-size: 0.55rem !important;
+    right: -12px !important;
+  }
+
+  .owned-marker-label {
+    font-size: 0.45rem !important;
+    padding: 0.05rem 0.15rem !important;
+    max-width: 40px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .owned-marker-content {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .plot-marker .plot-building-emoji {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* ===== 모바일 (max-width: 640px) ===== */
+@media (max-width: 640px) {
+  /* [FIX 6] 모바일 기본 폰트 크기 확대 (14px → 15px) */
+  html {
+    font-size: 15px;
+  }
+
+  /* 게임 컨테이너 */
+  #game-container {
+    padding: 0.5rem !important;
+    padding-top: 160px !important;
+    padding-bottom: 55px !important;
+  }
+
+  /* 메인 메뉴 */
+  .game-logo {
+    font-size: 3rem;
+  }
+
+  .game-title {
+    font-size: 2rem !important;
+  }
+
+  .game-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+  }
+
+  .menu-buttons {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  /* 플레이어 설정 */
+  #player-setup {
+    margin: 1rem auto;
+    padding: 1rem;
+  }
+
+  .setup-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .setup-actions {
+    flex-direction: column;
+  }
+
+  /* ===== 상단 헤더 - 모바일 최적화 ===== */
+  .board-header-sticky {
+    padding: 0.4rem 0.5rem !important;
+  }
+
+  /* [FIX 2] 헤더 요소 가운데 정렬 */
+  .header-top-row {
+    gap: 0.3rem !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .round-badge {
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  .round-badge .round-label {
+    font-size: 0.75rem !important;
+  }
+
+  .round-badge .round-number {
+    font-size: 0.8rem !important;
+  }
+
+  .current-phase-large {
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  .current-phase-name {
+    font-size: 0.8rem !important;
+  }
+
+  /* 현재 플레이어 턴 */
+  .current-player-turn {
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  .current-player-turn .player-turn {
+    font-size: 0.75rem !important;
+  }
+
+  /* 페이즈 표시: 아이콘만 (비활성) */
+  .phase-step:not(.active) .phase-name {
+    display: none !important;
+  }
+
+  .phase-step:not(.active) {
+    padding: 0.2rem 0.35rem !important;
+  }
+
+  .board-header-sticky .phase-step .phase-icon {
+    font-size: 1rem !important;
+  }
+
+  .board-header-sticky .phase-step.active .phase-name {
+    font-size: 0.65rem !important;
+  }
+
+  .phase-arrow {
+    font-size: 0.5rem !important;
+    margin: 0 !important;
+  }
+
+  /* ===== 유틸리티 버튼 하단 고정 ===== */
+  #game-utility-buttons {
+    top: auto !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    position: fixed !important;
+    justify-content: center !important;
+    background: var(--bg-primary) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 0.4rem 0.5rem !important;
+    padding-bottom: env(safe-area-inset-bottom, 0.4rem) !important;
+    z-index: 1001 !important;
+    gap: 0.25rem !important;
+  }
+
+  .utility-btn {
+    flex: 1 !important;
+    text-align: center !important;
+    padding: 0.45rem 0.2rem !important;
+    font-size: 0.75rem !important;
+    border-radius: var(--radius-sm) !important;
+  }
+
+  /* [FIX] 메뉴 드롭다운 - 위로 열리도록 */
+  .menu-dropdown-content {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  /* [FIX] 알림창 위치 - JS에서 동적 설정 */
+  #notifications {
+    bottom: auto !important;
+    right: 0.5rem !important;
+    left: 0.5rem !important;
+    z-index: 2001 !important;
+  }
+
+  .notification {
+    font-size: 0.85rem !important;
+    padding: 0.6rem 1rem !important;
+  }
+
+  /* ===== [FIX 5 & 6] 카드 디자인 모바일 개선 ===== */
+  .card-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    padding: 0 0.25rem !important;
+  }
+
+  /* 카드: 가운데 정렬 & 카드 느낌 강화 */
+  .game-card {
+    padding: 0 !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    overflow: hidden !important;
+  }
+
+  .game-card:hover {
+    transform: none !important;
+  }
+
+  .card-header {
+    font-size: 0.85rem !important;
+    padding: 0.6rem 0.85rem !important;
+  }
+
+  .card-body {
+    padding: 1.1rem !important;
+    text-align: center !important;
+  }
+
+  .card-title {
+    font-size: 1.2rem !important;
+    text-align: center !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  .card-subtitle {
+    text-align: center !important;
+    font-size: 0.85rem !important;
+  }
+
+  .card-description {
+    text-align: center !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* [FIX 5] 면적 등 stat 가운데 정렬 */
+  .card-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+    margin: 0.75rem auto !important;
+    max-width: 320px !important;
+    justify-items: center !important;
+  }
+
+  /* stat이 1개(면적)일 때도 가운데 오도록 */
+  .card-stats > .stat:only-child {
+    grid-column: 1 / -1 !important;
+    max-width: 200px !important;
+    width: 100% !important;
+  }
+
+  .stat {
+    padding: 0.7rem 0.5rem !important;
+    border-radius: var(--radius-md) !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .stat-label {
+    font-size: 0.7rem !important;
+  }
+
+  .stat-value {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+  }
+
+  /* [FIX 6] 가격 테이블 가운데 정렬 & 글씨 키우기 */
+  .price-table {
+    max-width: 100% !important;
+    margin: 0.75rem auto !important;
+  }
+
+  .price-row {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .price-type {
+    font-size: 0.9rem !important;
+  }
+
+  .price-value {
+    font-size: 0.95rem !important;
+  }
+
+  .dice-req {
+    font-size: 0.75rem !important;
+  }
+
+  .extra-cost {
+    font-size: 0.8rem !important;
+    padding: 0.5rem !important;
+  }
+
+  /* 카드 태그 가운데 & 글씨 키우기 */
+  .card-tags {
+    justify-content: center !important;
+  }
+
+  .tag {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.6rem !important;
+  }
+
+  /* 카드 지역 배지 */
+  .card-region {
+    font-size: 0.7rem !important;
+  }
+
+  /* 액션 버튼 */
+  .action-buttons {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .action-btn {
+    padding: 0.7rem 1rem !important;
+    font-size: 0.95rem !important;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  /* 액션 영역 */
+  #action-area {
+    padding: 0.5rem !important;
+    padding-bottom: 55px !important;
+  }
+
+  /* 모달 전체 화면화 */
+  .result-modal,
+  .detail-modal,
+  .dialog {
+    width: 95% !important;
+    max-height: 85vh !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .modal-header {
+    padding: 1rem !important;
+  }
+
+  .modal-header h2 {
+    font-size: 1.15rem !important;
+  }
+
+  .modal-content {
+    padding: 1rem !important;
+  }
+
+  /* 건물 그리드 */
+  .building-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+
+  .building-option {
+    padding: 0.75rem !important;
+  }
+
+  .building-emoji {
+    font-size: 1.5rem !important;
+  }
+
+  /* 설계/시공 모달 */
+  .design-modal-content,
+  .construction-modal-content {
+    padding: 0.75rem !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .design-modal-content .building-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 시공 디테일 그리드 */
+  .detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 구매 옵션 모바일 전체 너비 */
+  #purchase-options {
+    bottom: 50px !important;
+    left: 0 !important;
+    right: 0 !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+    padding: 1rem !important;
+  }
+
+  /* 스크롤 인디케이터 */
+  .scroll-indicator {
+    bottom: 60px !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  .scroll-indicator-text {
+    font-size: 0.85rem !important;
+  }
+
+  /* 단가표 테이블 */
+  .budget-table {
+    font-size: 0.75rem !important;
+  }
+
+  .budget-table th,
+  .budget-table td {
+    padding: 0.35rem !important;
+  }
+
+  .budget-table .desc-cell {
+    display: none !important;
+  }
+
+  /* 게임 규칙 모달 */
+  .game-manual {
+    max-height: 70vh !important;
+  }
+
+  .manual-section h3 {
+    font-size: 1.05rem !important;
+  }
+
+  .manual-section p,
+  .manual-section li {
+    font-size: 0.9rem !important;
+  }
+
+  /* 주사위 모달 모바일 */
+  .dice-modal {
+    min-width: auto !important;
+    width: 90% !important;
+    padding: 1.5rem !important;
+  }
+
+  .dice-modal.large {
+    min-width: auto !important;
+    width: 95% !important;
+  }
+
+  /* [FIX 4] 지도 마커 더 작게 */
+  .plot-marker {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .plot-marker.has-building-img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .plot-marker.available .plot-empty {
+    font-size: 0.6rem !important;
+  }
+
+  .plot-marker.owned .plot-building,
+  .plot-marker.owned .plot-land {
+    font-size: 0.7rem !important;
+  }
+
+  .plot-marker .plot-building-emoji {
+    font-size: 0.8rem !important;
+  }
+
+  .owned-building-img {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .plot-marker.available .plot-marker-inner {
+    border-width: 1px !important;
+  }
+
+  .owner-flag {
+    top: -4px !important;
+  }
+
+  .owner-flag .flag-name {
+    font-size: 0.4rem !important;
+    padding: 1px 3px !important;
+  }
+
+  .owned-marker-content {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .plot-status {
+    font-size: 0.4rem !important;
+    min-width: 10px !important;
+    min-height: 10px !important;
+    right: -8px !important;
+  }
+
+  .plot-marker.has-building-img .plot-status {
+    right: -10px !important;
+  }
+
+  .owner-flag {
+    top: -12px !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
+  }
+
+  .owner-flag .flag-name {
+    font-size: 0.35rem !important;
+    padding: 1px 3px 1px 2px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    max-width: none !important;
+  }
+
+  .owner-flag .flag-name::before {
+    border-width: 3px !important;
+    left: -3px !important;
+  }
+
+  .owner-flag .flag-name::after {
+    border-width: 4px !important;
+    right: -4px !important;
+  }
+
+  .owned-marker-content {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.55rem !important;
+  }
+
+  /* [FIX 1] 와일드카드 버튼 - 하단 footer 위로 */
+  .wildcard-toggle-btn {
+    bottom: 55px !important;
+    right: 0.5rem !important;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.85rem !important;
+    max-width: calc(100vw - 1rem) !important;
+    white-space: nowrap !important;
+  }
+
+  #wildcard-panel {
+    bottom: 100px !important;
+    right: 0.5rem !important;
+    left: 0.5rem !important;
+    width: auto !important;
+  }
+
+  /* 건물 위 플레이어 라벨 숨김 & 체크마크 축소 */
+  .owned-marker-label {
+    display: none !important;
+  }
+
+  .owned-marker-content {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .plot-status {
+    font-size: 0.5rem !important;
+    padding: 1px !important;
+  }
+
+  /* [FIX 3] 설계/시공 모달 - 버튼이 보이도록 */
+  .design-modal-content,
+  .construction-modal-content {
+    max-height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* [FIX 5] 설계 진행하기 버튼 - 오렌지색 가운데 정렬 */
+  .btn-confirm-design {
+    background: linear-gradient(135deg, #f59e0b, #ea580c) !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    padding: 0.9rem 1.5rem !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+    display: block !important;
+    margin: 1rem auto !important;
+    width: auto !important;
+    max-width: 80% !important;
+  }
+
+  /* [FIX 6] 시공 계약하기 버튼 - 오렌지색 가운데 정렬 */
+  .btn-confirm-construction {
+    background: linear-gradient(135deg, #f59e0b, #ea580c) !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    padding: 0.9rem 1.5rem !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+    display: block !important;
+    margin: 1rem auto !important;
+    width: auto !important;
+    max-width: 80% !important;
+  }
+
+  .construction-modal-content .action-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem !important;
+  }
+
+  /* 설계 모달 하단 action-buttons - sticky 해제, 맨 아래 고정 */
+  .design-modal-content .design-action-buttons {
+    position: static !important;
+    background: transparent !important;
+    padding: 0.75rem 0 !important;
+    margin: 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* 리스크 카드 모달 - 확인 버튼 고정 */
+  .modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--bg-secondary) !important;
+    z-index: 10 !important;
+  }
+
+  /* 결과 모달 버튼도 잘 보이도록 */
+  .result-modal .modal-footer,
+  .dialog .modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--bg-secondary) !important;
+    padding: 0.75rem 1rem !important;
+    z-index: 10 !important;
+  }
+
+  /* [FIX 6] 사이드바 텍스트 키우기 */
+  .sidebar-section h4 {
+    font-size: 1rem !important;
+  }
+
+  .no-assets {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* ===== 매우 작은 화면 (max-width: 380px) ===== */
+@media (max-width: 380px) {
+  html {
+    font-size: 14px;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .building-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .design-modal-content .building-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 헤더: 페이즈만 보이게 */
+  .phase-step:not(.active) {
+    display: none !important;
+  }
+
+  .phase-arrow {
+    display: none !important;
+  }
+
+  .current-phase-large {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .header-top-row {
+    justify-content: center !important;
+  }
+
+  /* 지도 마커 최소 */
+  .plot-marker {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .plot-marker.has-building-img {
+    width: 35px !important;
+    height: 35px !important;
+  }
+}
+
+/* ===== [FIX 1] 모바일 토글 버튼 - 헤더 아래로 배치 ===== */
+.mobile-player-toggle {
+  display: none;
+  position: fixed;
+  top: 0.4rem;
+  left: 0.4rem;
+  z-index: 2001;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.mobile-player-toggle:hover {
+  background: var(--accent-blue);
+}
+
+.mobile-player-toggle.active {
+  background: var(--accent-gold);
+  color: var(--bg-primary);
+}
+
+/* 게임 컨테이너가 보일 때만 토글 버튼 표시 */
+@media (max-width: 1024px) {
+  #game-container:not(.hidden) ~ .mobile-player-toggle {
+    display: flex !important;
+  }
+
+  /* [FIX 1] 토글 버튼을 헤더 아래로 이동하여 라운드 배지와 겹치지 않도록 */
+  .mobile-player-toggle {
+    top: auto !important;
+    bottom: auto !important;
+    /* 헤더 아래쪽에 배치 (고정 헤더 높이에 따라) */
+  }
+}
+
+@media (max-width: 640px) {
+  /* [FIX 1] 640px에서 토글 버튼을 헤더 밑 왼쪽에 배치 */
+  .mobile-player-toggle {
+    top: 105px !important;
+    left: 0.5rem !important;
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1rem !important;
+    background: rgba(15, 52, 96, 0.9) !important;
+    border: 1px solid var(--accent-gold) !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* 태블릿에서 토글 버튼을 헤더 밑에 배치 */
+  .mobile-player-toggle {
+    top: 110px !important;
+    left: 0.5rem !important;
+    background: rgba(15, 52, 96, 0.9) !important;
+    border: 1px solid var(--accent-gold) !important;
+  }
+}
+
+/* ===== 아이소메트릭 맵 모바일 ===== */
+@media (max-width: 1024px) {
+  /* [FIX 2] city-grid 마진 조정 - 헤더와 확실히 분리 */
+  #city-grid {
+    margin-top: 0.5rem !important;
+    padding: 0.75rem !important;
+    overflow: visible !important;
+  }
+
+  .city-grid-title {
+    padding: 0.75rem !important;
+  }
+
+  .city-grid-title h2 {
+    font-size: 1.2rem !important;
+    word-break: keep-all !important;
+  }
+
+  .iso-city-container {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    grid-template-areas:
+      "header"
+      "map"
+      "sidebar" !important;
+    padding: 0.5rem !important;
+    gap: 0.5rem !important;
+  }
+
+  /* 헤더: 겹침 완전 해결 - 세로 배치 */
+  .iso-city-header {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .iso-city-header h3 {
+    font-size: 1.1rem !important;
+    text-align: center !important;
+    word-break: keep-all !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  /* 범례 & 3D 버튼: 절대 위치 해제 → static */
+  .iso-city-legend {
+    position: static !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
+
+  .view-3d-btn,
+  #toggle-3d-city-btn {
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .iso-city-sidebar {
+    max-height: 200px !important;
+  }
+
+  .iso-city-map {
+    min-height: auto !important;
+  }
+
+  .iso-city-map-wrapper {
+    overflow: visible !important;
+    border-radius: 0 !important;
+  }
+
+  /* 3D 도시 뷰 높이 조정 */
+  .city-3d-container {
+    height: 350px !important;
+  }
+
+  /* 구 city-grid 3D transform 비활성 */
+  .city-grid-container {
+    transform: none !important;
+    padding: 0.75rem !important;
+  }
+
+  .city-grid-container:hover {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #city-grid {
+    padding: 0.5rem !important;
+  }
+
+  .city-grid-title {
+    padding: 0.5rem !important;
+  }
+
+  .city-grid-title h2 {
+    font-size: 1.05rem !important;
+  }
+
+  .iso-city-header {
+    padding: 0.5rem !important;
+    border-width: 2px !important;
+  }
+
+  .iso-city-header h3 {
+    font-size: 0.95rem !important;
+    letter-spacing: 0 !important;
+  }
+
+  .iso-city-legend {
+    gap: 0.25rem !important;
+  }
+
+  .legend-player {
+    font-size: 0.7rem !important;
+  }
+
+  .city-3d-container {
+    height: 280px !important;
+  }
+
+  /* 사이드바 내 자산 목록 */
+  .iso-city-sidebar {
+    max-height: 150px !important;
+    padding: 0.5rem !important;
+  }
+
+  .asset-player-group {
+    padding: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* 지역 범례 바 */
+  .iso-city-map-wrapper .city-map-legend {
+    flex-wrap: wrap !important;
+    gap: 0.3rem !important;
+    padding: 0.3rem !important;
+  }
+
+  .city-map-legend .legend-item {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+}
+
+/* ===== 랜드스케이프 모바일 ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .board-header-sticky {
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  .phase-progress-row {
+    display: none !important;
+  }
+
+  .header-top-row {
+    gap: 0.3rem !important;
+  }
+
+  #game-container {
+    padding-top: 45px !important;
+  }
+}
+
+/* ===== safe area (노치 대응) ===== */
+@supports (padding: env(safe-area-inset-top)) {
+  @media (max-width: 1024px) {
+    .board-header-sticky {
+      padding-top: calc(0.4rem + env(safe-area-inset-top)) !important;
+    }
+
+    #game-utility-buttons {
+      padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)) !important;
+    }
+  }
+}
