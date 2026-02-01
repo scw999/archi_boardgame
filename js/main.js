@@ -365,6 +365,9 @@ class GameApp {
         gameState.startRound();
         this.updateUI();
 
+        // 라운드 시작 시 스크롤 맨 위로 (개발 현황판 보이도록)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         // 라운드 시작 알림 (선 플레이어 표시)
         const startingPlayer = gameState.players[gameState.roundStartingPlayer];
         showNotification(`🎮 라운드 ${gameState.currentRound} 시작! 선: ${startingPlayer.name}`, 'info');

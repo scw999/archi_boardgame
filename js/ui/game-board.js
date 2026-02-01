@@ -193,6 +193,14 @@ export function showNotification(message, type = 'info', duration = 3000) {
   `;
 
     const container = document.getElementById('notifications') || document.body;
+
+    // 헤더 바로 아래에 알림 표시 (동적 위치 계산)
+    const header = document.querySelector('.board-header-sticky');
+    if (header && container.id === 'notifications') {
+        const headerRect = header.getBoundingClientRect();
+        container.style.top = (headerRect.bottom + 4) + 'px';
+    }
+
     container.appendChild(notification);
 
     // 애니메이션
