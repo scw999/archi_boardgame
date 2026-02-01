@@ -195,6 +195,9 @@
       const panels = document.getElementById('player-panels');
       const gameContainer = document.getElementById('game-container');
 
+      // 전역에서 접근 가능하도록 window에 등록
+      window.closeMobilePanel = closePanel;
+
       function openPanel() {
         panels.classList.add('mobile-open');
         overlay.classList.add('show');
@@ -229,6 +232,19 @@
         }
       });
       observer.observe(gameContainer, { attributes: true, attributeFilter: ['class'] });
+
+      // 모달 열릴 때 토글 버튼 숨기기 (매뉴얼, 단가표 등)
+      var bodyObserver = new MutationObserver(function() {
+        var hasModal = document.querySelector('.modal-overlay, .design-modal-overlay, .construction-modal-overlay');
+        if (hasModal) {
+          toggle.style.opacity = '0';
+          toggle.style.pointerEvents = 'none';
+        } else {
+          toggle.style.opacity = '';
+          toggle.style.pointerEvents = '';
+        }
+      });
+      bodyObserver.observe(document.body, { childList: true, subtree: false });
     })();
   </script>
 </body>

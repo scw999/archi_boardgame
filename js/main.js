@@ -2238,6 +2238,12 @@ class GameApp {
             this.runConstructionPhase();
         });
 
+        // 시공 계약 버튼으로 자동 스크롤
+        setTimeout(() => {
+            const scrollTarget = document.getElementById('btn-confirm-construction');
+            if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+
         // 시공 계약 버튼 이벤트
         const confirmBtn = document.getElementById('btn-confirm-construction');
         if (confirmBtn && check.canAfford) {
@@ -2435,6 +2441,12 @@ class GameApp {
                 // 방어 선택 UI 표시
                 const selectionPhase = modal.querySelector('.defense-selection-phase');
                 selectionPhase.style.display = 'block';
+
+                // 방어 적용 완료 버튼으로 자동 스크롤
+                setTimeout(() => {
+                    const defenseBtn = document.getElementById('btn-confirm-defense');
+                    if (defenseBtn) defenseBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
 
                 // 유해한 카드에 클릭 이벤트 추가
                 harmfulCards.forEach(({ index }) => {
@@ -5052,6 +5064,8 @@ class GameApp {
             if (wildcardSlot) {
                 const playerIndex = parseInt(wildcardSlot.dataset.playerIndex);
                 if (!isNaN(playerIndex)) {
+                    // 모바일: 플레이어 패널 닫기
+                    if (window.closeMobilePanel) window.closeMobilePanel();
                     this.showPlayerWildcardsModal(playerIndex);
                 }
                 return;
@@ -5062,6 +5076,8 @@ class GameApp {
             if (buildingSlot) {
                 const playerIndex = parseInt(buildingSlot.dataset.playerIndex);
                 if (!isNaN(playerIndex)) {
+                    // 모바일: 플레이어 패널 닫기
+                    if (window.closeMobilePanel) window.closeMobilePanel();
                     this.showPlayerBuildingsModal(playerIndex);
                 }
                 return;

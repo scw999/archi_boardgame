@@ -415,6 +415,27 @@
     border-radius: var(--radius-sm) !important;
   }
 
+  /* [FIX] 메뉴 드롭다운 - 위로 열리도록 */
+  .menu-dropdown-content {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  /* [FIX] 알림창 위치 - 위쪽으로 이동하여 버튼 안가림 */
+  #notifications {
+    top: 1rem !important;
+    right: 0.5rem !important;
+    left: 0.5rem !important;
+    z-index: 2001 !important;
+  }
+
+  .notification {
+    font-size: 0.85rem !important;
+    padding: 0.6rem 1rem !important;
+  }
+
   /* ===== [FIX 5 & 6] 카드 디자인 모바일 개선 ===== */
   .card-grid {
     grid-template-columns: 1fr !important;
@@ -989,8 +1010,8 @@
   }
 
   .iso-city-map-wrapper {
-    overflow: hidden !important;
-    border-radius: var(--radius-md) !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
   }
 
   /* 3D 도시 뷰 높이 조정 */
